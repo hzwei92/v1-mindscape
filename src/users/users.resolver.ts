@@ -1,0 +1,232 @@
+import { Inject, UseGuards } from '@nestjs/common';
+import { Args, Float, Int, Mutation, Parent, Query, ResolveField, Resolver, Subscription } from '@nestjs/graphql';
+import { CurrentUser, GqlAuthGuard } from 'src/auth/gql-auth.guard';
+import { PUB_SUB } from 'src/pub-sub/pub-sub.module';
+import { User, UserCursor } from './user.model';
+import { RedisPubSub } from 'graphql-redis-subscriptions';
+import { UsersService } from './users.service';
+import { ACTIVE_TIME } from 'src/constants';
+import { Arrow } from 'src/arrows/arrow.model';
+import { ArrowsService } from 'src/arrows/arrows.service';
+import { Role } from 'src/roles/role.model';
+import { Lead } from 'src/leads/lead.model';
+import { RolesService } from 'src/roles/roles.service';
+import { LeadsService } from 'src/leads/leads.service';
+
+@Resolver(() => User)
+export class UsersResolver {
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly arrowsService: ArrowsService,
+    private readonly rolesService: RolesService,
+    private readonly leadsService: LeadsService,
+    @Inject(PUB_SUB)
+    private readonly pubSub: RedisPubSub,
+  ) {}
+
+  @ResolveField(() => Arrow, {name: 'frame'})
+  async getUserFrame(
+    @Parent() user: User,
+  ) {
+    return this.arrowsService.getArrowById(user.frameId);
+  }
+
+  @ResolveField(() => Arrow, {name: 'focus', nullable: true})
+  async getUserFocus(
+    @Parent() user: User,
+  ) {
+    if (!user.focusId) return null;
+    return this.arrowsService.getArrowById(user.focusId);
+  }
+
+  @ResolveField(() => [Role], {name: 'roles'})
+  async getUserRoles(
+    @Parent() user: User,
+  ) {
+    return this.rolesService.getRolesByUserId(user.id);
+  }
+
+  @ResolveField(() => [Lead], {name: 'leaders'})
+  async getUserLeaders(
+    @Parent() user: User,
+  ) {
+    return this.leadsService.getLeadsByFollowerId(user.id);
+  }
+
+  @ResolveField(() => [Lead], {name: 'followers'})
+  async getUserFollowers(
+    @Parent() user: User,
+  ) {
+    return this.leadsService.getLeadsByLeaderId(user.id, false);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Query(() => User, {name: 'getCurrentUser'})
+  async getCurrentUser(
+    @CurrentUser() user: User,
+  ) {
+    return user;
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => User, {name: 'getUser'})
+  async getUser(
+    @Args('userId') userId: string,
+  ) {
+    return this.usersService.getUserById(userId);
+  }
+
+  @Query(() => User, {name: 'getUserByEmail', nullable: true})
+  async getUserByEmail(
+    @Args('email') email: string,
+  ) {
+    return this.usersService.getUserByEmail(email);
+  }
+
+  @Query(() => User, {name: 'getUserByName', nullable: true})
+  async getUserByName(
+    @Args('name') name: string,
+  ) {
+    return this.usersService.getUserByName(name);
+  }
+  
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => User, {name: 'publishCursor'})
+  async publishCursor(
+    @CurrentUser() user: User,
+    @Args('sessionId') sessionId: string,
+    @Args('superArrowId') superArrowId: string,
+    @Args('x', {type: () => Int}) x: number,
+    @Args('y', {type: () => Int}) y: number,
+  ) {
+    this.pubSub.publish('publishCursor', {
+      sessionId,
+      superArrowId,
+      publishCursor: {
+        id: user.id,
+        name: user.name,
+        color: user.color,
+        x,
+        y,
+      }
+    });
+    const date = new Date();
+    if (date.getTime() - user.updateDate.getTime() > ACTIVE_TIME) {
+      const user1 = await this.usersService.updateUser(user.id, date);
+      this.pubSub.publish('updateUser', {
+        sessionId,
+        userId: user1.id,
+        updateUser: user1,
+      })
+      return user1;
+    }
+    return user;
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => User, {name: 'setUserFocusById'})
+  async setUserFocusById(
+    @CurrentUser() user: User,
+    @Args('sessionId') sessionId: string,
+    @Args('arrowId', {nullable: true}) arrowId: string,
+  ) {
+    return this.usersService.setUserFocusById(user.id, arrowId);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => User, {name: 'setUserFocusByRouteName'})
+  async setUserFocusByRouteName(
+    @CurrentUser() user: User,
+    @Args('sessionId') sessionId: string,
+    @Args('arrowRouteName') arrowRouteName: string,
+  ) {
+    return this.usersService.setUserFocusByRouteName(user.id, arrowRouteName);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => User, {name: 'setUserMap'})
+  async updateUserMap(
+    @CurrentUser() user: User,
+    @Args('lng',{type: () => Float}) lng: number,
+    @Args('lat',{type: () => Float}) lat: number,
+    @Args('zoom',{type: () => Float}) zoom: number,
+  ) {
+    return this.usersService.setUserMap(user.id, lng, lat, zoom);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => User, {name: 'setUserColor'})
+  async setUserColor(
+    @CurrentUser() user: User,
+    @Args('sessionId') sessionId: string,
+    @Args('color') color: string,
+  ) {
+    const user1 = await this.usersService.setUserColor(user.id, color);
+    this.pubSub.publish('updateUser', {
+      sessionId,
+      userId: user1.id,
+      updateUser: user1,
+    });
+    return user1;
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => User, {name: 'setUserName'})
+  async setUserName(
+    @CurrentUser() user: User,
+    @Args('sessionId') sessionId: string,
+    @Args('name') name: string,
+  ) {
+    const user1 = await this.usersService.setUserName(user.id, name);
+    this.pubSub.publish('updateUser', {
+      sessionId,
+      userId: user1.id,
+      updateUser: user1,
+    });
+    return user1;
+  }
+
+  @Subscription(() => UserCursor, {name: 'publishCursor',
+    filter: (payload, variables) => {
+      if (payload.sessionId === variables.sessionId) return false;
+      return payload.superArrowId === variables.superArrowId;
+    }
+  })
+  publishCursorSub(
+    @Args('sessionId') sessionId: string,
+    @Args('superArrowId') superArrowId: string,
+  ) {
+    console.log('publishCursorSub')
+    return this.pubSub.asyncIterator('publishCursor')
+  }
+
+  @Subscription(() => User, {name: 'updateUser', 
+    filter: (payload, variables) => {
+      if (payload.sessionId === variables.sessionId) return false;
+      return variables.userIds.some(userId => {
+        return userId === payload.userId;
+      });
+    },
+  })
+  updateUserSub(
+    @Args('sessionId') sessionId: string,
+    @Args('userIds', {type: () => [String]}) userIds: string[],
+  ) {
+    console.log('updateUserSub')
+    return this.pubSub.asyncIterator('updateUser')
+  }
+
+  @Subscription(() => User, {name: 'setUserFocus', 
+    filter: (payload, variables) => {
+      if (payload.sessionId === variables.sessionId) return false;
+      return payload.superArrowId === variables.superArrowId;
+    },
+  })
+  setUserFocusSub(
+    @Args('sessionId') sessionId: string,
+    @Args('superArrowId') superArrowId: string,
+  ) {
+    console.log('setUserFocusSub')
+    return this.pubSub.asyncIterator('setUserFocus')
+  }
+}
