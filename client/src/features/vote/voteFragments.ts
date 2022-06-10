@@ -4,7 +4,7 @@ export const VOTE_FIELDS = gql`
   fragment VoteFields on Vote {
     id
     userId
-    edgeId
+    arrowId
     clicks
     tokens
     weight

@@ -11,15 +11,16 @@ import { selectMode } from '../window/windowSlice';
 import { Twig } from './twig';
 import TwigBar from './TwigBar';
 import TwigControls from './TwigControls';
-import { selectDetailIdToTwigId, setTwigHeight } from './twigSlice';
+import { selectDetailIdToTwigId, selectIdToDescIdToTrue, setTwigHeight } from './twigSlice';
 //import useSelectTwig from './useSelectTwig';
 import { selectCreateLink, setCreateLink } from '../arrow/arrowSlice';
 import { Arrow } from '../arrow/arrow';
 import ArrowComponent from '../arrow/ArrowComponent';
 import { TWIG_WITH_COORDS } from './twigFragments';
+import TwigVoter from './TwigVoter';
 
 interface TwigComponentProps {
-  user: User | null;
+  user: User;
   space: SpaceType;
   role: Role | null;
   abstract: Arrow;
@@ -47,6 +48,8 @@ function TwigComponent(props: TwigComponentProps) {
   const selectedTwigId = useAppSelector(selectTwigId(props.space));
   const isSelected = selectedTwigId === props.twig.id;
 
+  const idToDescIdToTrue = useAppSelector(selectIdToDescIdToTrue(props.space));
+
   const [isLoading, setIsLoading] = useState(false);
   const cardEl = useRef<HTMLDivElement | undefined>();
 
@@ -64,13 +67,20 @@ function TwigComponent(props: TwigComponentProps) {
 
   useEffect(() => {
     if (props.x !== props.twig.x || props.y !== props.twig.y) {
-      client.cache.modify({
-        id: client.cache.identify(props.twig),
-        fields: {
-          x: () => props.x,
-          y: () => props.y,
-        }
-      });
+      const dx = props.x - props.twig.x;
+      const dy = props.y - props.twig.y;
+      [props.twig.id, ...Object.keys(idToDescIdToTrue[props.twig.id] || {})].forEach(twigId => {
+        client.cache.modify({
+          id: client.cache.identify({
+            id: twigId,
+            __typename: 'Twig',
+          }),
+          fields: {
+            x: cachedVal => cachedVal + dx,
+            y: cachedVal => cachedVal + dy,
+          }
+        });
+      })
     }
   }, [props.x, props.y])
 
@@ -170,32 +180,42 @@ function TwigComponent(props: TwigComponentProps) {
             : null
         }
         <Box sx={{
-          padding: 0.5,
+          display: 'flex',
         }}>
-          <Box sx={{
-            marginLeft: 0.5,
-            marginRight: 0.5,
-          }}>
-            <ArrowComponent
-              user={props.user}
-              abstract={props.abstract}
-              space={props.space}
-              arrow={props.twig.detail}
-              instanceId={props.twig.id}
-            />  
-          </Box>
-          <TwigControls
+          <TwigVoter
             user={props.user}
             space={props.space}
             twig={props.twig}
-            abstract={props.abstract}
-            role={props.role}
-            canPost={props.canPost}
-            canView={props.canView}
-            isPost={isPost}
-            isLoading={isLoading}
-            setIsLoading={setIsLoading}
           />
+          <Box sx={{
+            padding: 0.5,
+            paddingLeft: 0,
+          }}>
+            <Box sx={{
+              marginLeft: 0.5,
+              marginRight: 0.5,
+            }}>
+              <ArrowComponent
+                user={props.user}
+                abstract={props.abstract}
+                space={props.space}
+                arrow={props.twig.detail}
+                instanceId={props.twig.id}
+              />  
+            </Box>
+            <TwigControls
+              user={props.user}
+              space={props.space}
+              twig={props.twig}
+              abstract={props.abstract}
+              role={props.role}
+              canPost={props.canPost}
+              canView={props.canView}
+              isPost={isPost}
+              isLoading={isLoading}
+              setIsLoading={setIsLoading}
+            />
+          </Box>
         </Box>
       </Card>
     </Box>

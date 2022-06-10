@@ -14,14 +14,15 @@ import { SpaceType } from './space';
 import { selectDrag, selectIsOpen, selectScale, selectScroll, setDrag, setScale, setScroll } from './spaceSlice';
 import useInitSpace from './useInitSpace';
 import { setFocusIsSynced } from '../focus/focusSlice';
-import { selectIdToHeight, selectIdToLinkIdToTrue } from '../arrow/arrowSlice';
-import { ABSTRACT_ARROW_FIELDS } from '../arrow/arrowFragments';
+import { selectIdToHeight, selectIdToLinkIdToTrue, selectLinkIdToTrue, selectSourceIdToTargetIdToLinkIdToTrue } from '../arrow/arrowSlice';
+import { ABSTRACT_ARROW_FIELDS, FULL_ARROW_FIELDS } from '../arrow/arrowFragments';
 import { Arrow } from '../arrow/arrow';
 import { Role } from '../role/role';
-import { FULL_TWIG_FIELDS, TWIG_WITH_COORDS } from '../twig/twigFragments';
+import { FULL_TWIG_FIELDS, TWIG_WITH_COORDS, TWIG_WITH_PARENT } from '../twig/twigFragments';
 import { Twig } from '../twig/twig';
 import TwigComponent from '../twig/TwigComponent';
 import { selectDetailIdToTwigId, selectIdToDescIdToTrue, selectTwigIdToTrue } from '../twig/twigSlice';
+import Sheaf from '../arrow/Sheaf';
 
 interface SpaceComponentProps {
   user: User;
@@ -65,7 +66,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   const idToDescIdToTrue = useAppSelector(selectIdToDescIdToTrue(props.space));
   const userIdToTrue = useAppSelector(selectUserIdToTrue(props.space));
   const detailIdToTwigId = useAppSelector(selectDetailIdToTwigId(props.space));
-  const idToLinkIdToTrue = useAppSelector(selectIdToLinkIdToTrue(props.space));
+  const sourceIdToTargetIdToLinkIdToTrue = useAppSelector(selectSourceIdToTargetIdToLinkIdToTrue(props.space));
 
   const abstract = client.cache.readFragment({
     id: client.cache.identify({
@@ -352,8 +353,32 @@ export default function SpaceComponent(props: SpaceComponentProps) {
     handleMouseMove(event, targetId);
   }
 
-  const twigs: JSX.Element[] = [];
+  const sheafs: JSX.Element[] = [];
 
+  Object.keys(sourceIdToTargetIdToLinkIdToTrue).forEach(sourceId => {
+    Object.keys(sourceIdToTargetIdToLinkIdToTrue[sourceId]).forEach(targetId => {
+      const links = Object.keys(sourceIdToTargetIdToLinkIdToTrue[sourceId][targetId]).map(linkId => {
+        return client.cache.readFragment({
+          id: client.cache.identify({
+            id: linkId,
+            __typename: 'Arrow'
+          }),
+          fragment: FULL_ARROW_FIELDS,
+          fragmentName: 'FullArrowFields',
+        }) as Arrow;
+      });
+
+      sheafs.push(
+        <Sheaf
+          user={props.user}
+          space={props.space}
+          links={links}
+        />
+      )
+    })
+  })
+
+  const twigs: JSX.Element[] = [];
   Object.keys(twigIdToTrue).forEach(twigId => {
     const twig = client.cache.readFragment({
       id: client.cache.identify({
@@ -384,8 +409,8 @@ export default function SpaceComponent(props: SpaceComponentProps) {
         fragment: TWIG_WITH_COORDS,
       }) as Twig;
 
-      x = Math.round((sourceTwig.x + targetTwig.x) / 2);
-      y = Math.round((sourceTwig.y + targetTwig.y) / 2);
+      x = (sourceTwig.x + targetTwig.x) / 2;
+      y = (sourceTwig.y + targetTwig.y) / 2;
     }
     else {
       x = twig.x;
@@ -415,6 +440,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
       </Box>
     )
   });
+
   const w = 2 * VIEW_RADIUS;
   const h = 2 * VIEW_RADIUS;
   return (
@@ -452,7 +478,77 @@ export default function SpaceComponent(props: SpaceComponentProps) {
           height: h,
         }}>
           <defs>
+            {
+              Object.keys(userIdToTrue).map(userId => {
+                const user = client.cache.readFragment({
+                  id: client.cache.identify({
+                    id: userId,
+                    __typename: 'User',
+                  }),
+                  fragment: gql`
+                    fragment UserWithColor on User {
+                      id
+                      color
+                    }
+                  `,
+                }) as User;
+                return (
+                  <marker 
+                    key={`marker-${userId}`}
+                    id={`marker-${userId}`} 
+                    markerWidth='6'
+                    markerHeight='10'
+                    refX='7'
+                    refY='5'
+                    orient='auto'
+                  >
+                    <polyline 
+                      points='0,0 5,5 0,10'
+                      fill='none'
+                      stroke={user.color}
+                    />
+                  </marker>
+                )
+              })
+            }
           </defs>
+          {
+            Object.keys(twigIdToTrue).map(twigId => {
+              const twig = client.cache.readFragment({
+                id: client.cache.identify({
+                  id: twigId,
+                  __typename: 'Twig',
+                }),
+                fragment: gql`
+                  fragment TwigWithPositioning on Twig {
+                    id
+                    detailId
+                    x
+                    y
+                    deleteDate
+                    parent {
+                      id
+                      x
+                      y
+                    }
+                  }
+                `,
+              }) as Twig;
+              if (twig.deleteDate || !twig.parent || twig.detailId === abstract.id) return null;
+              return (
+                <line 
+                  key={`twig-line-${twigId}`}
+                  x1={(twig.parent?.x ?? NaN) + VIEW_RADIUS}
+                  y1={(twig.parent?.y ?? NaN) + VIEW_RADIUS}
+                  x2={twig.x + VIEW_RADIUS}
+                  y2={twig.y + VIEW_RADIUS}
+                  stroke={mode === 'dark' ? 'white' : 'black'}
+                  strokeWidth={4}
+                />
+              )
+            })
+          }
+          { sheafs }
         </svg>
         { twigs }
       </Box>

@@ -155,3 +155,7 @@ export type IdToTrueType = {
 export type IdToIdToTrueType = {
   [id: string]: IdToTrueType;
 }
+
+export type IdToIdToIdToTrueType = {
+  [id: string]: IdToIdToTrueType;
+}

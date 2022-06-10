@@ -1,5 +1,5 @@
 import { gql, useApolloClient } from '@apollo/client';
-import { FULL_TWIG_FIELDS, TWIG_FIELDS } from './twigFragments';
+import { FULL_TWIG_FIELDS, TWIG_FIELDS, TWIG_WITH_PARENT } from './twigFragments';
 import { Twig } from './twig';
 import { IdToIdToTrueType, IdToTrueType } from '../../utils';
 import { useAppDispatch } from '../../app/hooks';
@@ -22,14 +22,7 @@ export default function useTwigTree(space: SpaceType) {
         }
         twig1 = client.cache.readFragment({
           id: client.cache.identify(twig1.parent),
-          fragment: gql`
-            fragment TwigWithParent on Twig {
-              id
-              parent {
-                id
-              }
-            }
-          `,
+          fragment: TWIG_WITH_PARENT,
         }) as Twig;
       }
     });

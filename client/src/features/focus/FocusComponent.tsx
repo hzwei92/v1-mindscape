@@ -63,7 +63,7 @@ export default function FocusComponent(props: FocusComponentProps) {
     }));
   }, [props.user?.focus?.color, mode]);
 
-  if (!theme) return null;
+  if (!theme || !props.user) return null;
 
   const handleClick = () => {
     console.log('focus');

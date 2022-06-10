@@ -171,7 +171,7 @@ export class TwigsService {
       Math.round((parentTwig.x + x) / 2),
       Math.round((parentTwig.y + y) / 2),
       parentTwig.abstract.twigZ + 2,
-      false,
+      true,
     );
     await this.arrowsService.incrementTwigN(parentTwig.abstractId, 2);
     await this.arrowsService.incrementTwigZ(parentTwig.abstractId, 2);

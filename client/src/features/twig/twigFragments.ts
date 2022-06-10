@@ -52,3 +52,12 @@ export const TWIG_WITH_COORDS = gql`
     y
   }
 `;
+
+export const TWIG_WITH_PARENT = gql`
+  fragment TwigWithParent on Twig {
+    id
+    parent {
+      id
+    }
+  }
+`;

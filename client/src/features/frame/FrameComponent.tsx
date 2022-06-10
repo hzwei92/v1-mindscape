@@ -60,7 +60,7 @@ export default function FrameComponent(props: FrameComponentProps) {
     dispatch(setFrameWidth(width - getAppbarWidth(width) - menuWidth1));
   }, [focusIsOpen, width, menuWidth1])
 
-  if (!theme) return null;
+  if (!theme || !props.user) return null;
 
   const handleClick = () => {
     console.log('frame');
