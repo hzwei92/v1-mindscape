@@ -18,7 +18,7 @@ import { selectIdToHeight, selectIdToLinkIdToTrue, selectLinkIdToTrue, selectSou
 import { ABSTRACT_ARROW_FIELDS, FULL_ARROW_FIELDS } from '../arrow/arrowFragments';
 import { Arrow } from '../arrow/arrow';
 import { Role } from '../role/role';
-import { FULL_TWIG_FIELDS, TWIG_WITH_COORDS, TWIG_WITH_PARENT } from '../twig/twigFragments';
+import { FULL_TWIG_FIELDS, TWIG_WITH_XY, TWIG_WITH_PARENT, TWIG_WITH_POS } from '../twig/twigFragments';
 import { Twig } from '../twig/twig';
 import TwigComponent from '../twig/TwigComponent';
 import { selectDetailIdToTwigId, selectIdToDescIdToTrue, selectTwigIdToTrue } from '../twig/twigSlice';
@@ -371,8 +371,10 @@ export default function SpaceComponent(props: SpaceComponentProps) {
       sheafs.push(
         <Sheaf
           user={props.user}
+          abstract={abstract}
           space={props.space}
           links={links}
+          canEdit={canEdit}
         />
       )
     })
@@ -399,14 +401,14 @@ export default function SpaceComponent(props: SpaceComponentProps) {
           id: detailIdToTwigId[twig.detail.sourceId],
           __typename: 'Twig',
         }),
-        fragment: TWIG_WITH_COORDS,
+        fragment: TWIG_WITH_XY,
       }) as Twig;
       const targetTwig = client.cache.readFragment({
         id: client.cache.identify({
           id: detailIdToTwigId[twig.detail.targetId],
           __typename: 'Twig',
         }),
-        fragment: TWIG_WITH_COORDS,
+        fragment: TWIG_WITH_XY,
       }) as Twig;
 
       x = (sourceTwig.x + targetTwig.x) / 2;
@@ -519,20 +521,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
                   id: twigId,
                   __typename: 'Twig',
                 }),
-                fragment: gql`
-                  fragment TwigWithPositioning on Twig {
-                    id
-                    detailId
-                    x
-                    y
-                    deleteDate
-                    parent {
-                      id
-                      x
-                      y
-                    }
-                  }
-                `,
+                fragment: TWIG_WITH_POS,
               }) as Twig;
               if (twig.deleteDate || !twig.parent || twig.detailId === abstract.id) return null;
               return (

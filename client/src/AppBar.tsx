@@ -15,7 +15,7 @@ import { selectMode, selectWidth, toggleMode } from './features/window/windowSli
 import { User } from './features/user/user';
 import useAuth from './features/auth/useAuth';
 import { setMenuMode } from './features/menu/menuSlice';
-//import useAppRouter from './useAppRouter';
+import useAppRouter from './useAppRouter';
 //import useSavePostSub from './features/post/useSavePostSub';
 
 interface AppBarProps {
@@ -30,7 +30,7 @@ export default function AppBar(props: AppBarProps) {
   const color = getColor(mode)
 
   useAuth();
-  //useAppRouter(props.user);
+  useAppRouter(props.user);
   //useSavePostSub(props.user);
 
   const handleAboutClick = () => {

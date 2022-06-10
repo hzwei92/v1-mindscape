@@ -45,7 +45,7 @@ export const FULL_TWIG_FIELDS = gql`
 `;
 
 
-export const TWIG_WITH_COORDS = gql`
+export const TWIG_WITH_XY = gql`
   fragment TwigWithCoords on Twig {
     id
     x
@@ -61,3 +61,25 @@ export const TWIG_WITH_PARENT = gql`
     }
   }
 `;
+
+export const TWIG_WITH_POS = gql`
+  fragment TwigWithPositioning on Twig {
+    id
+    detailId
+    x
+    y
+    deleteDate
+    parent {
+      id
+      x
+      y
+    }
+  }
+`;
+
+export const TWIG_WITH_Z = gql`
+  fragment TwigWithZ on Twig {
+    id
+    z
+  }
+`

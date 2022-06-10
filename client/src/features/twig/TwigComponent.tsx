@@ -16,7 +16,7 @@ import { selectDetailIdToTwigId, selectIdToDescIdToTrue, setTwigHeight } from '.
 import { selectCreateLink, selectSelectArrowId, setCreateLink } from '../arrow/arrowSlice';
 import { Arrow } from '../arrow/arrow';
 import ArrowComponent from '../arrow/ArrowComponent';
-import { TWIG_WITH_COORDS } from './twigFragments';
+import { TWIG_WITH_XY } from './twigFragments';
 import TwigVoter from './TwigVoter';
 import useSelectTwig from './useSelectTwig';
 import useLinkTwigs from './useLinkTwigs';
@@ -150,11 +150,11 @@ function TwigComponent(props: TwigComponentProps) {
             : TWIG_WIDTH - 50,
           opacity: .9,
           border: isSelected
-            ? `4px solid ${props.twig.user.color}`
+            ? `5px solid ${props.twig.user.color}`
             : null,
           borderRadius: isPost
             ? 2
-            : 5,
+            : 8,
           borderTopLeftRadius: 0,
           backgroundColor: isLinking
             ? mode === 'dark'

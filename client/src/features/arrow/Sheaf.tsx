@@ -7,14 +7,18 @@ import { SpaceType } from '../space/space';
 import { Twig } from '../twig/twig';
 import { FULL_TWIG_FIELDS } from '../twig/twigFragments';
 import { selectDetailIdToTwigId } from '../twig/twigSlice';
+import useCenterTwig from '../twig/useCenterTwig';
+import useSelectTwig from '../twig/useSelectTwig';
 import { User } from '../user/user';
 import { Arrow } from './arrow';
 import { selectSelectArrowId, setSelectArrowId } from './arrowSlice';
 
 interface SheafProps {
   user: User;
+  abstract: Arrow;
   space: SpaceType;
   links: Arrow[];
+  canEdit: boolean;
 }
 export default function Sheaf(props: SheafProps) {
   const client = useApolloClient();
@@ -61,8 +65,7 @@ export default function Sheaf(props: SheafProps) {
   const [linkI, setLinkI] = useState(0);
   const [clickTimeout, setClickTimeout] = useState(null as ReturnType<typeof setTimeout> | null);
 
-  //const { centerTwig } = useCenterTwig(props.user, props.space);
-
+  const { selectTwig } = useSelectTwig(props.space, props.canEdit)
   // useEffect(() => {
   //   if (links.length > 1) {
   //     const time = 1000 / Math.log(links.length);
@@ -73,14 +76,8 @@ export default function Sheaf(props: SheafProps) {
   //       clearInterval(interval);
   //     }
   //   }
-
   // }, [links.length]);
 
-  const center = (postId: string) => {
-    //const twigId = subPostIdToTwigId[postId];
-
-    //centerTwig(twigId, true, 0)
-  };
   
   const handleMouseDown = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -88,10 +85,7 @@ export default function Sheaf(props: SheafProps) {
 
   const handleClick = (event: React.MouseEvent) => {
     event.stopPropagation();
-    dispatch(setSelectArrowId({
-      space: props.space,
-      arrowId: links[0].id,
-    }))
+    selectTwig(props.abstract, twigs[0], true)
   }
 
   const rating = 1;
@@ -114,14 +108,16 @@ export default function Sheaf(props: SheafProps) {
       <line 
         style={{
           cursor: 'pointer',
-          opacity: 0,
+          opacity: isSelected 
+            ? .2 
+            : .05,
         }}
         x1={sourceTwig.x + VIEW_RADIUS}
         y1={sourceTwig.y + VIEW_RADIUS}
         x2={targetTwig.x + VIEW_RADIUS}
         y2={targetTwig.y + VIEW_RADIUS}
-        strokeWidth={10 * (5 + rating)}
-        stroke='lavender'
+        strokeWidth={10 * ((isSelected ? 4 : 2) + rating)}
+        stroke={links[0].user.color}
       />
     </g>
   )

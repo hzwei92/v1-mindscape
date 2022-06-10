@@ -3,7 +3,7 @@ import { gql, useApolloClient, useMutation, useReactiveVar } from '@apollo/clien
 import { useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { sessionVar } from '../../cache';
-import { TWIG_FIELDS } from './twigFragments';
+import { TWIG_FIELDS, TWIG_WITH_Z } from './twigFragments';
 import { SpaceType } from '../space/space';
 import { setSpace, setTwigId } from '../space/spaceSlice';
 import { Twig } from './twig';
@@ -88,12 +88,7 @@ export default function useSelectTwig(space: SpaceType, canEdit: boolean) {
             id: descId,
             __typename: 'Twig',
           }),
-          fragment: gql`
-            fragment TwigWithZ on Twig {
-              id
-              z
-            }
-          `
+          fragment: TWIG_WITH_Z
         }) as Twig;
       })
       .sort((a, b) => a.z < b.z ? -1 : 1)
