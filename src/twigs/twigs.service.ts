@@ -40,7 +40,7 @@ export class TwigsService {
     });
     return twigs
   }
-  async getTwigByAbstractIdAndTwigId(abstractId: string, detailId: string): Promise<Twig> {
+  async getTwigByAbstractIdAndDetailId(abstractId: string, detailId: string): Promise<Twig> {
     const twig = await this.twigsRepository.findOne({
       where: {
         abstractId,
@@ -278,6 +278,68 @@ export class TwigsService {
     return {
       abstract: abstract1,
       twigs: twigs1,
+      role: role1,
+    }
+  }
+
+  async linkTwigs(user: User, abstractId: string, sourceId: string, targetId: string) {
+    const abstract = await this.arrowsService.getArrowById(abstractId);
+    if (!abstract) {
+      throw new BadRequestException('This abstract does not exist');
+    }
+
+    let role = await this.rolesService.getRoleByUserIdAndArrowId(user.id, abstract.id);
+    let role1 = null;
+    if (checkPermit(abstract.canView, role.type)) {
+      if (!role) {
+        role = await this.rolesService.createRole(user, abstract, RoleType.OTHER);
+        role1 = role;
+      }
+    }
+    else {
+      throw new BadRequestException('Insufficient privileges');
+    }
+
+    const source = await this.arrowsService.getArrowById(sourceId);
+    if (!source) {
+      throw new BadRequestException('This source does not exist');
+    }
+    const target = await this.arrowsService.getArrowById(targetId);
+    if (!target) {
+      throw new BadRequestException('This target does not exist');
+    }
+    const sourceTwig = await this.getTwigByAbstractIdAndDetailId(abstract.id, source.id);
+    if (!sourceTwig) {
+      throw new BadRequestException('This sourceTwig does not exist');
+    }
+    const targetTwig = await this.getTwigByAbstractIdAndDetailId(abstract.id, target.id);
+    if (!targetTwig) {
+      throw new BadRequestException('This targetTwig does not exist');
+    }
+
+    const { arrow } = await this.arrowsService.createArrow(user, null, sourceId, targetId, abstract, null);
+
+    await this.arrowsService.incrementOutCount(source.id, 1);
+    await this.arrowsService.incrementInCount(target.id, 1);
+    
+    const source1 = await this.arrowsService.getArrowById(source.id);
+    const target1 = await this.arrowsService.getArrowById(target.id);
+
+    const x = Math.round((sourceTwig.x + targetTwig.x) / 2);
+    const y = Math.round((sourceTwig.y + targetTwig.y) / 2);
+
+    const twig = await this.createTwig(user, abstract, arrow, null, null, abstract.twigN + 1, x, y, abstract.twigZ + 1, true);
+  
+    await this.arrowsService.incrementTwigN(abstract.id, 1);
+    await this.arrowsService.incrementTwigZ(abstract.id, 1);
+
+    const abstract1 = await this.arrowsService.getArrowById(abstract.id);
+
+    return {
+      abstract: abstract1,
+      twig,
+      source: source1,
+      target: target1,
       role: role1,
     }
   }

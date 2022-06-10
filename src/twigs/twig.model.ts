@@ -70,6 +70,24 @@ export class ReplyTwigResult {
 }
 
 @ObjectType()
+export class LinkTwigsResult {
+  @Field(() => Arrow)
+  abstract: Arrow;
+
+  @Field(() => Twig)
+  twig: Twig;
+
+  @Field(() => Arrow)
+  source: Arrow;
+
+  @Field(() => Arrow)
+  target: Arrow;
+
+  @Field(() => Role, {nullable: true})
+  role: Role;
+}
+
+@ObjectType()
 export class AddTwigResult {
   @Field(() => Arrow)
   abstract: Arrow;

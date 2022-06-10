@@ -19,6 +19,7 @@ import ArrowComponent from '../arrow/ArrowComponent';
 import { TWIG_WITH_COORDS } from './twigFragments';
 import TwigVoter from './TwigVoter';
 import useSelectTwig from './useSelectTwig';
+import useLinkTwigs from './useLinkTwigs';
 
 interface TwigComponentProps {
   user: User;
@@ -34,7 +35,7 @@ interface TwigComponentProps {
   setTouches: Dispatch<SetStateAction<React.TouchList | null>>;
 }
 function TwigComponent(props: TwigComponentProps) {
-  console.log('twig', props.twig.id, props.twig.isPinned);
+  console.log('twig', props.twig.id);
 
   const client = useApolloClient();
   const dispatch = useAppDispatch();
@@ -55,7 +56,7 @@ function TwigComponent(props: TwigComponentProps) {
   const cardEl = useRef<HTMLDivElement | undefined>();
 
   const { selectTwig } = useSelectTwig(props.space, props.canEdit);
-  //const { linkArrows } = useLinkArrows(props.space);
+  const { linkTwigs } = useLinkTwigs(props.space, props.abstract);
 
   useEffect(() => {
     if (!cardEl.current?.clientHeight) return;
@@ -95,7 +96,7 @@ function TwigComponent(props: TwigComponentProps) {
       }));
     }
     if (createLink.sourceId && createLink.targetId === props.twig.detailId) {
-      //linkArrows();
+      linkTwigs();
     }
   }
 

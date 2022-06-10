@@ -393,7 +393,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
 
     let x;
     let y;
-    if (!twig.isPinned && twig.detail.sourceId !== twig.detail.targetId) {
+    if (twig.detail.sourceId !== twig.detail.targetId) {
       const sourceTwig = client.cache.readFragment({
         id: client.cache.identify({
           id: detailIdToTwigId[twig.detail.sourceId],

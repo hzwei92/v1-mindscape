@@ -5,7 +5,7 @@ import { Arrow } from 'src/arrows/arrow.model';
 import { ArrowsService } from 'src/arrows/arrows.service';
 import { PUB_SUB } from 'src/pub-sub/pub-sub.module';
 import { UsersService } from 'src/users/users.service';
-import { AddTwigResult, DragTwigResult, MoveTwigResult, RemoveTwigResult, ReplyTwigResult, SelectTwigResult, Twig } from './twig.model';
+import { AddTwigResult, DragTwigResult, LinkTwigsResult, MoveTwigResult, RemoveTwigResult, ReplyTwigResult, SelectTwigResult, Twig } from './twig.model';
 import { TwigsService } from './twigs.service';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
 import { User } from 'src/users/user.model';
@@ -78,6 +78,31 @@ export class TwigsResolver {
     return this.twigsService.replyTwig(user, parentTwigId, twigId, postId, x, y, draft);
   }
 
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => LinkTwigsResult, {name: 'linkTwigs'})
+  async linkTwigs(
+    @CurrentUser() user: UserEntity,
+    @Args('sessionId') sessionId: string,
+    @Args('abstractId') abstractId: string,
+    @Args('sourceId') sourceId: string,
+    @Args('targetId') targetId: string,
+  ) {
+    const {
+      abstract,
+      twig,
+      source,
+      target,
+      role,
+    } = await this.twigsService.linkTwigs(user, abstractId, sourceId, targetId);
+
+    return {
+      abstract,
+      twig,
+      source,
+      target,
+      role,
+    };
+  }
   @UseGuards(GqlAuthGuard)
   @Mutation(() => AddTwigResult, {name: 'addTwig'})
   async addTwig(

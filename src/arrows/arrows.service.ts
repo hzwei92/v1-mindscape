@@ -101,6 +101,13 @@ export class ArrowsService {
     };
   }
 
+  async incrementInCount(id: string, value: number) {
+    await this.arrowsRepository.increment({id}, 'inCount', value);
+  }
+
+  async incrementOutCount(id: string, value: number) {
+    await this.arrowsRepository.increment({id}, 'outCount', value);
+  }
 
   async incrementTwigN(id: string, value: number) {
     await this.arrowsRepository.increment({id}, 'twigN', value);
