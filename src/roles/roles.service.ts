@@ -6,7 +6,7 @@ import { RoleType }from 'src/enums';
 import { UsersService } from 'src/users/users.service';
 import { User } from 'src/users/user.entity';
 import { ArrowsService } from 'src/arrows/arrows.service';
-import { Arrow } from 'src/arrows/arrow.model';
+import { Arrow } from 'src/arrows/arrow.entity';
 
 @Injectable()
 export class RolesService {
@@ -15,6 +15,7 @@ export class RolesService {
     private readonly rolesRepository: Repository<Role>,
     @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
+    @Inject(forwardRef(() => ArrowsService))
     private readonly arrowsService: ArrowsService,
   ) {}
 
@@ -62,7 +63,7 @@ export class RolesService {
   async inviteRole(invitingUserId: string, invitedUserName: string, arrowId: string): Promise<Role> {
     const arrow = await this.arrowsService.getArrowById(arrowId);
     if (!arrow) {
-      throw new BadRequestException('This superArrow does not exist');
+      throw new BadRequestException('This abstract does not exist');
     }
     const invitingRole = await this.getRoleByUserIdAndArrowId(invitingUserId, arrowId);
     if (
@@ -80,7 +81,7 @@ export class RolesService {
     if (invitedRole) {
       if (invitedRole.isInvited) {
         if (invitedRole.isRequested) {
-          throw new BadRequestException('This user is already part of the superArrow')
+          throw new BadRequestException('This user is already part of the abstract')
         }
         else {
           throw new BadRequestException('This user has already been invited')
@@ -120,7 +121,7 @@ export class RolesService {
     if (role) {
       if (role.isRequested) {
         if (role.isInvited) {
-          throw new BadRequestException('This user is already part of the superArrow')
+          throw new BadRequestException('This user is already part of the abstract')
         }
         else {
           throw new BadRequestException('This user has already requested membership')
@@ -144,9 +145,9 @@ export class RolesService {
       }
     }
     else {
-      const superArrow = await this.arrowsService.getArrowById(arrowId);
-      if (!superArrow) {
-        throw new BadRequestException('This superArrow does not exist')
+      const abstract = await this.arrowsService.getArrowById(arrowId);
+      if (!abstract) {
+        throw new BadRequestException('This abstract does not exist')
       }
       const role0 = new Role();
       role0.userId = userId;
@@ -165,7 +166,7 @@ export class RolesService {
       throw new BadRequestException('This role does not exist');
     }
     if (role.type === 'ADMIN') {
-      throw new BadRequestException('Admins cannot leave superArrows at this time');
+      throw new BadRequestException('Admins cannot leave abstracts at this time');
     }
     const removerRole = await this.getRoleByUserIdAndArrowId(userId, role.arrowId);
     if (removerRole.type !== 'ADMIN' && removerRole.id !== role.id) {

@@ -1,6 +1,6 @@
 import { ObjectType, Field } from '@nestjs/graphql';
 import { User } from 'src/users/user.model';
-import { Post } from 'src/posts/post.model';
+import { Arrow } from 'src/arrows/arrow.model';
 
 @ObjectType()
 export class Sub {
@@ -14,10 +14,10 @@ export class Sub {
   user: User;
 
   @Field()
-  postId: string;
+  arrowId: string;
 
-  @Field(() => Post)
-  post: Post;
+  @Field(() => Arrow)
+  arrow: Arrow;
   
   @Field()
   createDate: Date;

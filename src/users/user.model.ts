@@ -1,5 +1,5 @@
-import { ObjectType, Field, Int } from '@nestjs/graphql';
-import { Post } from 'src/posts/post.model';
+import { ObjectType, Field, Int, Float } from '@nestjs/graphql';
+import { Arrow } from 'src/arrows/arrow.model';
 
 @ObjectType()
 export class User {
@@ -9,23 +9,14 @@ export class User {
   @Field({nullable: true})
   frameId: string;
 
-  @Field(() => Post, {nullable: true})
-  frame: Post;
+  @Field(() => Arrow, {nullable: true})
+  frame: Arrow;
 
   @Field({nullable: true})
   focusId: string;
 
-  @Field(() => Post, {nullable: true})
-  focus: Post;
-
-  @Field(() => Int)
-  postN: number;
-  
-  @Field(() => Int)
-  voteN: number;
-  
-  @Field(() => Int)
-  deletedVoteN: number;
+  @Field(() => Arrow, {nullable: true})
+  focus: Arrow;
   
   @Field()
   name: string;
@@ -45,13 +36,13 @@ export class User {
   @Field()
   color: string;
 
-  @Field({ nullable: true })
+  @Field(() => Float, { nullable: true })
   mapLng: number;
 
-  @Field({ nullable: true })
+  @Field(() => Float, { nullable: true })
   mapLat: number;
 
-  @Field({ nullable: true })
+  @Field(() => Float, { nullable: true })
   mapZoom: number;
 
   @Field()
@@ -64,7 +55,7 @@ export class User {
   isAdmin: boolean;
   
   @Field()
-  lastActiveDate: Date;
+  activeDate: Date;
 
   @Field()
   createDate: Date;

@@ -9,7 +9,6 @@ import {
   JoinColumn,
   OneToMany,
   Index,
-  OneToOne,
 } from 'typeorm';
 import { User } from 'src/users/user.entity';
 import { Sub } from 'src/subs/sub.entity';
@@ -18,6 +17,7 @@ import * as Enums from '../enums';
 import { Role } from 'src/roles/role.entity';
 import { Vote } from 'src/votes/vote.entity';
 import { findDefaultWeight } from 'src/utils';
+import { Twig } from 'src/twigs/twig.entity';
 
 @Entity()
 export class Arrow {
@@ -35,21 +35,16 @@ export class Arrow {
 
   @Column()
   color: string;
-
-  @Column()
-  isHold: boolean;
-
-  @Column()
-  isPin: boolean;
   
   @Column({ default: 1 })
   clicks: number;
 
   @Column({ default: 0 })
-  coins: number;
+  tokens: number;
 
   @Column({ default: findDefaultWeight(1, 0) })
   weight: number;
+
 
 
   @Column()
@@ -60,17 +55,17 @@ export class Arrow {
   user: User;
 
 
-  @Column({ nullable: true })
+  @Column()
   sourceId: string;
 
-  @ManyToOne(() => Arrow, { nullable: true })
+  @ManyToOne(() => Arrow)
   @JoinColumn({ name: 'sourceId', referencedColumnName: 'id' })
   source: Arrow;
 
-  @Column({ nullable: true })
+  @Column()
   targetId: string;
   
-  @ManyToOne(() => Arrow, { nullable: true })
+  @ManyToOne(() => Arrow)
   @JoinColumn({ name: 'targetId', referencedColumnName: 'id' })
   target: Arrow;
 
@@ -92,23 +87,26 @@ export class Arrow {
   abstractId: string;
 
   @ManyToOne(() => Arrow)
-  @JoinColumn({ name: 'superId', referencedColumnName: 'id' })
+  @JoinColumn({ name: 'abstractId', referencedColumnName: 'id' })
   abstract: Arrow;
 
   @OneToMany(() => Arrow, arrow => arrow.abstract)
   details: Arrow[];
 
+  @OneToMany(() => Twig, twig => twig.abstract)
+  twigs: Twig[];
+
   @Column({ default: 0 })
-  detailN: number;
+  twigN: number;
 
   @Column({ default: 0})
-  detailZ: number;
+  twigZ: number;
 
 
   @Column({
     type: 'enum',
     enum: Enums.RoleType,
-    default: Enums.RoleType.MEMBER,
+    default: Enums.RoleType.OTHER,
   })
   canEdit: Enums.RoleType;
 
@@ -183,7 +181,7 @@ export class Arrow {
   @Column({ default: 'NOW()' })
   activeDate: Date;
 
-  @Column()
+  @Column({ default: 'NOW()' })
   saveDate: Date;
   
   @Column({ nullable: true })

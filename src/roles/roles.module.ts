@@ -5,13 +5,13 @@ import { RolesService } from './roles.service';
 import { RolesResolver } from './roles.resolver';
 import { UsersModule } from 'src/users/users.module';
 import { PubSubModule } from 'src/pub-sub/pub-sub.module';
-import { PostsModule } from 'src/posts/posts.module';
+import { ArrowsModule } from 'src/arrows/arrows.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Role]),
     forwardRef(() => UsersModule),
-    forwardRef(() => PostsModule),
+    forwardRef(() => ArrowsModule),
     PubSubModule,
   ],
   providers: [RolesService, RolesResolver],

@@ -12,6 +12,14 @@ import { UsersModule } from './users/users.module';
 import { UsersService } from './users/users.service';
 import { AuthModule } from './auth/auth.module';
 import { ArrowsModule } from './arrows/arrows.module';
+import { VotesModule } from './votes/votes.module';
+import { SubsModule } from './subs/subs.module';
+import { SearchModule } from './search/search.module';
+import { RolesModule } from './roles/roles.module';
+import { PubSubModule } from './pub-sub/pub-sub.module';
+import { LeadsModule } from './leads/leads.module';
+import { EmailModule } from './email/email.module';
+import { TwigsModule } from './twigs/twigs.module';
 
 @Module({
   imports: [
@@ -88,9 +96,17 @@ import { ArrowsModule } from './arrows/arrows.module';
             }
       })
     }),
-    AuthModule,
-    UsersModule,
     ArrowsModule,
+    AuthModule,
+    EmailModule,
+    LeadsModule,
+    PubSubModule,
+    RolesModule,
+    SearchModule,
+    SubsModule,
+    UsersModule,
+    VotesModule,
+    TwigsModule,
   ],
 })
 export class AppModule {}

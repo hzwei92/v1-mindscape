@@ -11,3 +11,35 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.App {
+  text-align: center;
+}
+
+.mapboxgl-ctrl-attrib {
+  display: none;
+}
+
+.mapboxgl-ctrl-logo {
+  display: none;
+}
+
+html,body {
+  width: 100%;
+  height: 100%;
+}
+
+.unstyled-content-block {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+figure {
+  margin: 0px;
+  width: 100%;
+}

@@ -1,6 +1,7 @@
 import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
 import { Role } from 'src/roles/role.model';
 import { Sub } from 'src/subs/sub.model';
+import { Twig } from 'src/twigs/twig.model';
 import { User } from 'src/users/user.model';
 import { Vote } from 'src/votes/vote.model';
 
@@ -22,12 +23,6 @@ export class Arrow {
   @Field()
   color: string;
 
-  @Field()
-  isHold: boolean;
-
-  @Field()
-  isPin: boolean;
-
 
   @Field()
   userId: string;
@@ -36,16 +31,16 @@ export class Arrow {
   user: User;
 
 
-  @Field({ nullable: true })
+  @Field()
   sourceId: string;
 
-  @Field(() => Arrow, { nullable: true })
+  @Field(() => Arrow)
   source: Arrow;
 
-  @Field({ nullable: true })
+  @Field()
   targetId: string;
   
-  @Field(() => Arrow, { nullable: true })
+  @Field(() => Arrow)
   target: Arrow;
 
 
@@ -71,11 +66,14 @@ export class Arrow {
   @Field(() => [Arrow])
   details: Arrow[];
 
+  @Field(() => [Twig])
+  twigs: Twig[];
+  
   @Field()
-  detailN: number;
+  twigN: number;
 
   @Field()
-  detailZ: number;
+  twigZ: number;
 
 
   @Field()
@@ -127,7 +125,7 @@ export class Arrow {
   clicks: number;
 
   @Field(() => Float)
-  coins: number;
+  tokens: number;
 
   @Field(() => Float)
   weight: number;
@@ -156,6 +154,21 @@ export class Arrow {
   @Field() 
   updateDate: Date;
 
-  @Field()
+  @Field({ nullable: true })
   deleteDate: Date;
+}
+
+@ObjectType()
+export class ReplyTwigResult {
+  @Field(() => Arrow)
+  abstract: Arrow;
+
+  @Field(() => Arrow)
+  twig: Arrow;
+
+  @Field(() => Arrow)
+  link: Arrow;
+
+  @Field(() => Role, { nullable: true })
+  role: Role;
 }

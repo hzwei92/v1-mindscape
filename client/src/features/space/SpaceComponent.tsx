@@ -1,0 +1,461 @@
+import { gql, useApolloClient } from '@apollo/client';
+import { Box } from '@mui/material';
+import React, { useEffect, useRef, useState } from 'react';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { focusSpaceElVar, frameSpaceElVar } from '../../cache';
+import { VIEW_RADIUS, SPACE_BAR_HEIGHT } from '../../constants';
+import { checkPermit, getAppbarWidth, IdToTrueType } from '../../utils';
+import { selectFrameWidth } from '../frame/frameSlice';
+import { selectMenuMode, selectMenuWidth } from '../menu/menuSlice';
+import { User } from '../user/user';
+import { selectUserIdToTrue } from '../user/userSlice';
+import { selectMode, selectWidth } from '../window/windowSlice';
+import { SpaceType } from './space';
+import { selectDrag, selectIsOpen, selectScale, selectScroll, setDrag, setScale, setScroll } from './spaceSlice';
+import useInitSpace from './useInitSpace';
+import { setFocusIsSynced } from '../focus/focusSlice';
+import { selectIdToHeight, selectIdToLinkIdToTrue } from '../arrow/arrowSlice';
+import { ABSTRACT_ARROW_FIELDS } from '../arrow/arrowFragments';
+import { Arrow } from '../arrow/arrow';
+import { Role } from '../role/role';
+import { FULL_TWIG_FIELDS, TWIG_WITH_COORDS } from '../twig/twigFragments';
+import { Twig } from '../twig/twig';
+import TwigComponent from '../twig/TwigComponent';
+import { selectDetailIdToTwigId, selectIdToDescIdToTrue, selectTwigIdToTrue } from '../twig/twigSlice';
+
+interface SpaceComponentProps {
+  user: User;
+  space: SpaceType;
+}
+export default function SpaceComponent(props: SpaceComponentProps) {
+  const client = useApolloClient();
+  const dispatch = useAppDispatch();
+
+  const width = useAppSelector(selectWidth);
+  const mode = useAppSelector(selectMode);
+
+  const menuMode = useAppSelector(selectMenuMode);
+  const menuWidth = useAppSelector(selectMenuWidth);
+  const menuWidth1 = menuMode
+    ? menuWidth
+    : 0;
+
+  const frameIsOpen = useAppSelector(selectIsOpen('FRAME'));
+  const frameWidth = useAppSelector(selectFrameWidth);
+  const frameWidth1 = frameIsOpen
+    ? frameWidth
+    : 0;
+  
+  const offsetLeft = props.space === 'FRAME'
+    ? getAppbarWidth(width) + menuWidth1
+    : getAppbarWidth(width) + menuWidth1 + frameWidth1;
+
+  const offsetTop = SPACE_BAR_HEIGHT;
+
+  const spaceWidth = props.space === 'FRAME'
+    ? frameWidth1
+    : width - offsetLeft;
+
+  const scale = useAppSelector(selectScale(props.space));
+  const scroll = useAppSelector(selectScroll(props.space));
+  const drag = useAppSelector(selectDrag(props.space));
+
+  const idToHeight = useAppSelector(selectIdToHeight(props.space));
+  const twigIdToTrue = useAppSelector(selectTwigIdToTrue(props.space));
+  const idToDescIdToTrue = useAppSelector(selectIdToDescIdToTrue(props.space));
+  const userIdToTrue = useAppSelector(selectUserIdToTrue(props.space));
+  const detailIdToTwigId = useAppSelector(selectDetailIdToTwigId(props.space));
+  const idToLinkIdToTrue = useAppSelector(selectIdToLinkIdToTrue(props.space));
+
+  const abstract = client.cache.readFragment({
+    id: client.cache.identify({
+      id: props.space === 'FRAME'
+        ? props.user.frameId
+        : props.user.focusId,
+      __typename: 'Arrow',
+    }),
+    fragment: ABSTRACT_ARROW_FIELDS,
+    fragmentName: 'AbstractArrowFields',
+  }) as Arrow;
+
+  let role = null as Role | null;
+  (abstract?.roles || []).some(role_i => {
+    if (role_i.userId === props.user?.id && !role_i.deleteDate) {
+      role = role_i;
+      return true;
+    }
+    return false;
+  });
+
+  const canEdit = checkPermit(abstract?.canEdit, role?.type)
+  const canPost = checkPermit(abstract?.canPost, role?.type)
+  const canView = checkPermit(abstract?.canView, role?.type)
+
+  const [cursor, setCursor] = useState({
+    x: 0,
+    y: 0,
+  });
+
+  const [touches, setTouches] = useState(null as React.TouchList | null);
+
+  const [scaleEvent, setScaleEvent] = useState(null as React.WheelEvent | null);
+  const [isScaling, setIsScaling] = useState(false);
+
+  const [moveEvent, setMoveEvent] = useState(null as React.MouseEvent | null);
+
+  const [showSettings, setShowSettings] = useState(false);
+
+  const [showRoles, setShowRoles] = useState(false);
+
+  const spaceEl = useRef<HTMLElement>();
+
+  useInitSpace(props.space, abstract, canView);
+  //useAddTwigSub(props.user, props.space, abstract);
+
+  useEffect(() => {
+    if (!spaceEl.current) return;
+
+    if (props.space === 'FRAME') {
+      frameSpaceElVar(spaceEl);
+    }
+    else {
+      focusSpaceElVar(spaceEl);
+    }
+
+    const preventWheelDefault = (event: WheelEvent) => {
+      if (event.ctrlKey || event.metaKey) {
+        event.preventDefault();
+      }
+    }
+
+    spaceEl.current.addEventListener('wheel', preventWheelDefault);
+
+    return () => {
+      spaceEl.current?.removeEventListener('wheel', preventWheelDefault);
+    }
+  }, [spaceEl.current]);
+
+  useEffect(() => {
+    if (!scaleEvent || !spaceEl.current) return;
+
+    const center = {
+      x: cursor.x / scale,
+      y: cursor.y / scale,
+    };
+
+    const scale1 = Math.min(Math.max(.03125, scale + scaleEvent.deltaY * -0.008), 4)
+
+    const center1 = {
+      x: center.x * scale1,
+      y: center.y * scale1,
+    }
+
+    setCursor(center1);
+
+    const left = center1.x - (scaleEvent.clientX - offsetLeft);
+    const top = center1.y - (scaleEvent.clientY - offsetTop);
+    
+    spaceEl.current.scrollTo({
+      left,
+      top,
+    });
+
+    dispatch(setScale({
+      space: props.space,
+      scale: scale1
+    }));
+
+    setScaleEvent(null);
+  }, [scaleEvent, spaceEl.current]);
+
+  useEffect(() => {
+    if (!moveEvent || !spaceEl.current) return;
+
+    const x = spaceEl.current.scrollLeft + moveEvent.clientX - offsetLeft;
+    const y = spaceEl.current.scrollTop + moveEvent.clientY - offsetTop;
+
+    const dx = x - cursor.x;
+    const dy = y - cursor.y;
+
+    if (dx !== 0 || dy !== 0){
+      moveDrag(dx, dy);
+    }
+
+    setCursor({
+      x,
+      y,
+    });
+
+    //publishCursor(x, y); TODO
+
+    setMoveEvent(null);
+  }, [moveEvent]);
+
+  if (!abstract) return null;
+
+  const handleWheel = (event: React.WheelEvent) => {
+    if (event.ctrlKey || event.metaKey) {
+      if (!scaleEvent) {
+        setScaleEvent(event);
+        setIsScaling(true);
+      }
+    }
+  };
+
+  const moveDrag = (dx: number, dy: number, targetTwigId?: string) => {
+    if (drag.isScreen) {
+      if (!spaceEl.current) return;
+      spaceEl.current.scrollBy(-1 * dx, -1 * dy)
+      return;
+    }
+
+    if (!drag.twigId) return;
+
+    const dx1 = dx / scale;
+    const dy1 = dy / scale;
+
+    dispatch(setDrag({
+      space: props.space,
+      drag: {
+        ...drag,
+        targetTwigId: targetTwigId || drag.targetTwigId,
+        dx: drag.dx + dx1,
+        dy: drag.dy + dy1,
+      }
+    }));
+
+    [drag.twigId, ...Object.keys(idToDescIdToTrue[drag.twigId] || {})].forEach(twigId => {
+      client.cache.modify({
+        id: client.cache.identify({
+          id: twigId,
+          __typename: 'Twig',
+        }),
+        fields: {
+          x: cachedVal => cachedVal + dx1,
+          y: cachedVal => cachedVal + dy1,
+        }
+      });
+    })
+
+    if (canEdit) {
+      //dragTwig(drag.twigId, dx1, dy1);
+    }
+  };
+
+  const endDrag = () => {
+    dispatch(setDrag({
+      space: props.space,
+      drag: {
+        isScreen: false,
+        twigId: '',
+        dx: 0,
+        dy: 0,
+        targetTwigId: '',
+      }
+    }));
+
+    if (!drag.twigId || (drag.dx === 0 && drag.dy === 0)) return;
+
+    if (canEdit) {
+      if (drag.targetTwigId) {
+        //graftTwig(drag.twigId, drag.targetTwigId);
+      }
+      else {
+        //moveTwig(drag.twigId);
+      }
+    }
+    else {
+      dispatch(setFocusIsSynced(false));
+    }
+  };
+
+  const handleMouseMove = (event: React.MouseEvent, targetId?: string) => {
+    if (drag.isScreen || drag.twigId) {
+      event.preventDefault();
+    }
+    if (!targetId && drag.targetTwigId && !drag.isScreen) {
+      dispatch(setDrag({
+        space: props.space,
+        drag: {
+          ...drag,
+          targetTwigId: '',
+        },
+      }));
+    }
+
+    if (!moveEvent) {
+      setMoveEvent(event);
+    }
+
+  }
+
+  const handleMouseUp = (event: React.MouseEvent) => {
+    endDrag()
+  }
+
+  const handleTouchEnd = (event: React.TouchEvent) => {
+    endDrag();
+  }
+
+  const updateScroll = (left: number, top: number) => {
+    dispatch(setScroll({
+      space: props.space,
+      scroll: {
+        left,
+        top,
+      },
+    }));
+
+    if (isScaling) {
+      setIsScaling(false);
+    }
+    else if (!scaleEvent) {
+      const dx = left - scroll.left;
+      const dy = top - scroll.top;
+
+      setCursor({
+        x: cursor.x + dx,
+        y: cursor.y + dy,
+      });
+    }
+
+  }
+
+  const handleScroll = (event: React.UIEvent) => {
+    updateScroll(event.currentTarget.scrollLeft, event.currentTarget.scrollTop);
+  }
+
+  const handleMouseDown = (event: React.MouseEvent) => {
+    dispatch(setDrag({
+      space: props.space,
+      drag: {
+        isScreen: true,
+        twigId: '',
+        dx: 0,
+        dy: 0,
+        targetTwigId: '',
+      }
+    }));
+  }
+
+  const handleTargetMouseMove = (targetId: string) => (event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (drag.targetTwigId !== targetId) {
+      dispatch(setDrag({
+        space: props.space,
+        drag: {
+          ...drag,
+          targetTwigId: targetId,
+        },
+      }));
+    }
+    handleMouseMove(event, targetId);
+  }
+
+  const twigs: JSX.Element[] = [];
+
+  Object.keys(twigIdToTrue).forEach(twigId => {
+    const twig = client.cache.readFragment({
+      id: client.cache.identify({
+        id: twigId,
+        __typename: 'Twig',
+      }),
+      fragment: FULL_TWIG_FIELDS,
+      fragmentName: 'FullTwigFields'
+    }) as Twig;
+
+    if (!twig) return;
+
+    let x;
+    let y;
+    if (!twig.isPinned && twig.detail.sourceId !== twig.detail.targetId) {
+      const sourceTwig = client.cache.readFragment({
+        id: client.cache.identify({
+          id: detailIdToTwigId[twig.detail.sourceId],
+          __typename: 'Twig',
+        }),
+        fragment: TWIG_WITH_COORDS,
+      }) as Twig;
+      const targetTwig = client.cache.readFragment({
+        id: client.cache.identify({
+          id: detailIdToTwigId[twig.detail.targetId],
+          __typename: 'Twig',
+        }),
+        fragment: TWIG_WITH_COORDS,
+      }) as Twig;
+
+      x = Math.round((sourceTwig.x + targetTwig.x) / 2);
+      y = Math.round((sourceTwig.y + targetTwig.y) / 2);
+    }
+    else {
+      x = twig.x;
+      y = twig.y;
+    }
+
+    twigs.push(
+      <Box key={`twig-${twigId}`} sx={{
+        position: 'absolute',
+        left: x + VIEW_RADIUS,
+        top: y + VIEW_RADIUS,
+        zIndex: twig.z,
+      }}>
+        <TwigComponent
+          user={props.user}
+          space={props.space}
+          role={role}
+          abstract={abstract}
+          twig={twig}
+          canEdit={canEdit}
+          canPost={canPost}
+          canView={canView}
+          x={x}
+          y={y}
+          setTouches={setTouches}
+        />
+      </Box>
+    )
+  });
+  const w = 2 * VIEW_RADIUS;
+  const h = 2 * VIEW_RADIUS;
+  return (
+    <Box 
+      ref={spaceEl}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      onScroll={handleScroll}
+      onWheel={handleWheel}
+      onTouchEnd={handleTouchEnd}
+      sx={{
+        position: 'relative',
+        top: `${SPACE_BAR_HEIGHT}px`,
+        height: `calc(100% - ${SPACE_BAR_HEIGHT}px)`,
+        width: '100%',
+        overflow: 'scroll',
+      }}
+    >
+      <Box 
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        sx={{
+          width: w * (scale < 1 ? scale : 1),
+          height: h * (scale < 1 ? scale : 1),
+          position: 'relative',
+          cursor: drag.isScreen || drag.twigId
+            ? 'grabbing'
+            : 'grab',
+          transform: `scale(${scale})`,
+          transformOrigin: '0 0'
+        }}
+      >
+        <svg viewBox={`0 0 ${w} ${h}`} style={{
+          width: w,
+          height: h,
+        }}>
+          <defs>
+          </defs>
+        </svg>
+        { twigs }
+      </Box>
+    </Box>
+  );
+}

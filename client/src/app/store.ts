@@ -1,9 +1,27 @@
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit';
-import counterReducer from '../features/counter/counterSlice';
+import authReducer from '../features/auth/authSlice';
+import focusReducer from '../features/focus/focusSlice';
+import frameReducer from '../features/frame/frameSlice';
+import menuReducer from '../features/menu/menuSlice';
+import arrowReducer from '../features/arrow/arrowSlice';
+import searchReducer from '../features/search/searchSlice';
+import spaceReducer  from '../features/space/spaceSlice';
+import twigReducer from '../features/twig/twigSlice';
+import userReducer from '../features/user/userSlice';
+import windowReducer from '../features/window/windowSlice';
 
 export const store = configureStore({
   reducer: {
-    counter: counterReducer,
+    arrow: arrowReducer,
+    auth: authReducer,
+    focus: focusReducer,
+    frame: frameReducer,
+    menu: menuReducer,
+    search: searchReducer,
+    space: spaceReducer,
+    twig: twigReducer,
+    user: userReducer,
+    window: windowReducer,
   },
 });
 

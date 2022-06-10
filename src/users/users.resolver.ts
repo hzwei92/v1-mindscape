@@ -12,6 +12,7 @@ import { Role } from 'src/roles/role.model';
 import { Lead } from 'src/leads/lead.model';
 import { RolesService } from 'src/roles/roles.service';
 import { LeadsService } from 'src/leads/leads.service';
+import { User as UserEntity } from 'src/users/user.entity';
 
 @Resolver(() => User)
 export class UsersResolver {
@@ -93,15 +94,15 @@ export class UsersResolver {
   @UseGuards(GqlAuthGuard)
   @Mutation(() => User, {name: 'publishCursor'})
   async publishCursor(
-    @CurrentUser() user: User,
+    @CurrentUser() user: UserEntity,
     @Args('sessionId') sessionId: string,
-    @Args('superArrowId') superArrowId: string,
+    @Args('abstractId') abstractId: string,
     @Args('x', {type: () => Int}) x: number,
     @Args('y', {type: () => Int}) y: number,
   ) {
     this.pubSub.publish('publishCursor', {
       sessionId,
-      superArrowId,
+      abstractId,
       publishCursor: {
         id: user.id,
         name: user.name,
@@ -112,7 +113,7 @@ export class UsersResolver {
     });
     const date = new Date();
     if (date.getTime() - user.updateDate.getTime() > ACTIVE_TIME) {
-      const user1 = await this.usersService.updateUser(user.id, date);
+      const user1 = await this.usersService.setUserActiveDate(user, date);
       this.pubSub.publish('updateUser', {
         sessionId,
         userId: user1.id,
@@ -126,42 +127,42 @@ export class UsersResolver {
   @UseGuards(GqlAuthGuard)
   @Mutation(() => User, {name: 'setUserFocusById'})
   async setUserFocusById(
-    @CurrentUser() user: User,
+    @CurrentUser() user: UserEntity,
     @Args('sessionId') sessionId: string,
     @Args('arrowId', {nullable: true}) arrowId: string,
   ) {
-    return this.usersService.setUserFocusById(user.id, arrowId);
+    return this.usersService.setUserFocusById(user, arrowId);
   }
 
   @UseGuards(GqlAuthGuard)
   @Mutation(() => User, {name: 'setUserFocusByRouteName'})
   async setUserFocusByRouteName(
-    @CurrentUser() user: User,
+    @CurrentUser() user: UserEntity,
     @Args('sessionId') sessionId: string,
     @Args('arrowRouteName') arrowRouteName: string,
   ) {
-    return this.usersService.setUserFocusByRouteName(user.id, arrowRouteName);
+    return this.usersService.setUserFocusByRouteName(user, arrowRouteName);
   }
 
   @UseGuards(GqlAuthGuard)
   @Mutation(() => User, {name: 'setUserMap'})
   async updateUserMap(
-    @CurrentUser() user: User,
+    @CurrentUser() user: UserEntity,
     @Args('lng',{type: () => Float}) lng: number,
     @Args('lat',{type: () => Float}) lat: number,
     @Args('zoom',{type: () => Float}) zoom: number,
   ) {
-    return this.usersService.setUserMap(user.id, lng, lat, zoom);
+    return this.usersService.setUserMap(user, lng, lat, zoom);
   }
 
   @UseGuards(GqlAuthGuard)
   @Mutation(() => User, {name: 'setUserColor'})
   async setUserColor(
-    @CurrentUser() user: User,
+    @CurrentUser() user: UserEntity,
     @Args('sessionId') sessionId: string,
     @Args('color') color: string,
   ) {
-    const user1 = await this.usersService.setUserColor(user.id, color);
+    const user1 = await this.usersService.setUserColor(user, color);
     this.pubSub.publish('updateUser', {
       sessionId,
       userId: user1.id,
@@ -173,11 +174,11 @@ export class UsersResolver {
   @UseGuards(GqlAuthGuard)
   @Mutation(() => User, {name: 'setUserName'})
   async setUserName(
-    @CurrentUser() user: User,
+    @CurrentUser() user: UserEntity,
     @Args('sessionId') sessionId: string,
     @Args('name') name: string,
   ) {
-    const user1 = await this.usersService.setUserName(user.id, name);
+    const user1 = await this.usersService.setUserName(user, name);
     this.pubSub.publish('updateUser', {
       sessionId,
       userId: user1.id,
@@ -189,12 +190,12 @@ export class UsersResolver {
   @Subscription(() => UserCursor, {name: 'publishCursor',
     filter: (payload, variables) => {
       if (payload.sessionId === variables.sessionId) return false;
-      return payload.superArrowId === variables.superArrowId;
+      return payload.abstractId === variables.abstractId;
     }
   })
   publishCursorSub(
     @Args('sessionId') sessionId: string,
-    @Args('superArrowId') superArrowId: string,
+    @Args('abstractId') abstractId: string,
   ) {
     console.log('publishCursorSub')
     return this.pubSub.asyncIterator('publishCursor')
@@ -219,12 +220,12 @@ export class UsersResolver {
   @Subscription(() => User, {name: 'setUserFocus', 
     filter: (payload, variables) => {
       if (payload.sessionId === variables.sessionId) return false;
-      return payload.superArrowId === variables.superArrowId;
+      return payload.abstractId === variables.abstractId;
     },
   })
   setUserFocusSub(
     @Args('sessionId') sessionId: string,
-    @Args('superArrowId') superArrowId: string,
+    @Args('abstractId') abstractId: string,
   ) {
     console.log('setUserFocusSub')
     return this.pubSub.asyncIterator('setUserFocus')

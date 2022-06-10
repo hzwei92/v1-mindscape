@@ -13,7 +13,7 @@ import {
 
 import { Point } from 'geojson';
 import { Exclude } from 'class-transformer';
-import { Post } from 'src/posts/post.entity';
+import { Arrow } from 'src/arrows/arrow.entity';
 
 @Entity()
 export class User {
@@ -23,16 +23,16 @@ export class User {
   @Column({ nullable: true })
   frameId: string;
 
-  @ManyToOne(() => Post, { nullable: true })
+  @ManyToOne(() => Arrow, { nullable: true })
   @JoinColumn({ referencedColumnName: 'id'})
-  frame: Post;
+  frame: Arrow;
 
   @Column({ nullable: true })
   focusId: string;
 
-  @ManyToOne(() => Post, { nullable: true })
+  @ManyToOne(() => Arrow, { nullable: true })
   @JoinColumn({ referencedColumnName: 'id'})
-  focus: Post;
+  focus: Arrow;
 
   @Column()
   name: string;
@@ -49,9 +49,6 @@ export class User {
   @Index({ unique: true })
   email: string;
   
-  @Column({ default: '' })
-  description: string;
-
   @Column()
   color: string;
   
@@ -86,7 +83,7 @@ export class User {
   isAdmin: boolean;
 
   @Column({default: 'NOW()'})
-  lastActiveDate: Date;
+  activeDate: Date;
 
   @CreateDateColumn()
   createDate: Date;

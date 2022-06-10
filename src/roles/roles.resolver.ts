@@ -7,8 +7,8 @@ import { forwardRef, Inject, UseGuards } from '@nestjs/common';
 import { CurrentUser, GqlAuthGuard } from 'src/auth/gql-auth.guard';
 import { PUB_SUB } from 'src/pub-sub/pub-sub.module';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
-import { Post } from 'src/posts/post.model';
-import { PostsService } from 'src/posts/posts.service';
+import { Arrow } from 'src/arrows/arrow.model';
+import { ArrowsService } from 'src/arrows/arrows.service';
 
 @Resolver(() => Role)
 export class RolesResolver {
@@ -16,7 +16,7 @@ export class RolesResolver {
     private readonly rolesService: RolesService,
     @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
-    private readonly postsService: PostsService,
+    private readonly arrowsService: ArrowsService,
     @Inject(PUB_SUB)
     private readonly pubSub: RedisPubSub,
   ) {}
@@ -28,11 +28,11 @@ export class RolesResolver {
     return this.usersService.getUserById(role.userId);
   }
 
-  @ResolveField(() => Post, {name: 'post'})
-  async getRolePost(
+  @ResolveField(() => Arrow, {name: 'arrow'})
+  async getRoleArrow(
     @Parent() role: Role,
   ) {
-    return this.postsService.getPostById(role.postId);
+    return this.arrowsService.getArrowById(role.arrowId);
   }
 
   @UseGuards(GqlAuthGuard)
@@ -41,10 +41,10 @@ export class RolesResolver {
     @CurrentUser() user: User,
     @Args('sessionId') sessionId: string,
     @Args('userName') userName: string,
-    @Args('postId') postId: string,
+    @Args('arrowId') arrowId: string,
   ) {
-    const role = await this.rolesService.inviteRole(user.id, userName, postId);
-    const post = await this.postsService.getPostById(postId);
+    const role = await this.rolesService.inviteRole(user.id, userName, arrowId);
+    const arrow = await this.arrowsService.getArrowById(arrowId);
 
     this.pubSub.publish('userRole', {
       sessionId,
@@ -52,17 +52,17 @@ export class RolesResolver {
       userRole: {
         ...role,
         user,
-        post,
+        arrow,
       }
     });
 
-    this.pubSub.publish('postRole', {
+    this.pubSub.publish('arrowRole', {
       sessionId,
-      postId,
-      postRole: {
+      arrowId,
+      arrowRole: {
         ...role,
         user,
-        post,
+        arrow,
       },
     });
 
@@ -74,10 +74,10 @@ export class RolesResolver {
   async requestRole(
     @CurrentUser() user: User,
     @Args('sessionId') sessionId: string,
-    @Args('postId') postId: string,
+    @Args('arrowId') arrowId: string,
   ) {
-    const role = await this.rolesService.requestRole(user.id, postId)
-    const post = await this.postsService.getPostById(postId);
+    const role = await this.rolesService.requestRole(user.id, arrowId)
+    const arrow = await this.arrowsService.getArrowById(arrowId);
 
     this.pubSub.publish('userRole', {
       sessionId,
@@ -85,17 +85,17 @@ export class RolesResolver {
       userRole: {
         ...role,
         user,
-        post,
+        arrow,
       }
     });
 
-    this.pubSub.publish('postRole', {
+    this.pubSub.publish('arrowRole', {
       sessionId,
-      postId,
-      postRole: {
+      arrowId,
+      arrowRole: {
         ...role,
         user,
-        post
+        arrow
       },
     });
 
@@ -111,7 +111,7 @@ export class RolesResolver {
   ) {
     const role = await this.rolesService.removeRole(user.id, roleId)
     const removedUser = await this.usersService.getUserById(role.userId);
-    const post = await this.postsService.getPostById(role.postId);
+    const arrow = await this.arrowsService.getArrowById(role.arrowId);
 
     this.pubSub.publish('userRole', {
       sessionId,
@@ -119,17 +119,17 @@ export class RolesResolver {
       userRole: {
         ...role,
         user: removedUser,
-        post,
+        arrow,
       }
     });
 
-    this.pubSub.publish('postRole', {
+    this.pubSub.publish('arrowRole', {
       sessionId,
-      postId: role.postId,
-      postRole: {
+      arrowId: role.arrowId,
+      arrowRole: {
         ...role,
         user: removedUser,
-        post
+        arrow
       },
     });
 
@@ -148,16 +148,16 @@ export class RolesResolver {
   ) {
     return this.pubSub.asyncIterator('userRole')
   }
-  @Subscription(() => Role, {name: 'postRole',
+  @Subscription(() => Role, {name: 'arrowRole',
     filter: (payload, variables) => {
       if (payload.sessionId === variables.sessionId) return false;
-      return payload.postId === variables.postId;
+      return payload.arrowId === variables.arrowId;
     }
   })
-  postRoleSubscription(
+  arrowRoleSubscription(
     @Args('sessionId') sessionId: string,
-    @Args('postId') postId: string,
+    @Args('arrowId') arrowId: string,
   ) {
-    return this.pubSub.asyncIterator('postRole')
+    return this.pubSub.asyncIterator('arrowRole')
   }
 }

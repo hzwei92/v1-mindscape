@@ -6,6 +6,7 @@ import * as bcrypt from 'bcrypt';
 import { adjectives, animals, NumberDictionary, uniqueNamesGenerator } from 'unique-names-generator';
 import { SearchService } from 'src/search/search.service';
 import { ArrowsService } from 'src/arrows/arrows.service';
+import { v4 as uuidv4 } from 'uuid';
 
 const numbers = NumberDictionary.generate({ min: 100, max: 999 });
 
@@ -47,7 +48,7 @@ export class UsersService {
     return this.usersRepository.find({
       where: {
         focusId,
-        lastActiveDate: MoreThan(date),
+        activeDate: MoreThan(date),
       }
     });
   }
@@ -80,7 +81,15 @@ export class UsersService {
     user0.color = '#' + Math.round(Math.random() * Math.pow(16, 6)).toString(16).padStart(6, '0')
     const user1 = await this.usersRepository.save(user0);
 
-    const { arrow } = await this.arrowsService.createArrow(user1, null, null, null);
+    const postId = uuidv4();
+    const { arrow } = await this.arrowsService.createArrow(
+      user1,
+      postId,
+      postId,
+      postId,
+      null,
+      null,
+    );
     user1.frameId = arrow.id;
 
     await this.usersRepository.save(user1);
@@ -150,41 +159,41 @@ export class UsersService {
     return this.usersRepository.save(user0);
   }
 
-  async setUserMap(userId: string, lng: number, lat: number, zoom: number) {
+  async setUserMap(user: User, lng: number, lat: number, zoom: number) {
     const user0 = new User();
-    user0.id = userId;
+    user0.id = user.id;
     user0.mapLng = lng;
     user0.mapLat = lat;
     user0.mapZoom = zoom;
     return this.usersRepository.save(user0);
   }
 
-  async setUserColor(userId: string, color: string) {
+  async setUserColor(user: User, color: string) {
     const user0 = new User();
-    user0.id = userId;
+    user0.id = user.id;
     user0.color = color;
     await this.usersRepository.save(user0);
 
-    const user1 = await this.getUserById(userId);
+    const user1 = await this.getUserById(user.id);
     
     this.searchService.partialUpdateUsers([user1]);
 
     return user1;
   }
 
-  async setUserName(userId: string, name: string) {
-    const user = await this.getUserByName(name);
-    if (user && user.id !== userId) {
+  async setUserName(user: User, name: string) {
+    const nameUser = await this.getUserByName(name);
+    if (nameUser && nameUser.id !== user.id) {
       throw new BadRequestException('This name is already in use')
     }
     const user0 = new User();
-    user0.id = userId;
+    user0.id = user.id;
     user0.name = name.trim();
     user0.lowercaseName = user0.name.toLowerCase();
     user0.routeName = encodeURIComponent(user0.lowercaseName);
     await this.usersRepository.save(user0);
 
-    const user1 = await this.getUserById(userId);
+    const user1 = await this.getUserById(user.id);
 
     this.searchService.partialUpdateUsers([user1]);
 
@@ -192,7 +201,7 @@ export class UsersService {
   }
 
 
-  async setUserFocusById(userId: string, arrowId: string): Promise<User> {
+  async setUserFocusById(user: User, arrowId: string): Promise<User> {
     if (arrowId) {
       const arrow = await this.arrowsService.getArrowById(arrowId);
       if (!arrow) {
@@ -200,29 +209,29 @@ export class UsersService {
       }
     }
     const user0 = new User();
-    user0.id = userId;
+    user0.id = user.id;
     user0.focusId = arrowId;
     await this.usersRepository.save(user0);
-    return this.getUserById(userId);
+    return this.getUserById(user.id);
   }
   
-  async setUserFocusByRouteName(userId: string, arrowRouteName: string): Promise<User> {
+  async setUserFocusByRouteName(user: User, arrowRouteName: string): Promise<User> {
     let arrow = await this.arrowsService.getArrowByRouteName(arrowRouteName);
     if (!arrow) {
       throw new BadRequestException('This jam does not exist');
     }
     const user0 = new User();
-    user0.id = userId;
+    user0.id = user.id;
     user0.focusId = arrow.id;
     await this.usersRepository.save(user0);
-    return this.getUserById(userId);
+    return this.getUserById(user.id);
   }
 
-  async updateUser(userId: string, date: Date) {
+  async setUserActiveDate(user: User, date: Date) {
     const user0 = new User();
-    user0.id = userId;
-    user0.lastActiveDate = date;
+    user0.id = user.id;
+    user0.activeDate = date;
     await this.usersRepository.save(user0);
-    return this.getUserById(userId);
+    return this.getUserById(user.id);
   }
 }

@@ -59,7 +59,7 @@ export class SubsService {
     return this.subsRepository.save(sub0);
   }
   
-  async subArrow(userId: string, arrowId: string): Promise<Sub> {
+  async detail(userId: string, arrowId: string): Promise<Sub> {
     const arrow = await this.arrowsService.getArrowById(arrowId);
     if (!arrow) {
       throw new BadRequestException('This arrow does not exist');
@@ -74,7 +74,7 @@ export class SubsService {
     return this.subsRepository.save(sub0);
   }
 
-  async unsubArrow(userId: string, arrowId: string): Promise<Sub> {
+  async undetail(userId: string, arrowId: string): Promise<Sub> {
     const sub = await this.getSubByUserIdAndArrowId(userId, arrowId);
     if (!sub) {
       throw new BadRequestException('This sub does not exist');
