@@ -13,11 +13,12 @@ import TwigBar from './TwigBar';
 import TwigControls from './TwigControls';
 import { selectDetailIdToTwigId, selectIdToDescIdToTrue, setTwigHeight } from './twigSlice';
 //import useSelectTwig from './useSelectTwig';
-import { selectCreateLink, setCreateLink } from '../arrow/arrowSlice';
+import { selectCreateLink, selectSelectArrowId, setCreateLink } from '../arrow/arrowSlice';
 import { Arrow } from '../arrow/arrow';
 import ArrowComponent from '../arrow/ArrowComponent';
 import { TWIG_WITH_COORDS } from './twigFragments';
 import TwigVoter from './TwigVoter';
+import useSelectTwig from './useSelectTwig';
 
 interface TwigComponentProps {
   user: User;
@@ -45,15 +46,15 @@ function TwigComponent(props: TwigComponentProps) {
   const mode = useAppSelector(selectMode);
   const createLink = useAppSelector(selectCreateLink);
   
-  const selectedTwigId = useAppSelector(selectTwigId(props.space));
-  const isSelected = selectedTwigId === props.twig.id;
+  const selectArrowId = useAppSelector(selectSelectArrowId(props.space));
+  const isSelected = selectArrowId === props.twig.detailId;
 
   const idToDescIdToTrue = useAppSelector(selectIdToDescIdToTrue(props.space));
 
   const [isLoading, setIsLoading] = useState(false);
   const cardEl = useRef<HTMLDivElement | undefined>();
 
-  //const { selectTwig } = useSelectTwig(props.space, props.canEdit);
+  const { selectTwig } = useSelectTwig(props.space, props.canEdit);
   //const { linkArrows } = useLinkArrows(props.space);
 
   useEffect(() => {
@@ -104,7 +105,7 @@ function TwigComponent(props: TwigComponentProps) {
   const handleMouseDown = (event: React.MouseEvent) => {
     event.stopPropagation();
     if (!isSelected) {
-      //selectTwig(props.abstract, props.twig.id, true);
+      selectTwig(props.abstract, props.twig, true);
     }
   }
 
@@ -146,9 +147,7 @@ function TwigComponent(props: TwigComponentProps) {
           width: isPost
             ? TWIG_WIDTH
             : TWIG_WIDTH - 50,
-          opacity: isPost 
-            ? 0.9
-            : 0.8,
+          opacity: .9,
           border: isSelected
             ? `4px solid ${props.twig.user.color}`
             : null,

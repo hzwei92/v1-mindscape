@@ -273,10 +273,11 @@ export class TwigsService {
 
     const twigZ = baseZ + descendants.length + 1 - abstract.twigZ;
 
-    //const abstract1 = await this.arrowsService.setTwigZ(abstract, twigZ);
+    await this.arrowsService.incrementTwigZ(abstract.id, twigZ);
+    const abstract1 = await this.arrowsService.getArrowById(abstract.id);
     return {
+      abstract: abstract1,
       twigs: twigs1,
-      //abstract: abstract1,
       role: role1,
     }
   }

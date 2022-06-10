@@ -1,6 +1,6 @@
 import { useApolloClient } from '@apollo/client';
 import React, { useEffect, useState } from 'react';
-import { useAppSelector } from '../../app/hooks';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { VIEW_RADIUS } from '../../constants';
 import { getPolylineCoords } from '../../utils';
 import { SpaceType } from '../space/space';
@@ -9,6 +9,7 @@ import { FULL_TWIG_FIELDS } from '../twig/twigFragments';
 import { selectDetailIdToTwigId } from '../twig/twigSlice';
 import { User } from '../user/user';
 import { Arrow } from './arrow';
+import { selectSelectArrowId, setSelectArrowId } from './arrowSlice';
 
 interface SheafProps {
   user: User;
@@ -17,10 +18,15 @@ interface SheafProps {
 }
 export default function Sheaf(props: SheafProps) {
   const client = useApolloClient();
+  const dispatch = useAppDispatch();
 
   const detailIdToTwigId = useAppSelector(selectDetailIdToTwigId(props.space));
 
   const links = props.links.filter(link => !link.deleteDate);
+
+  const selectArrowId = useAppSelector(selectSelectArrowId(props.space));
+  const isSelected = links.some(link => link.id === selectArrowId);
+  
   const twigs = links.map(link => {
     const twigId = detailIdToTwigId[link.id];
     return client.cache.readFragment({
@@ -82,18 +88,10 @@ export default function Sheaf(props: SheafProps) {
 
   const handleClick = (event: React.MouseEvent) => {
     event.stopPropagation();
-    if (clickTimeout) {
-      clearTimeout(clickTimeout);
-      setClickTimeout(null);
-      //center(props.edge.sourcePostId);
-    }
-    else {
-      const t = setTimeout(() => {
-        //center(props.edge.targetPostId);
-        setClickTimeout(null);
-      }, 250);
-      setClickTimeout(t);
-    }
+    dispatch(setSelectArrowId({
+      space: props.space,
+      arrowId: links[0].id,
+    }))
   }
 
   const rating = 1;
@@ -103,13 +101,13 @@ export default function Sheaf(props: SheafProps) {
     }}>
       <polyline 
         points={getPolylineCoords(
-          10 + (20 * rating),
+          10 + (20 * (isSelected ? rating + 1 : rating)),
           sourceTwig.x + VIEW_RADIUS,
           sourceTwig.y + VIEW_RADIUS,
           targetTwig.x + VIEW_RADIUS,
           targetTwig.y + VIEW_RADIUS,
         )}
-        strokeWidth={2 + rating}
+        strokeWidth={2 + (isSelected ? 2 : 0) + rating}
         markerMid={`url(#marker-${links[0]?.userId})`}
         markerEnd={`url(#marker-${links[0]?.userId})`}
       />
@@ -122,7 +120,7 @@ export default function Sheaf(props: SheafProps) {
         y1={sourceTwig.y + VIEW_RADIUS}
         x2={targetTwig.x + VIEW_RADIUS}
         y2={targetTwig.y + VIEW_RADIUS}
-        strokeWidth={10 * (2 + rating)}
+        strokeWidth={10 * (5 + rating)}
         stroke='lavender'
       />
     </g>

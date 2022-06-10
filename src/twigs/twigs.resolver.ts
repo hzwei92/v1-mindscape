@@ -119,14 +119,14 @@ export class TwigsResolver {
     @Args('twigId') twigId: string,
   ) {
     const {
-     // abstract,
+      abstract,
       twigs,
       role
     } = await this.twigsService.selectTwig(user, twigId);
 
     return { 
-      twigs, 
-     // abstract, 
+      abstract,
+      twigs,  
       role
     }
   }

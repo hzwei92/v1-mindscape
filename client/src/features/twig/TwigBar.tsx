@@ -12,6 +12,7 @@ import { selectDrag, setDrag } from '../space/spaceSlice';
 import { selectCreateLink } from '../arrow/arrowSlice';
 import AdjustIcon from '@mui/icons-material/Adjust';
 import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
+import useSelectTwig from './useSelectTwig';
 
 interface TwigBarProps {
   space: SpaceType;
@@ -33,7 +34,7 @@ function TwigBar(props: TwigBarProps) {
   const createLink = useAppSelector(selectCreateLink);
   const drag = useAppSelector(selectDrag(props.space));
 
-  //const { selectTwig } = useSelectTwig(props.space, props.canEdit);
+  const { selectTwig } = useSelectTwig(props.space, props.canEdit);
 
   const beginDrag = () => {
     if (!props.twig.parent) return;
@@ -65,7 +66,7 @@ function TwigBar(props: TwigBarProps) {
   const handleMouseDown = (event: React.MouseEvent) => {
     event.stopPropagation();
     if (!props.isSelected) {
-      //selectTwig(props.abstract, props.twig.id, true);
+      selectTwig(props.abstract, props.twig, true);
     }
     beginDrag();
   }
@@ -83,7 +84,6 @@ function TwigBar(props: TwigBarProps) {
       sx={{
         backgroundColor: props.twig.user.color,
         textAlign: 'left',
-        color,
         cursor: props.abstract.id === props.twig.detailId
           ? createLink.sourceId
             ? 'crosshair'

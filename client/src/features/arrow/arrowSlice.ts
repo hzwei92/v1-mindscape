@@ -9,12 +9,14 @@ export interface ArrowState {
   commitArrowId: string;
   removeArrowId: string;
   'FRAME': {
+    selectArrowId: string,
     sourceIdToTargetIdToLinkIdToTrue: IdToIdToIdToTrueType;
     linkIdToTrue: IdToTrueType;
     idToLinkIdToTrue: IdToIdToTrueType;
     idToHeight: IdToHeightType;
   },
   'FOCUS': {
+    selectArrowId: '',
     sourceIdToTargetIdToLinkIdToTrue: IdToIdToIdToTrueType;
     linkIdToTrue: IdToTrueType;
     idToLinkIdToTrue: IdToIdToTrueType;
@@ -30,12 +32,14 @@ const initialState: ArrowState = {
   commitArrowId: '',
   removeArrowId: '',
   'FRAME': {
+    selectArrowId: '',
     sourceIdToTargetIdToLinkIdToTrue: {},
     linkIdToTrue: {},
     idToLinkIdToTrue: {},
     idToHeight: {},
   },
   'FOCUS': {
+    selectArrowId: '',
     sourceIdToTargetIdToLinkIdToTrue: {},
     linkIdToTrue: {},
     idToLinkIdToTrue: {},
@@ -63,6 +67,15 @@ export const arrowSlice = createSlice({
       return {
         ...state,
         removeArrowId: '',
+      }
+    },
+    setSelectArrowId: (state, action: PayloadAction<{space: SpaceType, arrowId: string}>) => {
+      return {
+        ...state,
+        [action.payload.space]: {
+          ...state[action.payload.space],
+          selectArrowId: action.payload.arrowId
+        }
       }
     },
     addArrows: (state, action: PayloadAction<{space: SpaceType, arrows: Arrow[]}>) => {
@@ -120,6 +133,7 @@ export const {
   setCreateLink,
   setCommitArrowId,
   setRemoveArrowId,
+  setSelectArrowId,
   addArrows,
   resetArrows,
 } = arrowSlice.actions;
@@ -127,6 +141,7 @@ export const {
 export const selectCreateLink = (state: RootState) => state.arrow.createLink;
 export const selectCommitArrowId = (state: RootState) => state.arrow.commitArrowId;
 export const selectRemoveArrowId = (state: RootState) => state.arrow.removeArrowId;
+export const selectSelectArrowId = (space: SpaceType) => (state: RootState) => state.arrow[space].selectArrowId;
 export const selectIdToHeight = (space: SpaceType) => (state: RootState) => state.arrow[space].idToHeight;
 export const selectLinkIdToTrue = (space: SpaceType) => (state: RootState) => state.arrow[space].linkIdToTrue;
 export const selectIdToLinkIdToTrue = (space: SpaceType) => (state: RootState) => state.arrow[space].idToLinkIdToTrue;
