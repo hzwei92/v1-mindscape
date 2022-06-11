@@ -30,12 +30,10 @@ interface TwigComponentProps {
   canEdit: boolean;
   canPost: boolean;
   canView: boolean;
-  x: number;
-  y: number;
   setTouches: Dispatch<SetStateAction<React.TouchList | null>>;
 }
 function TwigComponent(props: TwigComponentProps) {
-  console.log('twig', props.twig.id);
+  //console.log('twig', props.twig.id);
 
   const client = useApolloClient();
   const dispatch = useAppDispatch();
@@ -66,25 +64,6 @@ function TwigComponent(props: TwigComponentProps) {
       height: cardEl.current.clientHeight,
     }));
   }, [cardEl.current?.clientHeight]);
-
-  useEffect(() => {
-    if (props.x !== props.twig.x || props.y !== props.twig.y) {
-      const dx = props.x - props.twig.x;
-      const dy = props.y - props.twig.y;
-      [props.twig.id, ...Object.keys(idToDescIdToTrue[props.twig.id] || {})].forEach(twigId => {
-        client.cache.modify({
-          id: client.cache.identify({
-            id: twigId,
-            __typename: 'Twig',
-          }),
-          fields: {
-            x: cachedVal => cachedVal + dx,
-            y: cachedVal => cachedVal + dy,
-          }
-        });
-      })
-    }
-  }, [props.x, props.y])
 
   const handleClick = (event: React.MouseEvent) => {
     event.stopPropagation();

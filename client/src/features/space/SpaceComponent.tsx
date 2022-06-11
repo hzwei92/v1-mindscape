@@ -1,8 +1,8 @@
-import { gql, useApolloClient } from '@apollo/client';
+import { gql, useApolloClient, useReactiveVar } from '@apollo/client';
 import { Box } from '@mui/material';
 import React, { useEffect, useRef, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { focusSpaceElVar, frameSpaceElVar } from '../../cache';
+import { adjustTwigVar, focusSpaceElVar, frameSpaceElVar } from '../../cache';
 import { VIEW_RADIUS, SPACE_BAR_HEIGHT } from '../../constants';
 import { checkPermit, getAppbarWidth, IdToTrueType } from '../../utils';
 import { selectFrameWidth } from '../frame/frameSlice';
@@ -14,15 +14,17 @@ import { SpaceType } from './space';
 import { selectDrag, selectIsOpen, selectScale, selectScroll, setDrag, setScale, setScroll } from './spaceSlice';
 import useInitSpace from './useInitSpace';
 import { setFocusIsSynced } from '../focus/focusSlice';
-import { selectIdToHeight, selectIdToLinkIdToTrue, selectLinkIdToTrue, selectSourceIdToTargetIdToLinkIdToTrue } from '../arrow/arrowSlice';
+import { selectIdToHeight, selectSourceIdToTargetIdToLinkIdToTrue } from '../arrow/arrowSlice';
 import { ABSTRACT_ARROW_FIELDS, FULL_ARROW_FIELDS } from '../arrow/arrowFragments';
 import { Arrow } from '../arrow/arrow';
 import { Role } from '../role/role';
-import { FULL_TWIG_FIELDS, TWIG_WITH_XY, TWIG_WITH_PARENT, TWIG_WITH_POS } from '../twig/twigFragments';
-import { Twig } from '../twig/twig';
+import { FULL_TWIG_FIELDS, TWIG_WITH_XY, TWIG_WITH_POS } from '../twig/twigFragments';
+import { IdToCoordsType, Twig } from '../twig/twig';
 import TwigComponent from '../twig/TwigComponent';
 import { selectDetailIdToTwigId, selectIdToDescIdToTrue, selectTwigIdToTrue } from '../twig/twigSlice';
 import Sheaf from '../arrow/Sheaf';
+import useMoveTwig from '../twig/useMoveTwig';
+import useAdjustTwigs from '../twig/useAdjustTwigs';
 
 interface SpaceComponentProps {
   user: User;
@@ -31,6 +33,8 @@ interface SpaceComponentProps {
 export default function SpaceComponent(props: SpaceComponentProps) {
   const client = useApolloClient();
   const dispatch = useAppDispatch();
+
+  const adjustTwigDetail = useReactiveVar(adjustTwigVar);
 
   const width = useAppSelector(selectWidth);
   const mode = useAppSelector(selectMode);
@@ -105,13 +109,15 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   const [moveEvent, setMoveEvent] = useState(null as React.MouseEvent | null);
 
   const [showSettings, setShowSettings] = useState(false);
-
   const [showRoles, setShowRoles] = useState(false);
 
   const spaceEl = useRef<HTMLElement>();
 
   useInitSpace(props.space, abstract, canView);
   //useAddTwigSub(props.user, props.space, abstract);
+
+  const { moveTwig } = useMoveTwig(props.space);
+  const { adjustTwigs} = useAdjustTwigs(abstract)
 
   useEffect(() => {
     if (!spaceEl.current) return;
@@ -192,6 +198,15 @@ export default function SpaceComponent(props: SpaceComponentProps) {
     setMoveEvent(null);
   }, [moveEvent]);
 
+  useEffect(() => {
+    if (Object.keys(adjustTwigDetail.idToCoords).length && !drag.twigId) {
+      console.log('adjustment', adjustTwigDetail.idToCoords);
+      adjustTwigs(adjustTwigDetail.idToCoords);
+      adjustTwigVar({
+        idToCoords: {},
+      });
+    }
+  }, [adjustTwigDetail.idToCoords, drag.twigId])
   if (!abstract) return null;
 
   const handleWheel = (event: React.WheelEvent) => {
@@ -262,7 +277,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
         //graftTwig(drag.twigId, drag.targetTwigId);
       }
       else {
-        //moveTwig(drag.twigId);
+        moveTwig(drag.twigId);
       }
     }
     else {
@@ -370,6 +385,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
 
       sheafs.push(
         <Sheaf
+          key={`sheaf-${sourceId}-${targetId}`}
           user={props.user}
           abstract={abstract}
           space={props.space}
@@ -380,6 +396,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
     })
   })
 
+  const adjusted: IdToCoordsType = {};
   const twigs: JSX.Element[] = [];
   Object.keys(twigIdToTrue).forEach(twigId => {
     const twig = client.cache.readFragment({
@@ -393,8 +410,8 @@ export default function SpaceComponent(props: SpaceComponentProps) {
 
     if (!twig) return;
 
-    let x;
-    let y;
+    let x: number;
+    let y: number;
     if (twig.detail.sourceId !== twig.detail.targetId) {
       const sourceTwig = client.cache.readFragment({
         id: client.cache.identify({
@@ -411,8 +428,34 @@ export default function SpaceComponent(props: SpaceComponentProps) {
         fragment: TWIG_WITH_XY,
       }) as Twig;
 
-      x = (sourceTwig.x + targetTwig.x) / 2;
-      y = (sourceTwig.y + targetTwig.y) / 2;
+      x = Math.round((sourceTwig.x + targetTwig.x) / 2);
+      y = Math.round((sourceTwig.y + targetTwig.y) / 2);
+
+      if (x !== twig.x || y !== twig.y) {
+        const dx = x - twig.x;
+        const dy = y - twig.y;
+        [twig.id, ...Object.keys(idToDescIdToTrue[twig.id] || {})].forEach(descId => {
+          const id = client.cache.identify({
+            id: descId,
+            __typename: 'Twig',
+          });
+          client.cache.modify({
+            id,
+            fields: {
+              x: cachedVal => cachedVal + dx,
+              y: cachedVal => cachedVal + dy,
+            }
+          });
+          const desc = client.cache.readFragment({
+            id,
+            fragment: TWIG_WITH_XY,
+          }) as Twig;
+          adjusted[descId] = {
+            x: desc.x,
+            y: desc.y,
+          };
+        })
+      }
     }
     else {
       x = twig.x;
@@ -435,13 +478,20 @@ export default function SpaceComponent(props: SpaceComponentProps) {
           canEdit={canEdit}
           canPost={canPost}
           canView={canView}
-          x={x}
-          y={y}
           setTouches={setTouches}
         />
       </Box>
     )
   });
+
+  if (Object.keys(adjusted).length) {
+    adjustTwigVar({
+      idToCoords: {
+        ...adjustTwigDetail.idToCoords,
+        ...adjusted,
+      }
+    })
+  }
 
   const w = 2 * VIEW_RADIUS;
   const h = 2 * VIEW_RADIUS;

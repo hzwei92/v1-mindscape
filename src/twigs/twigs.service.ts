@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { uuidRegexExp } from 'src/constants';
 import { ArrowsService } from 'src/arrows/arrows.service';
 import { RolesService } from 'src/roles/roles.service';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Twig } from './twig.entity';
 import { RoleType } from '../enums';
 import { Arrow } from 'src/arrows/arrow.entity';
@@ -29,6 +29,14 @@ export class TwigsService {
       where: {
         id 
       }
+    });
+  }
+
+  async getTwigsByIds(ids: string[]) {
+    return this.twigsRepository.find({
+      where: {
+        id: In(ids),
+      },
     });
   }
 
@@ -198,7 +206,7 @@ export class TwigsService {
 
     let role = await this.rolesService.getRoleByUserIdAndArrowId(user.id, abstract.id);
     let role1 = null;
-    if (checkPermit(abstract.canEdit, role.type)) {
+    if (checkPermit(abstract.canEdit, role?.type)) {
       if (!role) {
         role = await this.rolesService.createRole(user, abstract, RoleType.OTHER);
         role1 = role;
@@ -241,7 +249,7 @@ export class TwigsService {
 
     let role = await this.rolesService.getRoleByUserIdAndArrowId(user.id, abstract.id);
     let role1 = null;
-    if (checkPermit(abstract.canEdit, role.type)) {
+    if (checkPermit(abstract.canEdit, role?.type)) {
       if (!role) {
         role = await this.rolesService.createRole(user, abstract, RoleType.OTHER);
         role1 = role;
@@ -290,7 +298,7 @@ export class TwigsService {
 
     let role = await this.rolesService.getRoleByUserIdAndArrowId(user.id, abstract.id);
     let role1 = null;
-    if (checkPermit(abstract.canView, role.type)) {
+    if (checkPermit(abstract.canView, role?.type)) {
       if (!role) {
         role = await this.rolesService.createRole(user, abstract, RoleType.OTHER);
         role1 = role;
@@ -353,7 +361,7 @@ export class TwigsService {
 
     let role = await this.rolesService.getRoleByUserIdAndArrowId(user.id, abstract.id);
     let role1 = null;
-    if (checkPermit(abstract.canEdit, role.type)) {
+    if (checkPermit(abstract.canEdit, role?.type)) {
       if (!role) {
         role = await this.rolesService.createRole(user, abstract, RoleType.OTHER);
         role1 = role;
@@ -363,16 +371,22 @@ export class TwigsService {
       throw new BadRequestException('Insufficient privileges');
     }
 
-    const twig0 = new Twig();
-    twig0.id = twigId;
-    twig0.x = x;
-    twig0.y = y;
-    twig0.abstractId = twig.abstractId;
+    const dx = x - twig.x;
+    const dy = y - twig.y;
 
-    const twig1 = await this.twigsRepository.save(twig0);
+    const descendants = await this.twigsRepository.manager.getTreeRepository(Twig).findDescendants(twig);
+
+    const twigs0 = descendants.map(descendant => {
+      const twig0 = new Twig();
+      twig0.id = descendant.id;
+      twig0.x = descendant.x + dx;
+      twig0.y = descendant.y + dy;
+      return twig0;
+    })
+    const twigs1 = await this.twigsRepository.save(twigs0);
 
     return {
-      twig: twig1,
+      twigs: twigs1,
       role: role1,
     }
   }
@@ -396,7 +410,7 @@ export class TwigsService {
 
     let role = await this.rolesService.getRoleByUserIdAndArrowId(user.id, abstract.id);
     let role1 = null;
-    if (checkPermit(abstract.canEdit, role.type)) {
+    if (checkPermit(abstract.canEdit, role?.type)) {
       if (!role) {
         role = await this.rolesService.createRole(user, abstract, RoleType.OTHER);
         role1 = role;
@@ -417,5 +431,42 @@ export class TwigsService {
       twig: twig1,
       role: role1,
     }
+  }
+
+  async adjustTwigs(user: User, abstractId: string,  twigIds: string[], xs: number[], ys: number[]) {
+    if (twigIds.length !== xs.length || twigIds.length !== ys.length) {
+      throw new BadRequestException('Invalid input');
+    }
+    const abstract = await this.arrowsService.getArrowById(abstractId);
+    if (!abstract) {
+      throw new BadRequestException('This abstract does not exist')
+    }
+
+    const role = await this.rolesService.getRoleByUserIdAndArrowId(user.id, abstract.id);
+
+    if (!checkPermit(abstract.canEdit, role?.type)) {
+      throw new BadRequestException('Insufficient privileges');
+    }
+
+    const twigs = await this.getTwigsByIds(twigIds);
+    if (twigs.length !== twigIds.length) {
+      throw new BadRequestException('Invalid Twig IDs');
+    }
+
+    twigs.forEach(twig => {
+      if (twig.abstractId !== abstractId) {
+        throw new BadRequestException('Invalid abstract ID')
+      }
+    });
+
+    const twigs0 = twigs.map((twig, i) => {
+      const twig0 = new Twig();
+      twig0.id = twig.id;
+      twig0.x = xs[i];
+      twig0.y = ys[i];
+      return twig0;
+    });
+
+    return this.twigsRepository.save(twigs0);
   }
 }

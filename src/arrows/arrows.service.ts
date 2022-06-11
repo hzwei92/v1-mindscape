@@ -42,7 +42,6 @@ export class ArrowsService {
     if (!arrow) {
       throw new BadRequestException('This arrow does not exist');
     }
-    console.log(arrow);
     if (arrow.abstract.canView !== RoleType.OTHER) {
       const role = await this.rolesService.getRoleByUserIdAndArrowId(user.id, arrow.abstractId);
       if (

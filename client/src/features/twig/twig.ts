@@ -22,13 +22,6 @@ export type Twig = {
   __typename: string;
 };
 
-export type IdToCoordsType = {
-  [id: string]: {
-    x: number;
-    y: number;
-    z: number;
-  };
-};
 
 export type IdToTwigType = {
   [id: string]: Twig;
@@ -78,4 +71,19 @@ export const createTwig = (
     __typename: 'Twig'
   } as Twig;
   return twig;
+}
+
+export type CoordsType = {
+  x: number;
+  y: number;
+}
+
+export type IdToCoordsType = {
+  [id: string]: CoordsType;
+}
+
+export type IdWithCoordsType = {
+  id: string;
+  x: number;
+  y: number;
 }

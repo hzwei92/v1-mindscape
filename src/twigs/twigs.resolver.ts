@@ -189,16 +189,15 @@ export class TwigsResolver {
     @Args('y', {type: () => Int}) y: number,
   ) {
     const {
-      twig, 
+      twigs, 
       role,
     } = await this.twigsService.moveTwig(user, twigId, x, y);
 
     return {
-      twig, 
+      twigs, 
       role,
     };
   }
-
 
   @UseGuards(GqlAuthGuard)
   @Mutation(() => MoveTwigResult, {name: 'graftTwig'})
@@ -220,6 +219,19 @@ export class TwigsResolver {
       role,
     };
   }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => [Twig], {name: 'adjustTwigs'})
+  async adjustTwig(
+    @CurrentUser() user: UserEntity,
+    @Args('abstractId') abstractId: string,
+    @Args('twigIds', {type: () => [String]}) twigIds: string[],
+    @Args('xs', {type: () => [Int]}) xs: number[],
+    @Args('ys', {type: () => [Int]}) ys: number[],
+  ) {
+    return this.twigsService.adjustTwigs(user, abstractId, twigIds, xs, ys);
+  }
+
 
 
   @Subscription(() => AddTwigResult, {name: 'addTwig',

@@ -141,8 +141,8 @@ export class DragTwigResult {
 
 @ObjectType() 
 export class MoveTwigResult {
-  @Field(() => Twig)
-  twig: Twig;
+  @Field(() => [Twig])
+  twigs: Twig[];
   
   @Field(() => Role, { nullable: true })
   role: Role;
