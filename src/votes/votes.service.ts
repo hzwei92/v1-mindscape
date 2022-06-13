@@ -31,11 +31,14 @@ export class VotesService {
     })
   }
 
-  async createInitialVote(user: User, arrow: Arrow) {
-    const vote0 = new Vote();
-    vote0.userId = user.id;
-    vote0.arrowId = arrow.id;
-    return this.votesRepository.save(vote0);
+  async createInitialVotes(user: User, arrows: Arrow[]) {
+    const votes0 = arrows.map(arrow => {
+      const vote0 = new Vote();
+      vote0.userId = user.id;
+      vote0.arrowId = arrow.id;
+      return vote0;
+    })
+    return this.votesRepository.save(votes0);
   }
   
   async createVote(user: User, arrow: Arrow, clicks: number, tokens: number): Promise<Vote> {

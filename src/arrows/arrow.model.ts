@@ -14,11 +14,17 @@ export class Arrow {
   @Field()
   routeName: string;
 
-  @Field()
+  @Field({ nullable: true })
   draft: string;
 
   @Field()
   text: string;
+
+  @Field({ nullable: true })
+  url: string;
+
+  @Field({ nullable: true })
+  title: string;
 
   @Field()
   color: string;

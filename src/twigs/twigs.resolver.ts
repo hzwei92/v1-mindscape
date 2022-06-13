@@ -5,7 +5,7 @@ import { Arrow } from 'src/arrows/arrow.model';
 import { ArrowsService } from 'src/arrows/arrows.service';
 import { PUB_SUB } from 'src/pub-sub/pub-sub.module';
 import { UsersService } from 'src/users/users.service';
-import { AddTwigResult, DragTwigResult, LinkTwigsResult, MoveTwigResult, RemoveTwigResult, ReplyTwigResult, SelectTwigResult, Twig } from './twig.model';
+import { AddTwigResult, DragTwigResult, LinkTwigsResult, MoveTwigResult, OpenTwigResult, RemoveTwigResult, ReplyTwigResult, SelectTwigResult, Twig, TwigEntry } from './twig.model';
 import { TwigsService } from './twigs.service';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
 import { User } from 'src/users/user.model';
@@ -200,7 +200,7 @@ export class TwigsResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => MoveTwigResult, {name: 'graftTwig'})
+  @Mutation(() => OpenTwigResult, {name: 'graftTwig'})
   async graftTwig(
     @CurrentUser() user: UserEntity,
     @Args('sessionId') sessionId: string,
@@ -232,6 +232,34 @@ export class TwigsResolver {
     return this.twigsService.adjustTwigs(user, abstractId, twigIds, xs, ys);
   }
 
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => OpenTwigResult, {name: 'openTwig'})
+  async openTwig(
+    @CurrentUser() user: UserEntity,
+    @Args('sessionId') sessionId: string,
+    @Args('twigId') twigId: string,
+    @Args('isOpen') isOpen: boolean,
+  ) {
+    const { 
+      twig,
+      role
+    } = await this.twigsService.openTwig(user, twigId, isOpen);
+
+    return {
+      twig,
+      role,
+    };
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => [Twig], {name: 'loadTwigs'})
+  async loadTwigs(
+    @CurrentUser() user: UserEntity,
+    @Args('entries', {type: () => [TwigEntry]}) entries: TwigEntry[],
+  ) {
+    console.log(entries);
+    return this.twigsService.loadTwigs(user, entries);
+  }
 
 
   @Subscription(() => AddTwigResult, {name: 'addTwig',

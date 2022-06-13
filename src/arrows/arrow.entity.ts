@@ -27,11 +27,18 @@ export class Arrow {
   @Column()
   routeName: string;
 
-  @Column()
+  @Column({ nullable: true })
   draft: string;
 
   @Column({ default: '' })
   text: string;
+
+  @Index()
+  @Column({ nullable: true })
+  url: string;
+
+  @Column({ nullable: true })
+  title: string;
 
   @Column()
   color: string;

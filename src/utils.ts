@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import { v4 } from 'uuid';
 import { RoleType } from './enums';
 
 export const findDefaultWeight = (clicks: number, tokens: number) => {
@@ -9,7 +9,7 @@ export const getEmptyDraft = () => {
   return JSON.stringify({
     blocks: [
       {
-        key: uuidv4(),
+        key: v4(),
         text: '',
         type: 'unstyled',
         depth: 0,

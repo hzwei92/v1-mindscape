@@ -25,7 +25,7 @@ type Arrow {
   createDate: DateTime!
   deleteDate: DateTime
   details: [Arrow!]!
-  draft: String!
+  draft: String
   id: String!
   inCount: Float!
   ins: [Arrow!]!
@@ -45,11 +45,13 @@ type Arrow {
   target: Arrow
   targetId: String!
   text: String!
+  title: String
   tokens: Float!
   twigN: Float!
   twigZ: Float!
   twigs: [Twig!]!
   updateDate: DateTime!
+  url: String
   user: User!
   userId: String!
   votes: [Vote!]!
@@ -99,14 +101,16 @@ type Mutation {
   getCurrentUserLeads: [Lead!]!
   getTwigs(abstractId: String!): [Twig!]!
   getUser(userId: String!): User!
-  graftTwig(sessionId: String!, targetTwigId: String!, twigId: String!, x: Int!, y: Int!): MoveTwigResult!
-  initUser: User!
+  graftTwig(sessionId: String!, targetTwigId: String!, twigId: String!, x: Int!, y: Int!): OpenTwigResult!
+  initUser(token: String): User!
   inviteRole(arrowId: String!, sessionId: String!, userName: String!): Role!
   linkTwigs(abstractId: String!, sessionId: String!, sourceId: String!, targetId: String!): LinkTwigsResult!
+  loadTwigs(entries: [TwigEntry!]!): [Twig!]!
   loginGoogleUser(token: String!): User!
   loginUser(email: String!, pass: String!): User!
   logoutUser: User!
   moveTwig(sessionId: String!, twigId: String!, x: Int!, y: Int!): MoveTwigResult!
+  openTwig(isOpen: Boolean!, sessionId: String!, twigId: String!): OpenTwigResult!
   publishCursor(abstractId: String!, sessionId: String!, x: Int!, y: Int!): User!
   refreshToken: User!
   registerGoogleUser(token: String!): User!
@@ -124,6 +128,11 @@ type Mutation {
   setUserName(name: String!, sessionId: String!): User!
   unfollowUser(userId: String!): Lead!
   verifyUser(code: String!): User!
+}
+
+type OpenTwigResult {
+  role: Role
+  twig: Twig!
 }
 
 type Query {
@@ -194,20 +203,42 @@ type Twig {
   abstract: Arrow!
   abstractId: String!
   children: [Twig!]!
+  color: String
   createDate: DateTime!
+  degree: Int!
   deleteDate: DateTime
   detail: Arrow!
   detailId: String!
+  groupId: Int
   i: Int!
   id: String!
-  isPinned: Boolean!
+  index: Int!
+  isOpen: Boolean!
+  isRoot: Boolean!
   parent: Twig
+  rank: Int!
+  tabId: Int
   updateDate: DateTime!
   user: User!
   userId: String!
+  windowId: Int
   x: Int!
   y: Int!
   z: Int!
+}
+
+input TwigEntry {
+  color: String
+  degree: Int!
+  groupId: Int
+  id: String!
+  index: Int
+  parentId: String
+  rank: Int!
+  tabId: Int
+  title: String
+  url: String
+  windowId: Int!
 }
 
 type User {

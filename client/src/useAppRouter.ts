@@ -3,7 +3,6 @@ import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from './app/hooks';
 import { selectIsOpen, setIsOpen, setSpace } from './features/space/spaceSlice';
-import { v4 as uuidv4 } from 'uuid';
 import { Role } from './features/role/role';
 import { User } from './features/user/user';
 import useSetUserFocus from './features/user/useSetUserFocus';

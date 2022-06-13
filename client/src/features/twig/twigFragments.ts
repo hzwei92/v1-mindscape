@@ -7,11 +7,15 @@ export const TWIG_FIELDS = gql`
     userId
     abstractId
     detailId
+    color
+    windowId
+    groupId
+    tabId
     i
     x
     y
     z
-    isPinned
+    isOpen
     createDate
     updateDate
     deleteDate

@@ -113,13 +113,22 @@ export default function ArrowComponent(props: ArrowProps) {
         }
       </Box>
       <Box>
-        <ArrowEditor
-          user={props.user}
-          space={props.space}
-          arrow={props.arrow}
-          isReadonly={false}
-          instanceId={props.instanceId}
-        />
+        {
+          props.arrow.draft
+            ?  <ArrowEditor
+                user={props.user}
+                space={props.space}
+                arrow={props.arrow}
+                isReadonly={false}
+                instanceId={props.instanceId}
+              />
+            : <Box>
+                {props.arrow.title}
+                <br/>
+                {props.arrow.url}
+              </Box>
+        }
+
       </Box>
     </Box>
   )

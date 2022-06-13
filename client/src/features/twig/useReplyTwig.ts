@@ -1,9 +1,9 @@
 import { gql, Reference, useApolloClient, useMutation, useReactiveVar } from '@apollo/client';
 import { sessionVar } from '../../cache';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 } from 'uuid';
 import { useNavigate } from 'react-router-dom';
 import { SpaceType } from '../space/space';
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { useAppDispatch } from '../../app/hooks';
 import { createTwig, Twig } from './twig';
 import { setSpace, setTwigId } from '../space/spaceSlice';
 import { User } from '../user/user';
@@ -11,7 +11,7 @@ import { useSnackbar } from 'notistack';
 import { addTwigs, finishNewTwig, startNewTwig } from './twigSlice';
 import { getEmptyDraft } from '../../utils';
 import { FULL_TWIG_FIELDS, TWIG_FIELDS } from './twigFragments';
-import { FULL_ROLE_FIELDS, ROLE_FIELDS } from '../role/roleFragments';
+import { FULL_ROLE_FIELDS } from '../role/roleFragments';
 import { applyRole } from '../role/useApplyRole';
 import { FULL_ARROW_FIELDS } from '../arrow/arrowFragments';
 import { Arrow, createArrow } from '../arrow/arrow';
@@ -102,8 +102,8 @@ export default function useReplyTwig(user: User | null, space: SpaceType, abstra
     const dy = parentTwig.y || 1;
     const dr = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
 
-    const postId = uuidv4();
-    const twigId = uuidv4();
+    const postId = v4();
+    const twigId = v4();
     const x = Math.round((420 + 100 * Math.random()) * (dx / dr) + parentTwig.x);
     const y = Math.round((420 + 100 * Math.random()) * (dy / dr) + parentTwig.y);
 

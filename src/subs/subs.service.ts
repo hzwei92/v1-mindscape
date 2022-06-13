@@ -52,11 +52,14 @@ export class SubsService {
     });
   }
 
-  async createSub(user: User, arrow: Arrow) {
-    const sub0 = new Sub();
-    sub0.userId = user.id;
-    sub0.arrowId = arrow.id;
-    return this.subsRepository.save(sub0);
+  async createSubs(user: User, arrows: Arrow[]) {
+    const subs0 = arrows.map(arrow => {
+      const sub0 = new Sub();
+      sub0.userId = user.id;
+      sub0.arrowId = arrow.id;
+      return sub0;
+    })
+    return this.subsRepository.save(subs0);
   }
   
   async detail(userId: string, arrowId: string): Promise<Sub> {

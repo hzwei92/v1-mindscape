@@ -23,8 +23,22 @@ export class AuthService {
   
   oauthClient: Auth.OAuth2Client;
 
-  async initUser() {
-    const user = await this.usersService.initUser();
+  async initUser(token: string | null) {
+    let user;
+    if (token) {
+      const email = await this.googleAuthenticate(token);
+      user = await this.usersService.getUserByEmail(email);
+      if (user) {
+        return this.loginGoogleUser(null, token);
+      }
+      else {
+        user = await this.usersService.initUser()
+        return this.registerGoogleUser(user.id, token);
+      }
+    }
+    else {
+      user = await this.usersService.initUser();
+    }
     const accessTokenCookie = this.getAccessTokenCookie(user.id);
     const refreshTokenCookie = await this.getRefreshTokenCookie(user.id, false);
     return {
@@ -64,6 +78,7 @@ export class AuthService {
       refreshTokenCookie,
     };
   }
+
   async registerGoogleUser(userId: string, token: string) {
     const email = await this.googleAuthenticate(token);
     const user = await this.usersService.registerUser(userId, email, null, true);
@@ -76,8 +91,10 @@ export class AuthService {
     }
   }
 
-  async loginGoogleUser(prevUserId: string, token: string) {
-    this.logoutUser(prevUserId);
+  async loginGoogleUser(prevUserId: string | null, token: string) {
+    if (prevUserId) {
+      this.logoutUser(prevUserId);
+    }
     const email = await this.googleAuthenticate(token);
     let user = await this.usersService.getUserByEmail(email);
     if (!user) {

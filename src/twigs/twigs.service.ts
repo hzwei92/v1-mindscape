@@ -8,10 +8,10 @@ import { Twig } from './twig.entity';
 import { RoleType } from '../enums';
 import { Arrow } from 'src/arrows/arrow.entity';
 import { User } from 'src/users/user.entity';
-import { UsersService } from 'src/users/users.service';
 import { VotesService } from 'src/votes/votes.service';
-import { SubsService } from 'src/subs/subs.service';
 import { checkPermit } from 'src/utils';
+import { TwigEntry } from './twig.model';
+import { v4 } from 'uuid';
 
 @Injectable()
 export class TwigsService {
@@ -37,6 +37,15 @@ export class TwigsService {
       where: {
         id: In(ids),
       },
+    });
+  }
+
+  async getRootTwigByAbstractId(abstractId: string) {
+    return this.twigsRepository.findOne({
+      where: {
+        abstractId,
+        isRoot: true,
+      }
     });
   }
 
@@ -68,12 +77,16 @@ export class TwigsService {
     return child.parent;
   }
 
-  async createRootTwig(user: User, arrow: Arrow) {
-    const twig0 = new Twig();
-    twig0.userId = user.id;
-    twig0.abstractId = arrow.id;
-    twig0.detailId = arrow.id;
-    return this.twigsRepository.save(twig0);
+  async createRootTwigs(user: User, arrows: Arrow[]) {
+    const twigs0 = arrows.map(arrow => {
+      const twig0 = new Twig();
+      twig0.userId = user.id;
+      twig0.abstractId = arrow.id;
+      twig0.detailId = arrow.id;
+      twig0.isRoot = true;
+      return twig0;
+    })
+    return this.twigsRepository.save(twigs0);
   }
 
   async createTwig(
@@ -86,7 +99,7 @@ export class TwigsService {
     x: number,
     y: number,
     z: number,
-    isPinned: boolean,
+    isOpen: boolean,
   ) {
     const twig0 = new Twig();
     twig0.id = twigId || undefined;
@@ -98,7 +111,7 @@ export class TwigsService {
     twig0.x = x
     twig0.y = y
     twig0.z = z;
-    twig0.isPinned = isPinned;
+    twig0.isOpen = isOpen;
     return this.twigsRepository.save(twig0);
   }
 
@@ -179,7 +192,7 @@ export class TwigsService {
       Math.round((parentTwig.x + x) / 2),
       Math.round((parentTwig.y + y) / 2),
       parentTwig.abstract.twigZ + 2,
-      true,
+      false,
     );
     await this.arrowsService.incrementTwigN(parentTwig.abstractId, 2);
     await this.arrowsService.incrementTwigZ(parentTwig.abstractId, 2);
@@ -468,5 +481,194 @@ export class TwigsService {
     });
 
     return this.twigsRepository.save(twigs0);
+  }
+
+  async openTwig(user: User, twigId: string, isOpen: boolean) {
+    const twig = await this.getTwigById(twigId);
+    if (!twig) {
+      throw new BadRequestException('This twig does not exist');
+    }
+    const abstract = await this.arrowsService.getArrowById(twig.abstractId);
+    if (!abstract) {
+      throw new BadRequestException('This abstract does not exist')
+    }
+
+    let role = await this.rolesService.getRoleByUserIdAndArrowId(user.id, abstract.id);
+    let role1 = null;
+    if (checkPermit(abstract.canEdit, role?.type)) {
+      if (!role) {
+        role = await this.rolesService.createRole(user, abstract, RoleType.OTHER);
+        role1 = role;
+      }
+    }
+    else {
+      throw new BadRequestException('Insufficient privileges');
+    }
+
+    const twig0 = new Twig();
+    twig0.id = twig.id;
+    twig0.isOpen = isOpen;
+    const twig1 = await this.twigsRepository.save(twig0);
+
+    return {
+      twig: twig1,
+      role: role1,
+    }
+  }
+
+  async loadTwigs(user: User, entries: TwigEntry[]) {
+    const abstract = await this.arrowsService.getArrowById(user.frameId);
+    if (!abstract) {
+      throw new BadRequestException('This abstract does not exist');
+    }
+
+    const arrows = await this.arrowsService.loadArrows(user, abstract, entries);
+    const windowIdToArrow = {};
+    const groupIdToArrow = {};
+    const urlToArrow = {};
+
+    console.log(5);
+    arrows.forEach(arrow => {
+      if (arrow.url) {
+        urlToArrow[arrow.url] = arrow;
+      }
+      else {
+        const label = arrow.title.split(':');
+        console.log('label', label)
+        if (label[0] === 'group') {
+          groupIdToArrow[label[1]] = arrow;
+        }
+        else {
+          windowIdToArrow[label[1]] = arrow;
+        }
+      }
+    });
+    console.log(4);
+    let tabEntries: TwigEntry[] = [];
+    const groupEntries: TwigEntry[] = [];
+    const windowEntries: TwigEntry[] = [];
+    entries.forEach(entry => {
+      if (entry.tabId) {
+        tabEntries.push(entry);
+      }
+      else if (entry.groupId) {
+        groupEntries.push(entry);
+      }
+      else {
+        windowEntries.push(entry);
+      }
+    });
+
+    const rootTwig = await this.getRootTwigByAbstractId(user.frameId);
+    console.log(3, windowIdToArrow)
+    let i = 1;
+    const windows0 = [];
+    windowEntries.forEach(entry => {
+      const dx = Math.random() - 0.5;
+      const dy = Math.random() - 0.5;
+      const dr = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+      const x = Math.round(800 * (dx / dr) + (700 * (Math.random() - 0.5)));
+      const y = Math.round(800 * (dy / dr) + (700 * (Math.random() - 0.5)));
+  
+      const window0 = new Twig();
+      window0.id = entry.id;
+      window0.userId = user.id;
+      window0.abstractId = user.frameId;
+      window0.detailId = windowIdToArrow[entry.windowId].id;
+      window0.parent = rootTwig;
+      window0.i = abstract.twigN + i;
+      window0.x = x;
+      window0.y = y;
+      window0.z = abstract.twigZ + i;
+      window0.windowId = entry.windowId;
+      windows0.push(window0);
+      i++;
+    });
+    const windows1 = await this.twigsRepository.save(windows0);
+
+    const windowIdToTwig = windows1.reduce((acc, twig) => {
+      acc[twig.windowId] = twig;
+      return acc;
+    }, {});
+    console.log(2)
+    const groups0 = [];
+    groupEntries.forEach(entry => {
+      const parentTwig = windowIdToTwig[entry.windowId];
+      console.log(parentTwig, windowIdToTwig, entry.windowId);
+      const dx = parentTwig.x
+      const dy = parentTwig.y
+      const dr = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+      const x = Math.round(800 * (dx / dr) + (700 * (Math.random() - 0.5)) + parentTwig.x);
+      const y = Math.round(800 * (dy / dr) + (700 * (Math.random() - 0.5)) + parentTwig.y);
+  
+      const group0 = new Twig();
+      group0.id = entry.id;
+      group0.userId = user.id;
+      group0.abstractId = user.frameId;
+      group0.detailId = groupIdToArrow[entry.groupId].id;
+      group0.parent = parentTwig;
+      group0.i = abstract.twigN + i;
+      group0.x = x;
+      group0.y = y;
+      group0.z = abstract.twigZ + i;
+      group0.windowId = entry.windowId;
+      group0.groupId = entry.groupId;
+      group0.color = entry.color;
+      groups0.push(group0);
+      i++;
+    });
+
+    const groups1 = await this.twigsRepository.save(groups0);
+
+    const idToTwig = [...windows1, ...groups1].reduce((acc, twig) => {
+      acc[twig.id] = twig;
+      return acc;
+    }, {});
+
+    console.log(1);
+    let degree = 3;
+    while (tabEntries.length) {
+      const nextEntries = [];
+      const tabs0 = [];
+      tabEntries.forEach(entry => {
+        if (entry.degree === degree) {
+          const parentTwig = idToTwig[entry.parentId];
+          const dx = parentTwig.x
+          const dy = parentTwig.y
+          const dr = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+          const x = Math.round(800 * (dx / dr) + (2000 * (Math.random() - 0.5)) + parentTwig.x);
+          const y = Math.round(800 * (dy / dr) + (2000 * (Math.random() - 0.5)) + parentTwig.y);
+      
+          const tab0 = new Twig();
+          tab0.id = entry.id;
+          tab0.userId = user.id;
+          tab0.abstractId = user.frameId;
+          tab0.detailId = urlToArrow[entry.url].id;
+          tab0.parent = parentTwig;
+          tab0.i = abstract.twigN + i;
+          tab0.x = x;
+          tab0.y = y;
+          tab0.z = abstract.twigZ + i;
+          tab0.windowId = entry.windowId;
+          tab0.groupId = entry.groupId;
+          tab0.tabId = entry.tabId;
+          tabs0.push(tab0);
+          i++;
+        }
+        else {
+          nextEntries.push(entry);
+        }
+      })
+
+      const tabs1 = await this.twigsRepository.save(tabs0);
+      tabs1.forEach(twig => {
+        idToTwig[twig.id] = twig;
+      })
+      tabEntries = nextEntries;
+      degree++;
+    }
+
+    console.log(0)
+    return Object.keys(idToTwig).map(id => idToTwig[id]);
   }
 }

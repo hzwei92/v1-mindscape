@@ -6,7 +6,7 @@ import * as bcrypt from 'bcrypt';
 import { adjectives, animals, NumberDictionary, uniqueNamesGenerator } from 'unique-names-generator';
 import { SearchService } from 'src/search/search.service';
 import { ArrowsService } from 'src/arrows/arrows.service';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 } from 'uuid';
 
 const numbers = NumberDictionary.generate({ min: 100, max: 999 });
 
@@ -81,7 +81,7 @@ export class UsersService {
     user0.color = '#' + Math.round(Math.random() * Math.pow(16, 6)).toString(16).padStart(6, '0')
     const user1 = await this.usersRepository.save(user0);
 
-    const postId = uuidv4();
+    const postId = v4();
     const { arrow } = await this.arrowsService.createArrow(
       user1,
       postId,

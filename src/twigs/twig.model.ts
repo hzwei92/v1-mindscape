@@ -1,4 +1,4 @@
-import { ObjectType, Field, Int } from '@nestjs/graphql';
+import { ObjectType, Field, Int, InputType } from '@nestjs/graphql';
 import { User } from 'src/users/user.model';
 import { Arrow } from 'src/arrows/arrow.model';
 import { Role } from 'src/roles/role.model';
@@ -26,11 +26,8 @@ export class Twig {
   @Field(() => Arrow)
   detail: Arrow;
 
-  @Field(() => Arrow, {nullable: true})
-  parent: Twig;
-
-  @Field(() => [Twig])
-  children: Twig[];
+  @Field()
+  isRoot: boolean;
 
   @Field(() => Int)
   i: number;
@@ -44,8 +41,35 @@ export class Twig {
   @Field(() => Int)
   z: number;
 
+  @Field({ nullable: true })
+  color: string;
+
   @Field()
-  isPinned: boolean;
+  isOpen: boolean;
+
+  @Field(() => Arrow, {nullable: true})
+  parent: Twig;
+
+  @Field(() => [Twig])
+  children: Twig[];
+
+  @Field(() => Int)
+  index: number;
+
+  @Field(() => Int)
+  degree: number;
+
+  @Field(() => Int)
+  rank: number;
+
+  @Field(() => Int, { nullable: true })
+  windowId: number;
+
+  @Field(() => Int, { nullable: true })
+  groupId: number;
+
+  @Field(() => Int, { nullable: true })
+  tabId: number;
 
   @Field()
   createDate: Date;
@@ -146,4 +170,49 @@ export class MoveTwigResult {
   
   @Field(() => Role, { nullable: true })
   role: Role;
+}
+
+@ObjectType() 
+export class OpenTwigResult {
+  @Field(() => Twig)
+  twig: Twig;
+  
+  @Field(() => Role, { nullable: true })
+  role: Role;
+}
+
+@InputType()
+export class TwigEntry {
+  @Field()
+  id: string;
+
+  @Field({ nullable: true })
+  parentId: string;
+
+  @Field(() => Int)
+  windowId: number;
+
+  @Field(() => Int, {nullable: true})
+  groupId: number;
+
+  @Field(() => Int, {nullable: true})
+  tabId: number;
+
+  @Field(() => Int, {nullable: true})
+  index: number;
+
+  @Field(() => Int)
+  degree: number;
+
+  @Field(() => Int)
+  rank: number;
+
+  @Field({ nullable: true })
+  color: string;
+
+  @Field({ nullable: true})
+  title: string;
+
+  @Field({ nullable: true})
+  url: string;
 }

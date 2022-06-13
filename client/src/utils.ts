@@ -1,6 +1,6 @@
 import { PaletteMode } from '@mui/material';
 import { MOBILE_WIDTH } from './constants';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 } from 'uuid';
 
 const second = 1000;
 const minute = 60 * second;
@@ -123,7 +123,7 @@ export const getPolylineCoords = (segmentDist: number, x1: number, y1: number, x
 
 export const getEmptyDraft = () => {
   const blocks = [{
-    key: uuidv4(),
+    key: v4(),
     text: '',
     type: 'unstyled',
     depth: 0,

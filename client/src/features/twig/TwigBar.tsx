@@ -82,7 +82,7 @@ function TwigBar(props: TwigBarProps) {
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
       sx={{
-        backgroundColor: props.twig.user.color,
+        backgroundColor: props.twig.color || props.twig.user.color,
         textAlign: 'left',
         cursor: props.abstract.id === props.twig.detailId
           ? createLink.sourceId

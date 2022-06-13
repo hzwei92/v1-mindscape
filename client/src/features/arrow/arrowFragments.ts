@@ -9,6 +9,8 @@ export const ARROW_FIELDS = gql`
     routeName
     draft
     text
+    title
+    url
     color
     userId
     inCount

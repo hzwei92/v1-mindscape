@@ -45,12 +45,9 @@ export class Twig {
   @JoinColumn({ referencedColumnName: 'id' })
   detail: Arrow;
 
-  @TreeParent()
-  parent: Twig;
-
-  @TreeChildren()
-  children: Twig[];
-
+  @Column({ default: false })
+  isRoot: boolean;
+  
   @Column({ default: 0 })
   i: number;
 
@@ -63,8 +60,35 @@ export class Twig {
   @Column({ default: 0})
   z: number;
 
+  @Column({ nullable: true })
+  color: string;
+
   @Column({ default: true })
-  isPinned: boolean;
+  isOpen: boolean;
+
+  @TreeParent()
+  parent: Twig;
+
+  @TreeChildren()
+  children: Twig[];
+
+  @Column({ default: 0 })
+  index: number;
+
+  @Column({ default: 1 })
+  degree: number;
+
+  @Column({ default: 1 })
+  rank: number;
+
+  @Column({ nullable: true })
+  windowId: number;
+
+  @Column({ nullable: true })
+  groupId: number;
+
+  @Column({ nullable: true })
+  tabId: number;
   
   @CreateDateColumn()
   createDate: Date;

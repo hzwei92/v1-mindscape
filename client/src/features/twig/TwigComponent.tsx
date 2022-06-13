@@ -33,7 +33,7 @@ interface TwigComponentProps {
   setTouches: Dispatch<SetStateAction<React.TouchList | null>>;
 }
 function TwigComponent(props: TwigComponentProps) {
-  //console.log('twig', props.twig.id);
+  console.log('twig', props.twig);
 
   const client = useApolloClient();
   const dispatch = useAppDispatch();
@@ -129,7 +129,7 @@ function TwigComponent(props: TwigComponentProps) {
             : TWIG_WIDTH - 50,
           opacity: .9,
           border: isSelected
-            ? `5px solid ${props.twig.user.color}`
+            ? `5px solid ${props.twig.color || props.twig.user.color}`
             : null,
           borderRadius: isPost
             ? 2

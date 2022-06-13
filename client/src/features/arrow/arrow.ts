@@ -6,8 +6,10 @@ import { Vote } from "../vote/vote";
 export type Arrow = {
   id: string;
   routeName: string;
-  draft: string;
+  draft: string | null;
   text: string;
+  title: string | null;
+  url: string | null;
   color: string;
 
   userId: string;
@@ -95,6 +97,8 @@ export const createArrow = (
     routeName: id,
     draft,
     text: '',
+    title: null,
+    url: null,
     color: user.color,
 
     userId: user.id,

@@ -65,7 +65,8 @@ export default function Sheaf(props: SheafProps) {
   const [linkI, setLinkI] = useState(0);
   const [clickTimeout, setClickTimeout] = useState(null as ReturnType<typeof setTimeout> | null);
 
-  const { selectTwig } = useSelectTwig(props.space, props.canEdit)
+  const { selectTwig } = useSelectTwig(props.space, props.canEdit);
+  
   // useEffect(() => {
   //   if (links.length > 1) {
   //     const time = 1000 / Math.log(links.length);

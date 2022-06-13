@@ -18,12 +18,13 @@ export class AuthResolver {
   @Mutation(() => User, {name: 'initUser'})
   async initUser(
     @Context() context: any,
+    @Args('token', {nullable: true}) token: string
   ) {
     const {
       user,
       accessTokenCookie,
       refreshTokenCookie,
-    } = await this.authService.initUser();
+    } = await this.authService.initUser(token);
 
     context.res.cookie(accessTokenCookie.name, accessTokenCookie.value, accessTokenCookie.options);
     context.res.cookie(refreshTokenCookie.name, refreshTokenCookie.value, refreshTokenCookie.options);

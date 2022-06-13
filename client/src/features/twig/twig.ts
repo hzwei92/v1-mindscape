@@ -11,11 +11,12 @@ export type Twig = {
   detail: Arrow;
   parent: Twig;
   children: Twig[];
+  color: string | null;
   i: number;
   x: number;
   y: number;
   z: number;
-  isPinned: boolean;
+  isOpen: boolean;
   createDate: Date | null;
   updateDate: Date | null;
   deleteDate: Date | null;
@@ -47,7 +48,7 @@ export const createTwig = (
   parent: Twig, 
   x: number,
   y: number,
-  isPinned: boolean,
+  isOpen: boolean,
 ) => {
   const date = new Date();
   const twig = {
@@ -60,11 +61,12 @@ export const createTwig = (
     detail,
     parent,
     children: [],
+    color: null,
     i: abstract.twigN + 1,
     x,
     y,
     z: abstract.twigZ + 1,
-    isPinned,
+    isOpen,
     createDate: date,
     updateDate: date,
     deleteDate: null,
