@@ -18,7 +18,7 @@ export default function useTwigTree(space: SpaceType) {
       while (twig1.parent) {
         idToDescIdToTrue[twig1.parent.id] = {
           ...(idToDescIdToTrue[twig1.parent.id]),
-          [twig1.id]: true,
+          [twig.id]: true,
         }
         twig1 = client.cache.readFragment({
           id: client.cache.identify(twig1.parent),

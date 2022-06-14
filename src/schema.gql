@@ -36,6 +36,7 @@ type Arrow {
   outs: [Arrow!]!
   removeDate: DateTime
   roles: [Role!]!
+  rootTwigId: String!
   routeName: String!
   saveDate: DateTime!
   source: Arrow

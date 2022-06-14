@@ -109,6 +109,9 @@ export class Arrow {
   @Column({ default: 0})
   twigZ: number;
 
+  @Column({ nullable: true })
+  rootTwigId: string;
+
 
   @Column({
     type: 'enum',

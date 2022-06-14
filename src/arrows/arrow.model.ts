@@ -81,6 +81,9 @@ export class Arrow {
   @Field()
   twigZ: number;
 
+  @Field()
+  rootTwigId: string;
+
 
   @Field()
   canEdit: string;

@@ -567,8 +567,8 @@ export class TwigsService {
       const dx = Math.random() - 0.5;
       const dy = Math.random() - 0.5;
       const dr = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-      const x = Math.round(800 * (dx / dr) + (700 * (Math.random() - 0.5)));
-      const y = Math.round(800 * (dy / dr) + (700 * (Math.random() - 0.5)));
+      const x = Math.round(800 * (dx / dr) + (1200 * (Math.random() - 0.5)));
+      const y = Math.round(800 * (dy / dr) + (1200 * (Math.random() - 0.5)));
   
       const window0 = new Twig();
       window0.id = entry.id;
@@ -598,8 +598,8 @@ export class TwigsService {
       const dx = parentTwig.x
       const dy = parentTwig.y
       const dr = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-      const x = Math.round(800 * (dx / dr) + (700 * (Math.random() - 0.5)) + parentTwig.x);
-      const y = Math.round(800 * (dy / dr) + (700 * (Math.random() - 0.5)) + parentTwig.y);
+      const x = Math.round(800 * (dx / dr) + (1200 * (Math.random() - 0.5)) + parentTwig.x);
+      const y = Math.round(800 * (dy / dr) + (1200 * (Math.random() - 0.5)) + parentTwig.y);
   
       const group0 = new Twig();
       group0.id = entry.id;
@@ -636,8 +636,8 @@ export class TwigsService {
           const dx = parentTwig.x
           const dy = parentTwig.y
           const dr = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-          const x = Math.round(800 * (dx / dr) + (2000 * (Math.random() - 0.5)) + parentTwig.x);
-          const y = Math.round(800 * (dy / dr) + (2000 * (Math.random() - 0.5)) + parentTwig.y);
+          const x = Math.round(800 * (dx / dr) + (1200 * (Math.random() - 0.5)) + parentTwig.x);
+          const y = Math.round(800 * (dy / dr) + (1200 * (Math.random() - 0.5)) + parentTwig.y);
       
           const tab0 = new Twig();
           tab0.id = entry.id;

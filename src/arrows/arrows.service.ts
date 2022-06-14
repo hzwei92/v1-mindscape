@@ -94,16 +94,21 @@ export class ArrowsService {
     arrow0.color = user.color;
     const arrow1 = await this.arrowsRepository.save(arrow0);
     
-    this.searchService.saveArrows([arrow1]);
-
-    const [vote] = await this.votesService.createInitialVotes(user, [arrow1]);
 
     const [twig] = await this.twigsService.createRootTwigs(user, [arrow1]);
+
+    arrow1.rootTwigId = twig.id;
+
+    const arrow2 = await this.arrowsRepository.save(arrow1);
+
+    this.searchService.saveArrows([arrow2]);
+
+    const [vote] = await this.votesService.createInitialVotes(user, [arrow2]);
     
-    const [sub] = await this.subsService.createSubs(user, [arrow1]);
+    const [sub] = await this.subsService.createSubs(user, [arrow2]);
 
     return {
-      arrow: arrow1,
+      arrow: arrow2,
       vote,
       twig,
       sub,
@@ -154,11 +159,23 @@ export class ArrowsService {
 
     this.searchService.saveArrows(arrows1);
 
+    const twigs = await this.twigsService.createRootTwigs(user, arrows1);
+
+    const detailIdToTwigId = twigs.reduce((acc, twig) => {
+      acc[twig.detailId] = twig.id;
+      return acc;
+    }, {});
+
+    arrows1.forEach(arrow => {
+      arrow.rootTwigId = detailIdToTwigId[arrow.id];
+    });
+
+    const arrows2 = await this.arrowsRepository.save(arrows1);
+
     await this.votesService.createInitialVotes(user, arrows1);
-    await this.twigsService.createRootTwigs(user, arrows1);
     await this.subsService.createSubs(user, arrows1);
 
-    return [...arrows, ...arrows1];
+    return [...arrows, ...arrows2];
   }
 
   async incrementInCount(id: string, value: number) {

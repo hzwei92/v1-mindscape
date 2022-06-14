@@ -30,8 +30,6 @@ export default function useMoveTwig(space: SpaceType) {
 
   const sessionDetail = useReactiveVar(sessionVar);
 
-  const idtoDescIdToTrue = useAppSelector(selectIdToDescIdToTrue(space));
-
   const { enqueueSnackbar } = useSnackbar();
   
   const [move] = useMutation(MOVE_TWIG, {
