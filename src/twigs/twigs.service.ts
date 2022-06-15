@@ -104,6 +104,33 @@ export class TwigsService {
     });
   }
 
+  async getTwigsByUserIdAndTabId(userId: string, tabId: number) {
+    return this.twigsRepository.findOne({
+      where: {
+        userId,
+        tabId,
+      },
+      relations: ['parent', 'children'],
+    });
+  }
+
+  async getTwigsByUserIdAndGroupId(userId: string, groupId: number) {
+    return this.twigsRepository.findOne({
+      where: {
+        userId,
+        groupId,
+      },
+    });
+  }
+
+  async getTwigsByUserIdAndWindowId(userId: string, windowId: number) {
+    return this.twigsRepository.findOne({
+      where: {
+        userId,
+        windowId,
+      },
+    });
+  }
 
   async createRootTwigs(user: User, arrows: Arrow[]) {
     const twigs0 = arrows.map(arrow => {
@@ -755,5 +782,50 @@ export class TwigsService {
     );
 
     return [...windowTwigs1, ...groupTwigs1, ...tabTwigs1];
+  }
+
+  async removeTabTwig(user: User, tabId: number) {
+    const twig = await this.getTwigsByUserIdAndTabId(user.id, tabId);
+    if (!twig) {
+      throw new BadRequestException('This tab twig does not exist')
+    }
+    const twig0 = new Twig();
+    twig0.id = twig.id;
+    twig0.deleteDate = new Date();
+    const twig1 = await this.twigsRepository.save(twig0);
+
+    const children0 = twig.children.map(child => {
+      const child0 = new Twig();
+      child0.id = child.id;
+      child0.parent = twig.parent;
+      return child0;
+    });
+    const children1 = await this.twigsRepository.save(children0);
+    return {
+      twig: twig1,
+      children: children1,
+    }
+  }
+
+  async removeGroupTwig(user: User, groupId: number) {
+    const twig = await this.getTwigsByUserIdAndGroupId(user.id, groupId);
+    if (!twig) {
+      throw new BadRequestException('This group twig does not exist')
+    }
+    const twig0 = new Twig();
+    twig0.id = twig.id;
+    twig0.deleteDate = new Date();
+    return this.twigsRepository.save(twig0);
+  }
+
+  async removeWindowTwig(user: User, windowId: number) {
+    const twig = await this.getTwigsByUserIdAndWindowId(user.id, windowId);
+    if (!twig) {
+      throw new BadRequestException('This window twig does not exist')
+    }
+    const twig0 = new Twig();
+    twig0.id = twig.id;
+    twig0.deleteDate = new Date();
+    return this.twigsRepository.save(twig0);
   }
 }

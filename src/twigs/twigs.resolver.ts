@@ -12,6 +12,7 @@ import {
   LinkTwigsResult,
   MoveTwigResult,
   OpenTwigResult,
+  RemoveTabTwigResult,
   RemoveTwigResult,
   ReplyTwigResult,
   SelectTwigResult, 
@@ -274,6 +275,39 @@ export class TwigsResolver {
   ) {
     return this.twigsService.loadTwigs(user, windows, groups, tabs);
   }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => RemoveTabTwigResult, {name: 'removeTabTwig'})
+  async removeTabTwig(
+    @CurrentUser() user: UserEntity,
+    @Args('tabId', {type: () => Int}) tabId: number,
+  ) {
+    const {
+      twig,
+      children,
+    } = await this.twigsService.removeTabTwig(user, tabId);
+    return { twig, children }
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => Twig, {name: 'removeGroupTwig'})
+  async removeGroupTwig(
+    @CurrentUser() user: UserEntity,
+    @Args('groupId', {type: () => Int}) groupId: number,
+  ) {
+    return this.twigsService.removeGroupTwig(user, groupId);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => Twig, {name: 'removeWindowTwig'})
+  async removeWindowTwig(
+    @CurrentUser() user: UserEntity,
+    @Args('windowId', {type: () => Int}) windowId: number,
+  ) {
+    return this.twigsService.removeWindowTwig(user, windowId);
+  }
+
+
 
 
   @Subscription(() => AddTwigResult, {name: 'addTwig',

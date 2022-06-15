@@ -11,7 +11,7 @@ import { selectMode } from '../window/windowSlice';
 import { Twig } from './twig';
 import TwigBar from './TwigBar';
 import TwigControls from './TwigControls';
-import { selectDetailIdToTwigId, selectIdToDescIdToTrue, setTwigHeight } from './twigSlice';
+import twigSlice, { selectDetailIdToTwigId, selectIdToDescIdToTrue, setTwigHeight } from './twigSlice';
 //import useSelectTwig from './useSelectTwig';
 import { selectCreateLink, selectSelectArrowId, setCreateLink } from '../arrow/arrowSlice';
 import { Arrow } from '../arrow/arrow';
@@ -65,6 +65,8 @@ function TwigComponent(props: TwigComponentProps) {
     }));
   }, [cardEl.current?.clientHeight]);
 
+  if (props.twig.deleteDate) return null;
+  
   const handleClick = (event: React.MouseEvent) => {
     event.stopPropagation();
 

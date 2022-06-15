@@ -246,3 +246,12 @@ export class TabEntry {
   @Field()
   color: string;
 }
+
+@ObjectType()
+export class RemoveTabTwigResult {
+  @Field(() => Twig)
+  twig: Twig;
+
+  @Field(() => [Twig])
+  children: Twig[];
+}

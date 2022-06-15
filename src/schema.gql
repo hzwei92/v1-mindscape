@@ -125,8 +125,11 @@ type Mutation {
   refreshToken: User!
   registerGoogleUser(token: String!): User!
   registerUser(email: String!, pass: String!): User!
+  removeGroupTwig(groupId: Int!): Twig!
   removeRole(roleId: String!, sessionId: String!): Role!
+  removeTabTwig(tabId: Int!): RemoveTabTwigResult!
   removeTwig(sessionId: String!, twigId: String!): RemoveTwigResult!
+  removeWindowTwig(windowId: Int!): Twig!
   replyTwig(draft: String!, parentTwigId: String!, postId: String!, sessionId: String!, twigId: String!, x: Int!, y: Int!): ReplyTwigResult!
   requestRole(arrowId: String!, sessionId: String!): Role!
   resendUserVerification: User!
@@ -148,6 +151,11 @@ type OpenTwigResult {
 type Query {
   getUserByEmail(email: String!): User
   getUserByName(name: String!): User
+}
+
+type RemoveTabTwigResult {
+  children: [Twig!]!
+  twig: Twig!
 }
 
 type RemoveTwigResult {
