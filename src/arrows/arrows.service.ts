@@ -12,7 +12,7 @@ import { PRIVATE_ARROW_DRAFT, PRIVATE_ARROW_TEXT, uuidRegexExp } from 'src/const
 import { RolesService } from 'src/roles/roles.service';
 import { TwigsService } from 'src/twigs/twigs.service';
 import { VotesService } from 'src/votes/votes.service';
-import { TwigEntry } from 'src/twigs/twig.model';
+import { GroupEntry, TabEntry, WindowEntry } from 'src/twigs/twig.model';
 
 @Injectable()
 export class ArrowsService {
@@ -115,67 +115,85 @@ export class ArrowsService {
     };
   }
 
-  async loadArrows(user: User, abstract: Arrow, entries: TwigEntry[]) {
-    const nonURLEntries: TwigEntry[] = [];
-    const urlToEntry = entries.reduce((acc, entry) => {
-      if (entry.url !== null) {
-        acc[entry.url] = entry;
-      }
-      else {
-        nonURLEntries.push(entry);
-      }
-      return acc;
-    }, {});
-    const arrows = await this.getArrowsByUrls(Object.keys(urlToEntry));
-    const urlToTrue = arrows.reduce((acc, arrow) => {
-      acc[arrow.url] = true;
-      return acc;
-    }, {});
-
-    const URLEntries: TwigEntry[] = Object.keys(urlToEntry)
-      .filter(url => !urlToTrue[url])
-      .map(url => urlToEntry[url]); 
-
-    const arrows0 = [...nonURLEntries, ...URLEntries]
-      .map(entry => {
-        const arrow0 = new Arrow();
-        arrow0.id = v4();
-        arrow0.sourceId = arrow0.id;
-        arrow0.targetId = arrow0.id;
-        arrow0.userId = user.id;
-        arrow0.abstractId = abstract.id;
-        arrow0.title = entry.title 
-          ? entry.title
-          : entry.groupId
-            ? 'group:' + entry.groupId
-            : 'window:' + entry.windowId;
-        arrow0.url = entry.url
-        arrow0.color = user.color;
-        arrow0.routeName = arrow0.id;
-        return arrow0;
-      });
-
+  async loadWindowArrows(user: User, abstract: Arrow, windows: WindowEntry[]) {
+    const arrows0 = windows.map(entry => {
+      const arrow0 = new Arrow();
+      arrow0.id = v4();
+      arrow0.sourceId = arrow0.id;
+      arrow0.targetId = arrow0.id;
+      arrow0.userId = user.id;
+      arrow0.abstractId = abstract.id;
+      arrow0.title = entry.windowId.toString();
+      arrow0.routeName = arrow0.id;
+      arrow0.color = user.color;
+      return arrow0;
+    });
     const arrows1 = await this.arrowsRepository.save(arrows0);
+    return this.finishArrows(user, arrows1);
+  }
 
-    this.searchService.saveArrows(arrows1);
+  async loadGroupArrows(user: User, abstract: Arrow, groups: GroupEntry[]) {
+    const arrows0 = groups.map(entry => {
+      const arrow0 = new Arrow();
+      arrow0.id = v4();
+      arrow0.sourceId = arrow0.id;
+      arrow0.targetId = arrow0.id;
+      arrow0.userId = user.id;
+      arrow0.abstractId = abstract.id;
+      arrow0.title = entry.groupId.toString();
+      arrow0.routeName = arrow0.id;
+      arrow0.color = user.color;
+      return arrow0;
+    });
+    const arrows1 = await this.arrowsRepository.save(arrows0);
+    return this.finishArrows(user, arrows1);
+  }
 
-    const twigs = await this.twigsService.createRootTwigs(user, arrows1);
+  async loadTabArrows(user: User, abstract: Arrow, tabs: TabEntry[]) {
+    const urlToTab = tabs.reduce((acc, entry) => {
+      acc[entry.url] = entry;
+      return acc;
+    }, {})
+    const tabs1 = Object.keys(urlToTab || {}).map(url => urlToTab[url]);
+
+    const arrows0 = tabs1.map(entry => {
+      const arrow0 = new Arrow();
+      arrow0.id = v4();
+      arrow0.sourceId = arrow0.id;
+      arrow0.targetId = arrow0.id;
+      arrow0.userId = user.id;
+      arrow0.abstractId = abstract.id;
+      arrow0.title = entry.title;
+      arrow0.url = entry.url;
+      arrow0.routeName = arrow0.id;
+      arrow0.color = user.color;
+      return arrow0;
+    });
+    const arrows1 = await this.arrowsRepository.save(arrows0);
+    return this.finishArrows(user, arrows1);
+  }
+
+  async finishArrows(user: User, arrows: Arrow[]) {
+    const twigs = await this.twigsService.createRootTwigs(user, arrows);
 
     const detailIdToTwigId = twigs.reduce((acc, twig) => {
       acc[twig.detailId] = twig.id;
       return acc;
     }, {});
 
-    arrows1.forEach(arrow => {
+    arrows.forEach(arrow => {
       arrow.rootTwigId = detailIdToTwigId[arrow.id];
     });
 
-    const arrows2 = await this.arrowsRepository.save(arrows1);
+    const arrows1 = await this.arrowsRepository.save(arrows);
+
+    this.searchService.saveArrows(arrows1);
+
 
     await this.votesService.createInitialVotes(user, arrows1);
     await this.subsService.createSubs(user, arrows1);
 
-    return [...arrows, ...arrows2];
+    return arrows1
   }
 
   async incrementInCount(id: string, value: number) {

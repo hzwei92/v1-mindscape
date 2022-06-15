@@ -70,6 +70,14 @@ type DragTwigResult {
   twigId: String!
 }
 
+input GroupEntry {
+  color: String!
+  groupId: Int!
+  id: String!
+  rank: Int!
+  windowId: Int!
+}
+
 type Lead {
   createDate: DateTime!
   deleteDate: DateTime
@@ -107,7 +115,7 @@ type Mutation {
   initUser(token: String): User!
   inviteRole(arrowId: String!, sessionId: String!, userName: String!): Role!
   linkTwigs(abstractId: String!, sessionId: String!, sourceId: String!, targetId: String!): LinkTwigsResult!
-  loadTwigs(entries: [TwigEntry!]!): [Twig!]!
+  loadTwigs(groups: [GroupEntry!]!, tabs: [TabEntry!]!, windows: [WindowEntry!]!): [Twig!]!
   loginGoogleUser(token: String!): User!
   loginUser(email: String!, pass: String!): User!
   logoutUser: User!
@@ -200,6 +208,20 @@ type Subscription {
   userRole(sessionId: String!, userId: String!): Role!
 }
 
+input TabEntry {
+  color: String!
+  degree: Int!
+  groupId: Int!
+  id: String!
+  index: Int!
+  parentTabId: Float
+  rank: Int!
+  tabId: Int!
+  title: String!
+  url: String!
+  windowId: Int!
+}
+
 type Twig {
   abstract: Arrow!
   abstractId: String!
@@ -226,20 +248,6 @@ type Twig {
   x: Int!
   y: Int!
   z: Int!
-}
-
-input TwigEntry {
-  color: String
-  degree: Int!
-  groupId: Int
-  id: String!
-  index: Int
-  parentId: String
-  rank: Int!
-  tabId: Int
-  title: String
-  url: String
-  windowId: Int!
 }
 
 type User {
@@ -288,4 +296,10 @@ type Vote {
   user: User!
   userId: String!
   weight: Int!
+}
+
+input WindowEntry {
+  id: String!
+  rank: Int!
+  windowId: Int!
 }

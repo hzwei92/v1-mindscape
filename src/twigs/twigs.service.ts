@@ -10,7 +10,7 @@ import { Arrow } from 'src/arrows/arrow.entity';
 import { User } from 'src/users/user.entity';
 import { VotesService } from 'src/votes/votes.service';
 import { checkPermit } from 'src/utils';
-import { TwigEntry } from './twig.model';
+import { WindowEntry, GroupEntry, TabEntry } from './twig.model';
 import { v4 } from 'uuid';
 
 @Injectable()
@@ -76,6 +76,34 @@ export class TwigsService {
     });
     return child.parent;
   }
+
+  async getTwigsByUserIdAndWindowIds(userId: string, windowIds: number[]) {
+    return this.twigsRepository.find({
+      where: {
+        userId,
+        windowId: In(windowIds),
+      },
+    });
+  }
+
+  async getTwigsByUserIdAndGroupIds(userId: string, groupIds: number[]) {
+    return this.twigsRepository.find({
+      where: {
+        userId,
+        groupId: In(groupIds),
+      },
+    });
+  }
+
+  async getTwigsByUserIdAndTabIds(userId: string, tabIds: number[]) {
+    return this.twigsRepository.find({
+      where: {
+        userId,
+        tabId: In(tabIds),
+      },
+    });
+  }
+
 
   async createRootTwigs(user: User, arrows: Arrow[]) {
     const twigs0 = arrows.map(arrow => {
@@ -516,105 +544,67 @@ export class TwigsService {
     }
   }
 
-  async loadTwigs(user: User, entries: TwigEntry[]) {
-    const abstract = await this.arrowsService.getArrowById(user.frameId);
-    if (!abstract) {
-      throw new BadRequestException('This abstract does not exist');
-    }
+  async loadWindowTwigs(user: User, abstract: Arrow, windows: WindowEntry[]) {
+    const rootTwig = await this.getRootTwigByAbstractId(user.frameId);
 
-    const arrows = await this.arrowsService.loadArrows(user, abstract, entries);
-    const windowIdToArrow = {};
-    const groupIdToArrow = {};
-    const urlToArrow = {};
-
-    console.log(5);
-    arrows.forEach(arrow => {
-      if (arrow.url) {
-        urlToArrow[arrow.url] = arrow;
-      }
-      else {
-        const label = arrow.title.split(':');
-        console.log('label', label)
-        if (label[0] === 'group') {
-          groupIdToArrow[label[1]] = arrow;
-        }
-        else {
-          windowIdToArrow[label[1]] = arrow;
-        }
-      }
-    });
-    console.log(4);
-
-    const twigs = await this.getTwigsByIds(entries.map(entry => entry.parentId));
-    const idToTwig = twigs.reduce((acc, twig) => {
-      acc[twig.id] = twig;
+    const arrows = await this.arrowsService.loadWindowArrows(user, abstract, windows);
+    const windowIdToArrow = arrows.reduce((acc, arrow) => {
+      acc[arrow.title] = arrow;
       return acc;
     }, {});
-    let tabEntries: TwigEntry[] = [];
-    const groupEntries: TwigEntry[] = [];
-    const windowEntries: TwigEntry[] = [];
-    entries.forEach(entry => {
-      if (entry.tabId) {
-        tabEntries.push(entry);
-      }
-      else if (entry.groupId) {
-        groupEntries.push(entry);
-      }
-      else {
-        windowEntries.push(entry);
-      }
-    });
 
-    const rootTwig = await this.getRootTwigByAbstractId(user.frameId);
-    console.log(3, windowIdToArrow)
-    let i = 1;
-    const windows0 = [];
-    windowEntries.forEach(entry => {
+    const windows0 = windows.map((entry, i) => {
       const dx = Math.random() - 0.5;
       const dy = Math.random() - 0.5;
       const dr = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-      const x = Math.round(800 * (dx / dr) + (800 * (Math.random() - 0.5)));
-      const y = Math.round(800 * (dy / dr) + (800 * (Math.random() - 0.5)));
+      const x = Math.round(400 * (dx / dr) + (1200 * (Math.random() - 0.5)));
+      const y = Math.round(400 * (dy / dr) + (1200 * (Math.random() - 0.5)));
   
       const window0 = new Twig();
       window0.id = entry.id;
       window0.userId = user.id;
-      window0.abstractId = user.frameId;
+      window0.abstractId = abstract.id;
       window0.detailId = windowIdToArrow[entry.windowId].id;
       window0.parent = rootTwig;
-      window0.i = abstract.twigN + i;
+      window0.i = abstract.twigN + i + 1;
       window0.x = x;
       window0.y = y;
-      window0.z = abstract.twigZ + i;
-      window0.color = entry.color;
+      window0.z = abstract.twigZ + i + 1;
       window0.windowId = entry.windowId;
-      windows0.push(window0);
-      i++;
+      window0.degree = 1;
+      window0.rank = entry.rank;
+      return window0;
     });
     const windows1 = await this.twigsRepository.save(windows0);
+    await this.arrowsService.incrementTwigN(abstract.id, windows.length);
+    await this.arrowsService.incrementTwigZ(abstract.id, windows.length);
 
-    const windowIdToTwig = windows1.reduce((acc, twig) => {
-      acc[twig.windowId] = twig;
+    return windows1;
+  }
+
+  async loadGroupTwigs(user: User, abstract: Arrow, groups: GroupEntry[], windowIdToTwig: any) {
+    const arrows = await this.arrowsService.loadGroupArrows(user, abstract, groups);
+    const groupIdToArrow = arrows.reduce((acc, arrow) => {
+      acc[arrow.title] = arrow;
       return acc;
     }, {});
-    console.log(2)
-    const groups0 = [];
-    groupEntries.forEach(entry => {
-      const parentTwig = windowIdToTwig[entry.windowId] || idToTwig[entry.parentId];
+
+    const groups0 = groups.map((entry, i) => {
+      const parentTwig = windowIdToTwig[entry.windowId];
+
       if (!parentTwig) {
-        throw new Error('Missing group parentTwig' + entry.id)
+        console.error('Missing group parentTwig' + entry);
       }
-      console.log(parentTwig, windowIdToTwig, entry.windowId);
       const dx = parentTwig.x
       const dy = parentTwig.y
       const dr = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-      const x = Math.round(800 * (dx / dr) + (800 * (Math.random() - 0.5)) + parentTwig.x);
-      const y = Math.round(800 * (dy / dr) + (800 * (Math.random() - 0.5)) + parentTwig.y);
+      const x = Math.round(400 * (dx / dr) + (1200 * (dy / dr) * (Math.random() - 0.5)) + parentTwig.x);
+      const y = Math.round(400 * (dy / dr) + (1200 * (dx / dr) * (Math.random() - 0.5)) + parentTwig.y);
   
       const group0 = new Twig();
       group0.id = entry.id;
       group0.userId = user.id;
-      group0.abstractId = user.frameId;
+      group0.abstractId = abstract.id;
       group0.detailId = groupIdToArrow[entry.groupId].id;
       group0.parent = parentTwig;
       group0.i = abstract.twigN + i;
@@ -623,39 +613,52 @@ export class TwigsService {
       group0.z = abstract.twigZ + i;
       group0.windowId = entry.windowId;
       group0.groupId = entry.groupId;
+      group0.degree = 2;
+      group0.rank = entry.rank;
       group0.color = entry.color;
-      groups0.push(group0);
-      i++;
+      return group0;
     });
-
     const groups1 = await this.twigsRepository.save(groups0);
+    await this.arrowsService.incrementTwigN(abstract.id, groups.length);
+    await this.arrowsService.incrementTwigZ(abstract.id, groups.length);
 
-    const idToTwig1 = [...windows1, ...groups1].reduce((acc, twig) => {
-      acc[twig.id] = twig;
+    return groups1;
+  }
+
+
+  async loadTabTwigs(user: User, abstract: Arrow, tabs: TabEntry[], groupIdToTwig: any, tabIdToTwig: any) {
+    const arrows = await this.arrowsService.loadTabArrows(user, abstract, tabs);
+    const urlToArrow = arrows.reduce((acc, arrow) => {
+      acc[arrow.url] = arrow;
       return acc;
     }, {});
 
-    console.log(1);
+    const idToTabTwig = {};
     let degree = 3;
-    while (tabEntries.length) {
-      const nextEntries = [];
+    let i = 1;
+    while (tabs.length) {
+      const nextTabs = [];
       const tabs0 = [];
-      tabEntries.forEach(entry => {
+      tabs.forEach(entry => {
         if (entry.degree === degree) {
-          const parentTwig = idToTwig1[entry.parentId] || idToTwig[entry.parentId];
+          const parentTwig = entry.parentTabId
+            ? tabIdToTwig[entry.parentTabId]
+            : groupIdToTwig[entry.groupId];
+
           if (!parentTwig) {
-            throw new Error('Missing tab parentTwig' + entry.id);
+            console.error('Missing tab parentTwig', entry);
           }
+
           const dx = parentTwig.x
           const dy = parentTwig.y
           const dr = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-          const x = Math.round(800 * (dx / dr) + (800 * (Math.random() - 0.5)) + parentTwig.x);
-          const y = Math.round(800 * (dy / dr) + (800 * (Math.random() - 0.5)) + parentTwig.y);
+          const x = Math.round(400 * (dx / dr) + (1200 * (dy / dr) * (Math.random() - 0.5)) + parentTwig.x);
+          const y = Math.round(400 * (dy / dr) + (1200 * (dx / dr) * (Math.random() - 0.5)) + parentTwig.y);
       
           const tab0 = new Twig();
           tab0.id = entry.id;
           tab0.userId = user.id;
-          tab0.abstractId = user.frameId;
+          tab0.abstractId = abstract.id;
           tab0.detailId = urlToArrow[entry.url].id;
           tab0.parent = parentTwig;
           tab0.i = abstract.twigN + i;
@@ -666,23 +669,91 @@ export class TwigsService {
           tab0.windowId = entry.windowId;
           tab0.groupId = entry.groupId;
           tab0.tabId = entry.tabId;
+          tab0.degree = degree;
+          tab0.rank = entry.rank;
+          tab0.index = entry.index;
           tabs0.push(tab0);
           i++;
         }
         else {
-          nextEntries.push(entry);
+          nextTabs.push(entry);
         }
-      })
+      });
 
       const tabs1 = await this.twigsRepository.save(tabs0);
       tabs1.forEach(twig => {
-        idToTwig1[twig.id] = twig;
-      })
-      tabEntries = nextEntries;
+        tabIdToTwig[twig.tabId] = twig;
+        idToTabTwig[twig.id] = twig;
+      });
+      tabs = nextTabs;
       degree++;
     }
+    const twigs = Object.keys(idToTabTwig || {}).map(id => idToTabTwig[id]);
+    await this.arrowsService.incrementTwigN(abstract.id, twigs.length);
+    await this.arrowsService.incrementTwigZ(abstract.id, twigs.length);
 
-    console.log(0)
-    return Object.keys(idToTwig1).map(id => idToTwig1[id]);
+    return twigs;
+  }
+
+  async loadTwigs(user: User, windows: WindowEntry[], groups: GroupEntry[], tabs: TabEntry[]) {
+    const abstract = await this.arrowsService.getArrowById(user.frameId);
+    if (!abstract) {
+      throw new BadRequestException('This abstract does not exist');
+    }
+    const windowIds = windows.map(entry => entry.windowId);
+    const windowTwigs = await this.getTwigsByUserIdAndWindowIds(user.id, windowIds);
+    const windowIdToTwig = windowTwigs.reduce((acc, twig) => {
+      acc[twig.windowId] = twig;
+      return acc;
+    }, {});
+    
+    const windows1 = windows.filter(entry => !windowIdToTwig[entry.windowId]);
+
+    const windowTwigs1 = await this.loadWindowTwigs(user, abstract, windows1);
+
+    const windowIdToTwig1 = windowTwigs1.reduce((acc, twig) => {
+      acc[twig.windowId] = twig;
+      return acc;
+    }, windowIdToTwig);
+
+    const groupIds = groups.map(entry => entry.groupId);
+    const groupTwigs = await this.getTwigsByUserIdAndGroupIds(user.id, groupIds);
+    const groupIdToTwig = groupTwigs.reduce((acc, twig) => {
+      acc[twig.groupId] = twig;
+      return acc;
+    }, {});
+
+    const groups1 = groups.filter(entry => !groupIdToTwig[entry.groupId]);
+
+    const groupTwigs1 = await this.loadGroupTwigs(
+      user, 
+      abstract, 
+      groups1, 
+      windowIdToTwig1
+    );
+
+    const groupIdToTwig1 = groupTwigs1.reduce((acc, twig) => {
+      acc[twig.groupId] = twig;
+      return acc;
+    }, groupIdToTwig);
+
+    const tabIds = tabs.map(entry => entry.tabId);
+    const tabTwigs = await this.getTwigsByUserIdAndTabIds(user.id, tabIds);
+    const tabIdToTwig = tabTwigs.reduce((acc, twig) => {
+      acc[twig.tabId] = twig;
+      return acc;
+    }, {});
+
+    const tabs1 = tabs.filter(entry => !tabIdToTwig[entry.tabId]);
+    
+    const tabTwigs1 = await this.loadTabTwigs(
+      user,
+      abstract,
+      tabs1,
+      groupIdToTwig1,
+      tabIdToTwig,
+    );
+
+    return [...windowTwigs1, ...groupTwigs1, ...tabTwigs1];
   }
 }

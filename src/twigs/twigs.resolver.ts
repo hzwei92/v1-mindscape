@@ -5,7 +5,20 @@ import { Arrow } from 'src/arrows/arrow.model';
 import { ArrowsService } from 'src/arrows/arrows.service';
 import { PUB_SUB } from 'src/pub-sub/pub-sub.module';
 import { UsersService } from 'src/users/users.service';
-import { AddTwigResult, DragTwigResult, LinkTwigsResult, MoveTwigResult, OpenTwigResult, RemoveTwigResult, ReplyTwigResult, SelectTwigResult, Twig, TwigEntry } from './twig.model';
+import { 
+  AddTwigResult,
+  DragTwigResult,
+  GroupEntry,
+  LinkTwigsResult,
+  MoveTwigResult,
+  OpenTwigResult,
+  RemoveTwigResult,
+  ReplyTwigResult,
+  SelectTwigResult, 
+  TabEntry, 
+  Twig,
+  WindowEntry,
+} from './twig.model';
 import { TwigsService } from './twigs.service';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
 import { User } from 'src/users/user.model';
@@ -255,10 +268,11 @@ export class TwigsResolver {
   @Mutation(() => [Twig], {name: 'loadTwigs'})
   async loadTwigs(
     @CurrentUser() user: UserEntity,
-    @Args('entries', {type: () => [TwigEntry]}) entries: TwigEntry[],
+    @Args('windows', {type: () => [WindowEntry]}) windows: WindowEntry[],
+    @Args('groups', {type: () => [GroupEntry]}) groups: GroupEntry[],
+    @Args('tabs', {type: () => [TabEntry]}) tabs: TabEntry[],
   ) {
-    console.log(entries);
-    return this.twigsService.loadTwigs(user, entries);
+    return this.twigsService.loadTwigs(user, windows, groups, tabs);
   }
 
 

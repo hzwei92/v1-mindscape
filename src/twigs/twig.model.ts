@@ -182,23 +182,53 @@ export class OpenTwigResult {
 }
 
 @InputType()
-export class TwigEntry {
+export class WindowEntry {
   @Field()
   id: string;
-
-  @Field({ nullable: true })
-  parentId: string;
 
   @Field(() => Int)
   windowId: number;
 
-  @Field(() => Int, {nullable: true})
+  @Field(() => Int)
+  rank: number;
+}
+
+@InputType()
+export class GroupEntry {
+  @Field()
+  id: string;
+
+  @Field(() => Int)
+  windowId: number;
+
+  @Field(() => Int)
   groupId: number;
 
-  @Field(() => Int, {nullable: true})
+  @Field(() => Int)
+  rank: number;
+
+  @Field()
+  color: string;
+}
+
+@InputType()
+export class TabEntry {
+  @Field()
+  id: string;
+
+  @Field(() => Int)
+  windowId: number;
+
+  @Field(() => Int)
+  groupId: number;
+
+  @Field({ nullable: true })
+  parentTabId: number;
+
+  @Field(() => Int)
   tabId: number;
 
-  @Field(() => Int, {nullable: true})
+  @Field(() => Int)
   index: number;
 
   @Field(() => Int)
@@ -207,12 +237,12 @@ export class TwigEntry {
   @Field(() => Int)
   rank: number;
 
-  @Field({ nullable: true })
-  color: string;
-
-  @Field({ nullable: true})
+  @Field()
   title: string;
 
-  @Field({ nullable: true})
+  @Field()
   url: string;
+
+  @Field()
+  color: string;
 }
