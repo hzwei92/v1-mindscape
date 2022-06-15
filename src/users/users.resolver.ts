@@ -62,7 +62,7 @@ export class UsersResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @Query(() => User, {name: 'getCurrentUser'})
+  @Mutation(() => User, {name: 'getCurrentUser'})
   async getCurrentUser(
     @CurrentUser() user: User,
   ) {

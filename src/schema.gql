@@ -99,6 +99,7 @@ type Mutation {
   dragTwig(abstractId: String!, dx: Int!, dy: Int!, sessionId: String!, twigId: String!): Twig!
   followUser(userId: String!): Lead!
   getArrowByRouteName(routeName: String!): Arrow
+  getCurrentUser: User!
   getCurrentUserLeads: [Lead!]!
   getTwigs(abstractId: String!): [Twig!]!
   getUser(userId: String!): User!
@@ -137,7 +138,6 @@ type OpenTwigResult {
 }
 
 type Query {
-  getCurrentUser: User!
   getUserByEmail(email: String!): User
   getUserByName(name: String!): User
 }

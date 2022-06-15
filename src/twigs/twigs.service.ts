@@ -544,6 +544,12 @@ export class TwigsService {
       }
     });
     console.log(4);
+
+    const twigs = await this.getTwigsByIds(entries.map(entry => entry.parentId));
+    const idToTwig = twigs.reduce((acc, twig) => {
+      acc[twig.id] = twig;
+      return acc;
+    }, {});
     let tabEntries: TwigEntry[] = [];
     const groupEntries: TwigEntry[] = [];
     const windowEntries: TwigEntry[] = [];
@@ -567,8 +573,8 @@ export class TwigsService {
       const dx = Math.random() - 0.5;
       const dy = Math.random() - 0.5;
       const dr = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-      const x = Math.round(800 * (dx / dr) + (1200 * (Math.random() - 0.5)));
-      const y = Math.round(800 * (dy / dr) + (1200 * (Math.random() - 0.5)));
+      const x = Math.round(800 * (dx / dr) + (800 * (Math.random() - 0.5)));
+      const y = Math.round(800 * (dy / dr) + (800 * (Math.random() - 0.5)));
   
       const window0 = new Twig();
       window0.id = entry.id;
@@ -580,6 +586,7 @@ export class TwigsService {
       window0.x = x;
       window0.y = y;
       window0.z = abstract.twigZ + i;
+      window0.color = entry.color;
       window0.windowId = entry.windowId;
       windows0.push(window0);
       i++;
@@ -593,13 +600,16 @@ export class TwigsService {
     console.log(2)
     const groups0 = [];
     groupEntries.forEach(entry => {
-      const parentTwig = windowIdToTwig[entry.windowId];
+      const parentTwig = windowIdToTwig[entry.windowId] || idToTwig[entry.parentId];
+      if (!parentTwig) {
+        throw new Error('Missing group parentTwig' + entry.id)
+      }
       console.log(parentTwig, windowIdToTwig, entry.windowId);
       const dx = parentTwig.x
       const dy = parentTwig.y
       const dr = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-      const x = Math.round(800 * (dx / dr) + (1200 * (Math.random() - 0.5)) + parentTwig.x);
-      const y = Math.round(800 * (dy / dr) + (1200 * (Math.random() - 0.5)) + parentTwig.y);
+      const x = Math.round(800 * (dx / dr) + (800 * (Math.random() - 0.5)) + parentTwig.x);
+      const y = Math.round(800 * (dy / dr) + (800 * (Math.random() - 0.5)) + parentTwig.y);
   
       const group0 = new Twig();
       group0.id = entry.id;
@@ -620,7 +630,7 @@ export class TwigsService {
 
     const groups1 = await this.twigsRepository.save(groups0);
 
-    const idToTwig = [...windows1, ...groups1].reduce((acc, twig) => {
+    const idToTwig1 = [...windows1, ...groups1].reduce((acc, twig) => {
       acc[twig.id] = twig;
       return acc;
     }, {});
@@ -632,12 +642,15 @@ export class TwigsService {
       const tabs0 = [];
       tabEntries.forEach(entry => {
         if (entry.degree === degree) {
-          const parentTwig = idToTwig[entry.parentId];
+          const parentTwig = idToTwig1[entry.parentId] || idToTwig[entry.parentId];
+          if (!parentTwig) {
+            throw new Error('Missing tab parentTwig' + entry.id);
+          }
           const dx = parentTwig.x
           const dy = parentTwig.y
           const dr = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-          const x = Math.round(800 * (dx / dr) + (1200 * (Math.random() - 0.5)) + parentTwig.x);
-          const y = Math.round(800 * (dy / dr) + (1200 * (Math.random() - 0.5)) + parentTwig.y);
+          const x = Math.round(800 * (dx / dr) + (800 * (Math.random() - 0.5)) + parentTwig.x);
+          const y = Math.round(800 * (dy / dr) + (800 * (Math.random() - 0.5)) + parentTwig.y);
       
           const tab0 = new Twig();
           tab0.id = entry.id;
@@ -649,6 +662,7 @@ export class TwigsService {
           tab0.x = x;
           tab0.y = y;
           tab0.z = abstract.twigZ + i;
+          tab0.color = entry.color;
           tab0.windowId = entry.windowId;
           tab0.groupId = entry.groupId;
           tab0.tabId = entry.tabId;
@@ -662,13 +676,13 @@ export class TwigsService {
 
       const tabs1 = await this.twigsRepository.save(tabs0);
       tabs1.forEach(twig => {
-        idToTwig[twig.id] = twig;
+        idToTwig1[twig.id] = twig;
       })
       tabEntries = nextEntries;
       degree++;
     }
 
     console.log(0)
-    return Object.keys(idToTwig).map(id => idToTwig[id]);
+    return Object.keys(idToTwig1).map(id => idToTwig1[id]);
   }
 }
