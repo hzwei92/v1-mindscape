@@ -53,7 +53,7 @@ export class Twig {
   @Field(() => [Twig])
   children: Twig[];
 
-  @Field(() => Int)
+  @Field(() => Int, { nullable: true })
   index: number;
 
   @Field(() => Int)

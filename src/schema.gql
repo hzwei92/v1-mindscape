@@ -140,6 +140,7 @@ type Mutation {
   setUserMap(lat: Float!, lng: Float!, zoom: Float!): User!
   setUserName(name: String!, sessionId: String!): User!
   unfollowUser(userId: String!): Lead!
+  updateTabTwigs(group: GroupEntry!, tab: TabEntry!, window: WindowEntry!): [Twig!]!
   verifyUser(code: String!): User!
 }
 
@@ -243,7 +244,7 @@ type Twig {
   groupId: Int
   i: Int!
   id: String!
-  index: Int!
+  index: Int
   isOpen: Boolean!
   isRoot: Boolean!
   parent: Twig

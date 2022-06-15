@@ -277,6 +277,17 @@ export class TwigsResolver {
   }
 
   @UseGuards(GqlAuthGuard)
+  @Mutation(() => [Twig], {name: 'updateTabTwigs'})
+  async updateTabTwigs(
+    @CurrentUser() user: UserEntity,
+    @Args('window', {type: () => WindowEntry}) window: WindowEntry,
+    @Args('group', {type: () => GroupEntry}) group: GroupEntry,
+    @Args('tab', {type: () => TabEntry}) tab: TabEntry,
+  ) {
+    return this.twigsService.updateTabTwigs(user, window, group, tab);
+  }
+
+  @UseGuards(GqlAuthGuard)
   @Mutation(() => RemoveTabTwigResult, {name: 'removeTabTwig'})
   async removeTabTwig(
     @CurrentUser() user: UserEntity,

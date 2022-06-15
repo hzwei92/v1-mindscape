@@ -153,8 +153,17 @@ export class ArrowsService {
     const urlToTab = tabs.reduce((acc, entry) => {
       acc[entry.url] = entry;
       return acc;
-    }, {})
-    const tabs1 = Object.keys(urlToTab || {}).map(url => urlToTab[url]);
+    }, {});
+
+    const arrows = await this.getArrowsByUrls(Object.keys(urlToTab));
+    const urlToArrow = arrows.reduce((acc, arrow) => {
+      acc[arrow.url] = arrow;
+      return acc;
+    }, {});
+
+    const tabs1 = Object.keys(urlToTab || {})
+      .filter(url => !urlToArrow[url])
+      .map(url => urlToTab[url]);
 
     const arrows0 = tabs1.map(entry => {
       const arrow0 = new Arrow();
@@ -170,7 +179,8 @@ export class ArrowsService {
       return arrow0;
     });
     const arrows1 = await this.arrowsRepository.save(arrows0);
-    return this.finishArrows(user, arrows1);
+    const arrows2 = await this.finishArrows(user, arrows1);
+    return [...arrows, ...arrows2];
   }
 
   async finishArrows(user: User, arrows: Arrow[]) {

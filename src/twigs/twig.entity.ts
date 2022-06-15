@@ -72,7 +72,7 @@ export class Twig {
   @TreeChildren()
   children: Twig[];
 
-  @Column({ default: 0 })
+  @Column({ nullable: true })
   index: number;
 
   @Column({ default: 1 })
