@@ -5,7 +5,7 @@ import { ArrowsService } from 'src/arrows/arrows.service';
 import { RolesService } from 'src/roles/roles.service';
 import { In, IsNull, Repository } from 'typeorm';
 import { Twig } from './twig.entity';
-import { RoleType } from '../enums';
+import { DisplayMode, RoleType } from '../enums';
 import { Arrow } from 'src/arrows/arrow.entity';
 import { User } from 'src/users/user.entity';
 import { VotesService } from 'src/votes/votes.service';
@@ -591,8 +591,8 @@ export class TwigsService {
       const dx = Math.random() - 0.5;
       const dy = Math.random() - 0.5;
       const dr = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-      const x = Math.round(400 * (dx / dr) + (1200 * (Math.random() - 0.5)));
-      const y = Math.round(400 * (dy / dr) + (1200 * (Math.random() - 0.5)));
+      const x = Math.round(400 * (dx / dr));
+      const y = Math.round(400 * (dy / dr));
   
       const window0 = new Twig();
       window0.id = entry.id;
@@ -607,6 +607,7 @@ export class TwigsService {
       window0.windowId = entry.windowId;
       window0.degree = 1;
       window0.rank = entry.rank;
+      window0.displayMode = DisplayMode.VERTICAL;
       return window0;
     });
     const windows1 = await this.twigsRepository.save(windows0);
@@ -634,8 +635,11 @@ export class TwigsService {
       const dx = parentTwig.x
       const dy = parentTwig.y
       const dr = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-      const x = Math.round(400 * (dx / dr) + (1200 * (dy / dr) * (Math.random() - 0.5)) + parentTwig.x);
-      const y = Math.round(400 * (dy / dr) + (1200 * (dx / dr) * (Math.random() - 0.5)) + parentTwig.y);
+      const dx1 = Math.random() - 0.5;
+      const dy1 = Math.random() - 0.5;
+      const dr1 = Math.sqrt(Math.pow(dx1, 2) + Math.pow(dy1, 2));
+      const x = Math.round((400 * (dx / dr)) + (400 * (dx1 / dr1)) + parentTwig.x);
+      const y = Math.round((400 * (dy / dr)) + (400 * (dy1 / dr1)) + parentTwig.y);
   
       const group0 = new Twig();
       group0.id = entry.id;
@@ -652,6 +656,7 @@ export class TwigsService {
       group0.degree = 2;
       group0.rank = entry.rank;
       group0.color = entry.color;
+      group0.displayMode = DisplayMode.HORIZONTAL;
       return group0;
     });
     const groups1 = await this.twigsRepository.save(groups0);
@@ -690,8 +695,11 @@ export class TwigsService {
           const dx = parentTwig.x
           const dy = parentTwig.y
           const dr = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-          const x = Math.round(400 * (dx / dr) + (1200 * (dy / dr) * (Math.random() - 0.5)) + parentTwig.x);
-          const y = Math.round(400 * (dy / dr) + (1200 * (dx / dr) * (Math.random() - 0.5)) + parentTwig.y);
+          const dx1 = Math.random() - 0.5;
+          const dy1 = Math.random() - 0.5;
+          const dr1 = Math.sqrt(Math.pow(dx1, 2) + Math.pow(dy1, 2));
+          const x = Math.round((400 * (dx / dr)) + (400 * (dx1 / dr1)) + parentTwig.x);
+          const y = Math.round((400 * (dy / dr)) + (400 * (dy1 / dr1)) + parentTwig.y);
       
           const tab0 = new Twig();
           tab0.id = entry.id;
@@ -710,6 +718,7 @@ export class TwigsService {
           tab0.degree = entry.degree;
           tab0.rank = entry.rank;
           tab0.index = entry.index;
+          tab0.displayMode = DisplayMode.VERTICAL;
           tabs0.push(tab0);
           i++;
         }
@@ -854,6 +863,7 @@ export class TwigsService {
       tabTwig0.degree = tab.degree;
       tabTwig0.rank = tab.rank;
       tabTwig0.index = tab.index;
+      tabTwig0.displayMode = DisplayMode.VERTICAL,
 
       tabTwig = await this.twigsRepository.save(tabTwig0);
     }

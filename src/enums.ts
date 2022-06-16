@@ -9,3 +9,9 @@ export enum RoleType {
   MEMBER = 'MEMBER',
   OTHER = 'OTHER'
 }
+
+export enum DisplayMode {
+  SCATTERED = 'SCATTERED',
+  HORIZONTAL = 'HORIZONTAL',
+  VERTICAL = 'VERTICAL',
+}

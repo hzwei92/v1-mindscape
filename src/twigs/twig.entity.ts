@@ -13,6 +13,8 @@ import {
 } from 'typeorm';
 import { User } from 'src/users/user.entity';
 import { Arrow } from 'src/arrows/arrow.entity';
+import { TWIG_HEIGHT, TWIG_WIDTH } from 'src/constants';
+import { DisplayMode } from 'src/enums';
 
 @Entity()
 @Tree('closure-table', {
@@ -80,6 +82,25 @@ export class Twig {
 
   @Column({ default: 1 })
   rank: number;
+
+  @Column({ default: TWIG_WIDTH })
+  ownWidth: number;
+
+  @Column({ default: TWIG_HEIGHT })
+  ownHeight: number;
+
+  @Column({ default: TWIG_WIDTH })
+  width: number;
+
+  @Column({ default: TWIG_HEIGHT })
+  height: number;
+
+  @Column({
+    type: 'enum',
+    enum: DisplayMode,
+    default: DisplayMode.SCATTERED,
+  })
+  displayMode: DisplayMode;
 
   @Column({ nullable: true })
   windowId: number;

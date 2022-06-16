@@ -241,18 +241,23 @@ type Twig {
   deleteDate: DateTime
   detail: Arrow!
   detailId: String!
+  displayMode: String!
   groupId: Int
+  height: Int!
   i: Int!
   id: String!
   index: Int
   isOpen: Boolean!
   isRoot: Boolean!
+  ownHeight: Int!
+  ownWidth: Int!
   parent: Twig
   rank: Int!
   tabId: Int
   updateDate: DateTime!
   user: User!
   userId: String!
+  width: Int!
   windowId: Int
   x: Int!
   y: Int!

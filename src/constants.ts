@@ -44,3 +44,6 @@ export const IDLE_TIME = 2 * 60 * 1000;
 
 
 export const VIEW_RADIUS = 30000;
+
+export const TWIG_WIDTH = 360;
+export const TWIG_HEIGHT = 140;

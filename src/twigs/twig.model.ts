@@ -62,6 +62,21 @@ export class Twig {
   @Field(() => Int)
   rank: number;
 
+  @Field(() => Int)
+  ownWidth: number;
+
+  @Field(() => Int)
+  ownHeight: number;
+
+  @Field(() => Int)
+  width: number;
+
+  @Field(() => Int)
+  height: number;
+
+  @Field()
+  displayMode: string;
+
   @Field(() => Int, { nullable: true })
   windowId: number;
 
