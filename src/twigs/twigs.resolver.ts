@@ -12,8 +12,10 @@ import {
   LinkTwigsResult,
   MoveTwigResult,
   OpenTwigResult,
+  RemoveGroupTwigResult,
   RemoveTabTwigResult,
   RemoveTwigResult,
+  RemoveWindowTwigResult,
   ReplyTwigResult,
   SelectTwigResult, 
   TabEntry, 
@@ -265,27 +267,70 @@ export class TwigsResolver {
     };
   }
 
+
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => [Twig], {name: 'loadTwigs'})
-  async loadTwigs(
+  @Mutation(() => [Twig], {name: 'loadTabs'})
+  async loadTabs(
     @CurrentUser() user: UserEntity,
     @Args('windows', {type: () => [WindowEntry]}) windows: WindowEntry[],
     @Args('groups', {type: () => [GroupEntry]}) groups: GroupEntry[],
     @Args('tabs', {type: () => [TabEntry]}) tabs: TabEntry[],
   ) {
-    return this.twigsService.loadTwigs(user, windows, groups, tabs);
+    console.log('loadTabs', windows, groups, tabs);
+    return this.twigsService.loadTabs(user, windows, groups, tabs);
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => [Twig], {name: 'updateTabTwigs'})
-  async updateTabTwigs(
+  @Mutation(() => [Twig], {name: 'createTab'})
+  async createTab(
     @CurrentUser() user: UserEntity,
-    @Args('window', {type: () => WindowEntry}) window: WindowEntry,
-    @Args('group', {type: () => GroupEntry}) group: GroupEntry,
-    @Args('tab', {type: () => TabEntry}) tab: TabEntry,
+    @Args('tab', {type: () => TabEntry, nullable: true}) tab: TabEntry,
   ) {
-    return this.twigsService.updateTabTwigs(user, window, group, tab);
+    console.log('createTab', tab)
+    return this.twigsService.createTab(user, tab);
   }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => [Twig], {name: 'createGroup'})
+  async createGroup(
+    @CurrentUser() user: UserEntity,
+    @Args('group', {type: () => GroupEntry}) group: GroupEntry,
+    @Args('window', {type: () => WindowEntry, nullable: true}) window: WindowEntry,
+    @Args('tab', {type: () => TabEntry, nullable: true}) tab: TabEntry,
+    @Args('tabTwigId', {nullable: true}) tabTwigId: string,
+  ) {
+    console.log('createGroup', group, tab, window)
+    const twigs = await this.twigsService.createGroup(user, group, window, tab, tabTwigId);
+    console.log(twigs);
+    return twigs;
+  }
+  
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => Twig, {name: 'updateTab'})
+  async updateTab(
+    @CurrentUser() user: UserEntity,
+    @Args('twigId') twigId: string,
+    @Args('title') title: string,
+    @Args('url') url: string,
+  ) {
+    return this.twigsService.updateTab(user, twigId, title, url);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => [Twig], {name: 'moveTab'})
+  async moveTab(
+    @CurrentUser() user: UserEntity,
+    @Args('twigId') twigId: string,
+    @Args('windowId', { type: () => Int }) windowId: number,
+    @Args('groupId', { type: () => Int }) groupId: number,
+    @Args('parentTabId', {type: () => Int, nullable: true}) parentTabId: number,
+  ) {
+    console.log('moveTab', twigId, groupId, parentTabId);
+    return this.twigsService.moveTab(user, twigId, windowId, groupId, parentTabId);
+  }
+
+
+
 
   @UseGuards(GqlAuthGuard)
   @Mutation(() => RemoveTabTwigResult, {name: 'removeTabTwig'})
@@ -293,15 +338,11 @@ export class TwigsResolver {
     @CurrentUser() user: UserEntity,
     @Args('tabId', {type: () => Int}) tabId: number,
   ) {
-    const {
-      twig,
-      children,
-    } = await this.twigsService.removeTabTwig(user, tabId);
-    return { twig, children }
+    return this.twigsService.removeTabTwig(user, tabId);
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => Twig, {name: 'removeGroupTwig'})
+  @Mutation(() => RemoveGroupTwigResult, {name: 'removeGroupTwig'})
   async removeGroupTwig(
     @CurrentUser() user: UserEntity,
     @Args('groupId', {type: () => Int}) groupId: number,
@@ -310,7 +351,7 @@ export class TwigsResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => Twig, {name: 'removeWindowTwig'})
+  @Mutation(() => RemoveWindowTwigResult, {name: 'removeWindowTwig'})
   async removeWindowTwig(
     @CurrentUser() user: UserEntity,
     @Args('windowId', {type: () => Int}) windowId: number,

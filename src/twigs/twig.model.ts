@@ -6,7 +6,7 @@ import { Role } from 'src/roles/role.model';
 @ObjectType()
 export class Twig {
   @Field()
-  id: string
+  id: string;
 
   @Field()
   userId: string;
@@ -198,8 +198,8 @@ export class OpenTwigResult {
 
 @InputType()
 export class WindowEntry {
-  @Field()
-  id: string;
+  @Field({ nullable: true})
+  twigId: string;
 
   @Field(() => Int)
   windowId: number;
@@ -210,8 +210,8 @@ export class WindowEntry {
 
 @InputType()
 export class GroupEntry {
-  @Field()
-  id: string;
+  @Field({ nullable: true })
+  twigId: string;
 
   @Field(() => Int)
   windowId: number;
@@ -228,8 +228,8 @@ export class GroupEntry {
 
 @InputType()
 export class TabEntry {
-  @Field()
-  id: string;
+  @Field({ nullable: true})
+  twigId: string;
 
   @Field(() => Int)
   windowId: number;
@@ -269,4 +269,25 @@ export class RemoveTabTwigResult {
 
   @Field(() => [Twig])
   children: Twig[];
+
+  @Field(() => [Twig])
+  sibs: Twig[];
+}
+
+@ObjectType()
+export class RemoveGroupTwigResult {
+  @Field(() => Twig)
+  twig: Twig;
+
+  @Field(() => [Twig])
+  sibs: Twig[];
+}
+
+@ObjectType()
+export class RemoveWindowTwigResult {
+  @Field(() => Twig)
+  twig: Twig;
+
+  @Field(() => [Twig])
+  sibs: Twig[];
 }

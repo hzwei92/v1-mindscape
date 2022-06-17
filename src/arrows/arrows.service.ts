@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/users/user.entity';
-import { In, Repository } from 'typeorm';
+import { In, QueryRunner, Repository } from 'typeorm';
 import { Arrow } from './arrow.entity';
 import { v4 } from 'uuid'; 
 import { getEmptyDraft } from 'src/utils';
@@ -149,7 +149,7 @@ export class ArrowsService {
     return this.finishArrows(user, arrows1);
   }
 
-  async loadTabArrows(user: User, abstract: Arrow, tabs: TabEntry[]) {
+  async loadTabArrows(user: User, abstract: Arrow, tabs: {url: string, title: string}[]) {
     const urlToTab = tabs.reduce((acc, entry) => {
       acc[entry.url] = entry;
       return acc;

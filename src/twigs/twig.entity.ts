@@ -24,7 +24,7 @@ import { DisplayMode } from 'src/enums';
 })
 export class Twig {
   @PrimaryGeneratedColumn('uuid')
-  id: string
+  id: string;
 
   @Column()
   userId: string;
