@@ -300,9 +300,7 @@ export class TwigsResolver {
     @Args('tabTwigId', {nullable: true}) tabTwigId: string,
   ) {
     console.log('createGroup', group, tab, window)
-    const twigs = await this.twigsService.createGroup(user, group, window, tab, tabTwigId);
-    console.log(twigs);
-    return twigs;
+    return this.twigsService.createGroup(user, group, window, tab, tabTwigId);
   }
   
   @UseGuards(GqlAuthGuard)
