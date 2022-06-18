@@ -98,6 +98,7 @@ export class ArrowsService {
     const [twig] = await this.twigsService.createRootTwigs(user, [arrow1]);
 
     arrow1.rootTwigId = twig.id;
+    arrow1.selectTwigId = twig.id;
 
     const arrow2 = await this.arrowsRepository.save(arrow1);
 
@@ -193,6 +194,7 @@ export class ArrowsService {
 
     arrows.forEach(arrow => {
       arrow.rootTwigId = detailIdToTwigId[arrow.id];
+      arrow.selectTwigId = detailIdToTwigId[arrow.id];
     });
 
     const arrows1 = await this.arrowsRepository.save(arrows);
@@ -206,12 +208,18 @@ export class ArrowsService {
     return arrows1
   }
 
+  async setSelectTwigId(id: string, selectTwigId: string) {
+    await this.arrowsRepository.update({ id }, {
+      selectTwigId,
+    });
+  }
+
   async incrementInCount(id: string, value: number) {
-    await this.arrowsRepository.increment({id}, 'inCount', value);
+    await this.arrowsRepository.increment({ id }, 'inCount', value);
   }
 
   async incrementOutCount(id: string, value: number) {
-    await this.arrowsRepository.increment({id}, 'outCount', value);
+    await this.arrowsRepository.increment({ id }, 'outCount', value);
   }
 
   async incrementTwigN(id: string, value: number) {

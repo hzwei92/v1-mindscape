@@ -84,6 +84,8 @@ export class Arrow {
   @Field()
   rootTwigId: string;
 
+  @Field()
+  selectTwigId: string;
 
   @Field()
   canEdit: string;

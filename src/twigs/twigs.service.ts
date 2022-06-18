@@ -350,6 +350,7 @@ export class TwigsService {
     const twigZ = baseZ + descendants.length + 1 - abstract.twigZ;
 
     await this.arrowsService.incrementTwigZ(abstract.id, twigZ);
+    await this.arrowsService.setSelectTwigId(abstract.id, twigId);
     const abstract1 = await this.arrowsService.getArrowById(abstract.id);
     return {
       abstract: abstract1,
@@ -420,7 +421,7 @@ export class TwigsService {
     }
   }
 
-  async moveTwig(user: User, twigId: string, x: number, y: number) {
+  async moveTwig(user: User, twigId: string, x: number, y: number, shouldMoveSubtree: boolean) {
     const twig = await this.getTwigById(twigId);
     if (!twig) {
       throw new BadRequestException('This twig does not exist');
@@ -439,19 +440,25 @@ export class TwigsService {
       throw new BadRequestException('Insufficient privileges');
     }
 
-    const dx = x - twig.x;
-    const dy = y - twig.y;
+    let twigs1 = []
+    if (shouldMoveSubtree) {
+      const dx = x - twig.x;
+      const dy = y - twig.y;
 
-    const descendants = await this.twigsRepository.manager.getTreeRepository(Twig).findDescendants(twig);
+      let descs = await this.twigsRepository.manager.getTreeRepository(Twig).findDescendants(twig);
 
-    const twigs0 = descendants.map(descendant => {
-      const twig0 = new Twig();
-      twig0.id = descendant.id;
-      twig0.x = descendant.x + dx;
-      twig0.y = descendant.y + dy;
-      return twig0;
-    })
-    const twigs1 = await this.twigsRepository.save(twigs0);
+      descs = descs.map(desc => {
+        desc.x += dx;
+        desc.y += dy;
+        return desc
+      })
+      twigs1 = await this.twigsRepository.save(descs);
+    }
+    else {
+      twig.x = x;
+      twig.y = y;
+      twigs1 = await this.twigsRepository.save([twig]);
+    }
 
     return {
       twigs: twigs1,
