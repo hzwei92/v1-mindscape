@@ -421,7 +421,7 @@ export class TwigsService {
     }
   }
 
-  async moveTwig(user: User, twigId: string, x: number, y: number, shouldMoveSubtree: boolean) {
+  async moveTwig(user: User, twigId: string, x: number, y: number, displayMode: string) {
     const twig = await this.getTwigById(twigId);
     if (!twig) {
       throw new BadRequestException('This twig does not exist');
@@ -441,7 +441,7 @@ export class TwigsService {
     }
 
     let twigs1 = []
-    if (shouldMoveSubtree) {
+    if (displayMode !== DisplayMode.SCATTERED) {
       const dx = x - twig.x;
       const dy = y - twig.y;
 
@@ -457,6 +457,7 @@ export class TwigsService {
     else {
       twig.x = x;
       twig.y = y;
+      twig.displayMode = DisplayMode[displayMode]
       twigs1 = await this.twigsRepository.save([twig]);
     }
 

@@ -203,12 +203,12 @@ export class TwigsResolver {
     @Args('twigId') twigId: string,
     @Args('x', {type: () => Int}) x: number,
     @Args('y', {type: () => Int}) y: number,
-    @Args('shouldMoveSubtree') shouldMoveSubtree: boolean,
+    @Args('displayMode') displayMode: string,
   ) {
     const {
       twigs, 
       role,
-    } = await this.twigsService.moveTwig(user, twigId, x, y, shouldMoveSubtree);
+    } = await this.twigsService.moveTwig(user, twigId, x, y, displayMode);
 
     return {
       twigs, 

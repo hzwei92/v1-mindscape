@@ -123,7 +123,7 @@ type Mutation {
   loginUser(email: String!, pass: String!): User!
   logoutUser: User!
   moveTab(groupId: Int!, parentTabId: Int, twigId: String!, windowId: Int!): [Twig!]!
-  moveTwig(sessionId: String!, shouldMoveSubtree: Boolean!, twigId: String!, x: Int!, y: Int!): MoveTwigResult!
+  moveTwig(displayMode: String!, sessionId: String!, twigId: String!, x: Int!, y: Int!): MoveTwigResult!
   openTwig(isOpen: Boolean!, sessionId: String!, twigId: String!): OpenTwigResult!
   publishCursor(abstractId: String!, sessionId: String!, x: Int!, y: Int!): User!
   refreshToken: User!
