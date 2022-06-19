@@ -8,6 +8,18 @@ export class Twig {
   @Field()
   id: string;
 
+  @Field({ nullable: true })
+  sourceId: string;
+
+  @Field(() => Twig, { nullable: true })
+  source: Twig;
+
+  @Field({ nullable: true })
+  targetId: string;
+
+  @Field(() => Twig, { nullable: true })
+  target: Twig;
+
   @Field()
   userId: string;
 
@@ -264,8 +276,8 @@ export class TabEntry {
 
 @ObjectType()
 export class RemoveTabTwigResult {
-  @Field(() => Twig)
-  twig: Twig;
+  @Field(() => [Twig])
+  twigs: Twig[];
 
   @Field(() => [Twig])
   children: Twig[];

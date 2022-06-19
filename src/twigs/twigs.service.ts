@@ -150,6 +150,8 @@ export class TwigsService {
     detail: Arrow, 
     parentTwig: Twig | null, 
     twigId: string | null, 
+    sourceId: string | null,
+    targetId: string | null,
     i: number,
     x: number,
     y: number,
@@ -158,6 +160,8 @@ export class TwigsService {
   ) {
     const twig0 = new Twig();
     twig0.id = twigId || undefined;
+    twig0.sourceId = sourceId;
+    twig0.targetId = targetId;
     twig0.userId = user.id;
     twig0.abstractId = abstract.id;
     twig0.detailId = detail.id;
@@ -182,7 +186,7 @@ export class TwigsService {
       where: {
         id: parentTwigId,
       },
-      relations: ['abstract', 'detail']
+      relations: ['abstract']
     });
     if (!parentTwig) {
       throw new BadRequestException('This parent twig does not exist');
@@ -231,6 +235,8 @@ export class TwigsService {
       post,
       parentTwig,
       twigId,
+      null, 
+      null,
       parentTwig.abstract.twigN + 1,
       x,
       y,
@@ -243,6 +249,8 @@ export class TwigsService {
       link,
       null,
       null,
+      parentTwig.id,
+      postTwig.id,
       parentTwig.abstract.twigN + 2,
       Math.round((parentTwig.x + x) / 2),
       Math.round((parentTwig.y + y) / 2),
@@ -405,7 +413,20 @@ export class TwigsService {
     const x = Math.round((sourceTwig.x + targetTwig.x) / 2);
     const y = Math.round((sourceTwig.y + targetTwig.y) / 2);
 
-    const twig = await this.createTwig(user, abstract, arrow, null, null, abstract.twigN + 1, x, y, abstract.twigZ + 1, true);
+    const twig = await this.createTwig(
+      user, 
+      abstract, 
+      arrow, 
+      null, 
+      null, 
+      sourceTwig.id,
+      targetTwig.id,
+      abstract.twigN + 1, 
+      x, 
+      y, 
+      abstract.twigZ + 1, 
+      true
+    );
   
     await this.arrowsService.incrementTwigN(abstract.id, 1);
     await this.arrowsService.incrementTwigZ(abstract.id, 1);
@@ -441,13 +462,16 @@ export class TwigsService {
     }
 
     let twigs1 = []
-    if (displayMode !== DisplayMode.SCATTERED) {
+    if (displayMode === DisplayMode.SCATTERED) {
       const dx = x - twig.x;
       const dy = y - twig.y;
 
       let descs = await this.twigsRepository.manager.getTreeRepository(Twig).findDescendants(twig);
 
       descs = descs.map(desc => {
+        if (desc.id === twigId) {
+          desc.displayMode = DisplayMode[displayMode]
+        }
         desc.x += dx;
         desc.y += dy;
         return desc
@@ -824,6 +848,7 @@ export class TwigsService {
 
   async createTab(user: User, tab: TabEntry) {
     try {
+      const twigs = [];
       const group = await this.twigsRepository.findOne({
         where: {
           userId: user.id,
@@ -831,7 +856,7 @@ export class TwigsService {
           groupId: tab.groupId,
           tabId: IsNull(),
         },
-        relations: ['children']
+        relations: ['children', 'abstract'],
       });
 
       let parent;
@@ -853,13 +878,19 @@ export class TwigsService {
         parent = group
       }
 
+      if (!parent) {
+        console.log('missing parent twig for ', tab)
+        throw Error('missing parent twig')
+      }
+
       // increment sib rank
-      let sibs = parent.children.filter(sib => sib.rank > tab.rank)
+      let sibs = (parent?.children || []).filter(sib => sib.rank > tab.rank)
         .map(sib => {
           sib.rank += 1;
           return sib;
         });
       sibs = await this.twigsRepository.save(sibs);
+      twigs.push(...sibs);
 
       const [tabTwig] = await this.loadTabTwigs(user, [tab], {
         [group.groupId]: group,
@@ -870,8 +901,39 @@ export class TwigsService {
             : {}
         ),
       });
+      twigs.push(tabTwig)
 
-      return [tabTwig, ...sibs];
+      if (parentTab && parentTab.detailId !== tabTwig.detailId) {
+        const { arrow: link, isPreexisting } = await this.arrowsService.linkArrows(
+          user,
+          group.abstract,
+          parentTab.detailId, 
+          tabTwig.detailId
+        );
+        const x = Math.round((parentTab.x + tabTwig.x) / 2);
+        const y = Math.round((parentTab.y + tabTwig.y) / 2);
+    
+        const linkTwig = await this.createTwig(
+          user, 
+          group.abstract, 
+          link, 
+          null, 
+          null,
+          parentTab.id,
+          tabTwig.id,
+          group.abstract.twigN + 2,
+          x,
+          y,
+          group.abstract.twigN + 2,
+          false,
+        );
+        twigs.push(linkTwig, parentTab);
+
+        await this.arrowsService.incrementTwigN(group.abstractId, 1);
+        await this.arrowsService.incrementTwigZ(group.abstractId, 1);
+      }
+
+      return twigs;
     } catch (err) {
       throw err;
     } finally {
@@ -1053,8 +1115,14 @@ export class TwigsService {
       title,
     }]);
 
-    twig.detailId = arrows[0].id;
-    return this.twigsRepository.save(twig);
+    if (twig.detailId === arrows[0].id) {
+      return twig;
+    }
+    else {
+      await this.arrowsService.linkArrows(user, abstract, twig.detailId, arrows[0].id);
+      twig.detailId = arrows[0].id;
+      return this.twigsRepository.save(twig);
+    }
   }
 
   async moveTab(user: User, twigId: string, windowId: number, groupId: number, parentTabId: number | null) {
@@ -1148,14 +1216,15 @@ export class TwigsService {
         userId: user.id,
         tabId,
       },
-      relations: ['parent', 'parent.children', 'children'],
+      relations: ['parent', 'parent.children', 'children', 'ins', 'outs'],
     });
 
     if (!twig) {
       throw new BadRequestException('This tab twig does not exist')
     }
 
-    twig.deleteDate = new Date();
+    const date = new Date();
+    twig.deleteDate = date;
     const twig1 = await this.twigsRepository.save(twig);
 
     const children0 = twig.children.map((child, i) => {
@@ -1174,8 +1243,25 @@ export class TwigsService {
       });
 
     const sibs1 = await this.twigsRepository.save(sibs0);
+
+    const links = [...twig.ins, ...twig.outs];
+    const links0 = [];
+    await links.reduce(async (acc, link) => {
+      await acc;
+
+      const descs = await this.twigsRepository.manager.getTreeRepository(Twig)
+        .findDescendants(link);
+
+      descs.forEach(desc => {
+        desc.deleteDate = date;
+        links0.push(desc);
+      })
+    }, Promise.resolve());
+
+    const links1 = await this.twigsRepository.save(links0);
+    
     return {
-      twig: twig1,
+      twigs: [twig1, ...links1],
       children: children1,
       sibs: sibs1,
     }

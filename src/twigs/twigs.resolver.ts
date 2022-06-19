@@ -1,5 +1,5 @@
 import { Inject, UseGuards } from '@nestjs/common';
-import { Args, Int, Mutation, Parent, ResolveField, Resolver, Subscription } from '@nestjs/graphql';
+import { Args, Int, Mutation, Parent, Query, ResolveField, Resolver, Subscription } from '@nestjs/graphql';
 import { CurrentUser, GqlAuthGuard } from 'src/auth/gql-auth.guard';
 import { Arrow } from 'src/arrows/arrow.model';
 import { ArrowsService } from 'src/arrows/arrows.service';
@@ -312,6 +312,7 @@ export class TwigsResolver {
     @Args('title') title: string,
     @Args('url') url: string,
   ) {
+    console.log('updateTab', twigId, title, url)
     return this.twigsService.updateTab(user, twigId, title, url);
   }
 

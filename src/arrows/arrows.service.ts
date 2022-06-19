@@ -1,18 +1,18 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/users/user.entity';
-import { In, QueryRunner, Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Arrow } from './arrow.entity';
 import { v4 } from 'uuid'; 
-import { getEmptyDraft } from 'src/utils';
+import { findDefaultWeight, getEmptyDraft } from 'src/utils';
 import { SearchService } from 'src/search/search.service';
 import { SubsService } from 'src/subs/subs.service';
 import { RoleType } from 'src/enums';
-import { PRIVATE_ARROW_DRAFT, PRIVATE_ARROW_TEXT, uuidRegexExp } from 'src/constants';
+import { PRIVATE_ARROW_DRAFT, PRIVATE_ARROW_TEXT } from 'src/constants';
 import { RolesService } from 'src/roles/roles.service';
 import { TwigsService } from 'src/twigs/twigs.service';
 import { VotesService } from 'src/votes/votes.service';
-import { GroupEntry, TabEntry, WindowEntry } from 'src/twigs/twig.model';
+import { GroupEntry, WindowEntry } from 'src/twigs/twig.model';
 
 @Injectable()
 export class ArrowsService {
@@ -116,6 +116,37 @@ export class ArrowsService {
     };
   }
 
+  async linkArrows(user: User, abstract: Arrow, sourceId: string, targetId: string) {
+    let arrow = await this.arrowsRepository.findOne({
+      where: {
+        userId: user.id,
+        sourceId,
+        targetId,
+      },
+    });
+    let isPreexisting;
+    let vote;
+    if (arrow) {
+      isPreexisting = true;
+      vote = await this.votesService.createVote(user, arrow, 1, 0);
+      arrow.clicks += 1;
+      arrow.weight = findDefaultWeight(arrow.clicks, arrow.tokens);
+      arrow = await this.arrowsRepository.save(arrow);
+    }
+    else {
+      isPreexisting = false;
+      ({ arrow, vote } = await this.createArrow(user, null, sourceId, targetId, abstract, null));
+
+      await this.incrementOutCount(sourceId, 1);
+      await this.incrementInCount(targetId, 1);
+    }
+    return {
+      arrow,
+      vote,
+      isPreexisting,
+    }
+  }
+
   async loadWindowArrows(user: User, abstract: Arrow, windows: WindowEntry[]) {
     const arrows0 = windows.map(entry => {
       const arrow0 = new Arrow();
@@ -162,26 +193,41 @@ export class ArrowsService {
       return acc;
     }, {});
 
-    const tabs1 = Object.keys(urlToTab || {})
-      .filter(url => !urlToArrow[url])
-      .map(url => urlToTab[url]);
+    const readyArrows = []
+    const createArrows = [];
+    const updateArrows = []
+    Object.keys(urlToTab || {})
+      .forEach(url => {
+        const entry = urlToTab[url];
+        const arrow = urlToArrow[url];
+        if (arrow) {
+          if (arrow.title === entry.title) {
+            readyArrows.push(arrow);
+          }
+          else {
+            arrow.title = entry.title;
+            updateArrows.push(arrow);
+          }
+        }
+        else {
+          const arrow0 = new Arrow();
+          arrow0.id = v4();
+          arrow0.sourceId = arrow0.id;
+          arrow0.targetId = arrow0.id;
+          arrow0.userId = user.id;
+          arrow0.abstractId = abstract.id;
+          arrow0.title = entry.title;
+          arrow0.url = entry.url;
+          arrow0.routeName = arrow0.id;
+          arrow0.color = user.color;
+          createArrows.push(arrow0);
+        }
+      });
 
-    const arrows0 = tabs1.map(entry => {
-      const arrow0 = new Arrow();
-      arrow0.id = v4();
-      arrow0.sourceId = arrow0.id;
-      arrow0.targetId = arrow0.id;
-      arrow0.userId = user.id;
-      arrow0.abstractId = abstract.id;
-      arrow0.title = entry.title;
-      arrow0.url = entry.url;
-      arrow0.routeName = arrow0.id;
-      arrow0.color = user.color;
-      return arrow0;
-    });
-    const arrows1 = await this.arrowsRepository.save(arrows0);
-    const arrows2 = await this.finishArrows(user, arrows1);
-    return [...arrows, ...arrows2];
+    const updateArrows1 = await this.arrowsRepository.save(updateArrows);
+    const createArrows1 = await this.arrowsRepository.save(createArrows);
+    const createArrows2 = await this.finishArrows(user, createArrows1);
+    return [...readyArrows, ...updateArrows1, ...createArrows2];
   }
 
   async finishArrows(user: User, arrows: Arrow[]) {

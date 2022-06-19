@@ -166,7 +166,7 @@ type RemoveGroupTwigResult {
 type RemoveTabTwigResult {
   children: [Twig!]!
   sibs: [Twig!]!
-  twig: Twig!
+  twigs: [Twig!]!
 }
 
 type RemoveTwigResult {
@@ -268,7 +268,11 @@ type Twig {
   ownWidth: Int!
   parent: Twig
   rank: Int!
+  source: Twig
+  sourceId: String
   tabId: Int
+  target: Twig
+  targetId: String
   updateDate: DateTime!
   user: User!
   userId: String!

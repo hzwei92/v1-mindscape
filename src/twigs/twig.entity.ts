@@ -10,6 +10,7 @@ import {
   JoinColumn,
   TreeParent,
   TreeChildren,
+  OneToMany,
 } from 'typeorm';
 import { User } from 'src/users/user.entity';
 import { Arrow } from 'src/arrows/arrow.entity';
@@ -25,6 +26,29 @@ import { DisplayMode } from 'src/enums';
 export class Twig {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ nullable: true })
+  sourceId: string;
+
+  @ManyToOne(() => Twig, { nullable: true })
+  @JoinColumn({ referencedColumnName: 'id'})
+  source: Twig;
+
+  @Column({ nullable: true })
+  targetId: string;
+
+  @ManyToOne(() => Twig, { nullable: true })
+  @JoinColumn({ referencedColumnName: 'id'})
+  target: Twig;
+
+
+  @OneToMany(() => Twig, twig => twig.target)
+  ins: Twig[];
+
+  @OneToMany(() => Twig, twig => twig.source)
+  outs: Twig[];
+  
+
 
   @Column()
   userId: string;
