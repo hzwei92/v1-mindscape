@@ -53,6 +53,9 @@ export class Twig {
   @Field(() => Int)
   z: number;
 
+  @Field()
+  isPositionReady: boolean;
+  
   @Field({ nullable: true })
   color: string;
 
@@ -272,6 +275,15 @@ export class TabEntry {
 
   @Field()
   color: string;
+}
+
+@ObjectType()
+export class UpdateTabResult {
+  @Field(() => Twig)
+  twig: Twig;
+
+  @Field(() => [Twig])
+  deleted: Twig[];
 }
 
 @ObjectType()

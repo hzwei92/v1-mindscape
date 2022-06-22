@@ -20,6 +20,7 @@ import {
   SelectTwigResult, 
   TabEntry, 
   Twig,
+  UpdateTabResult,
   WindowEntry,
 } from './twig.model';
 import { TwigsService } from './twigs.service';
@@ -305,7 +306,7 @@ export class TwigsResolver {
   }
   
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => Twig, {name: 'updateTab'})
+  @Mutation(() => UpdateTabResult, {name: 'updateTab'})
   async updateTab(
     @CurrentUser() user: UserEntity,
     @Args('twigId') twigId: string,

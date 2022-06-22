@@ -112,9 +112,6 @@ export class Arrow {
   @Column({ nullable: true })
   rootTwigId: string;
 
-  @Column({ nullable: true })
-  selectTwigId: string;
-
 
   @Column({
     type: 'enum',

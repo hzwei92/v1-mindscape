@@ -91,7 +91,8 @@ import { TwigsModule } from './twigs/twigs.module';
               origin: [
                 'http://localhost:8081',
                 'http://localhost:3000',
-                'chrome-extension://dfgclbhmaeilnpimjliggfdiidoaccgc'
+                'chrome-extension://dfgclbhmaeilnpimjliggfdiidoaccgc',
+                'chrome-extension://ilcoblgjlneeglihjhkpdhbgbjmcmcej'
               ],
               credentials: true,
             }

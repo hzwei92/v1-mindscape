@@ -39,7 +39,6 @@ type Arrow {
   rootTwigId: String!
   routeName: String!
   saveDate: DateTime!
-  selectTwigId: String!
   source: Arrow
   sourceId: String!
   state: String
@@ -144,7 +143,7 @@ type Mutation {
   setUserMap(lat: Float!, lng: Float!, zoom: Float!): User!
   setUserName(name: String!, sessionId: String!): User!
   unfollowUser(userId: String!): Lead!
-  updateTab(title: String!, twigId: String!, url: String!): Twig!
+  updateTab(title: String!, twigId: String!, url: String!): UpdateTabResult!
   verifyUser(code: String!): User!
 }
 
@@ -263,6 +262,7 @@ type Twig {
   id: String!
   index: Int
   isOpen: Boolean!
+  isPositionReady: Boolean!
   isRoot: Boolean!
   ownHeight: Int!
   ownWidth: Int!
@@ -281,6 +281,11 @@ type Twig {
   x: Int!
   y: Int!
   z: Int!
+}
+
+type UpdateTabResult {
+  deleted: [Twig!]!
+  twig: Twig!
 }
 
 type User {
