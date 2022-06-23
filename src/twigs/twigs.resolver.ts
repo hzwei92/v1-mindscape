@@ -7,6 +7,7 @@ import { PUB_SUB } from 'src/pub-sub/pub-sub.module';
 import { UsersService } from 'src/users/users.service';
 import { 
   AddTwigResult,
+  CreateGroupResult,
   DragTwigResult,
   GroupEntry,
   LinkTwigsResult,
@@ -256,12 +257,12 @@ export class TwigsResolver {
     @CurrentUser() user: UserEntity,
     @Args('sessionId') sessionId: string,
     @Args('twigId') twigId: string,
-    @Args('isOpen') isOpen: boolean,
+    @Args('shouldOpen') shouldOpen: boolean,
   ) {
     const { 
       twig,
       role
-    } = await this.twigsService.openTwig(user, twigId, isOpen);
+    } = await this.twigsService.openTwig(user, twigId, shouldOpen);
 
     return {
       twig,
@@ -293,7 +294,7 @@ export class TwigsResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => [Twig], {name: 'createGroup'})
+  @Mutation(() => CreateGroupResult, {name: 'createGroup'})
   async createGroup(
     @CurrentUser() user: UserEntity,
     @Args('group', {type: () => GroupEntry}) group: GroupEntry,

@@ -482,7 +482,6 @@ export class TwigsService {
       twig.x = x;
       twig.y = y;
       twig.displayMode = DisplayMode[displayMode];
-      twig.isPositionReady = true;
       twigs1 = await this.twigsRepository.save([twig]);
     }
 
@@ -571,7 +570,7 @@ export class TwigsService {
     return this.twigsRepository.save(twigs0);
   }
 
-  async openTwig(user: User, twigId: string, isOpen: boolean) {
+  async openTwig(user: User, twigId: string, shouldOpen: boolean) {
     const twig = await this.getTwigById(twigId);
     if (!twig) {
       throw new BadRequestException('This twig does not exist');
@@ -595,7 +594,7 @@ export class TwigsService {
 
     const twig0 = new Twig();
     twig0.id = twig.id;
-    twig0.isOpen = isOpen;
+    twig0.isOpen = shouldOpen;
     const twig1 = await this.twigsRepository.save(twig0);
 
     return {
@@ -624,7 +623,6 @@ export class TwigsService {
       window0.x = 0;
       window0.y = 0;
       window0.z = abstract.twigZ + i + 1;
-      window0.isPositionReady = false;
       window0.windowId = entry.windowId;
       window0.degree = 1;
       window0.rank = entry.rank;
@@ -663,7 +661,6 @@ export class TwigsService {
       group0.x = parentTwig.x;
       group0.y = parentTwig.y;
       group0.z = abstract.twigZ + i;
-      group0.isPositionReady = false;
       group0.windowId = entry.windowId;
       group0.groupId = entry.groupId;
       group0.degree = 2;
@@ -714,7 +711,6 @@ export class TwigsService {
           tab0.x = parentTwig.x;
           tab0.y = parentTwig.y;
           tab0.z = abstract.twigZ + i;
-          tab0.isPositionReady = false;
           tab0.color = entry.color;
           tab0.windowId = entry.windowId;
           tab0.groupId = entry.groupId;
@@ -931,8 +927,6 @@ export class TwigsService {
     tabTwigId: string | null,
   ) {
     try {
-      const twigs = [];
-
       let windowTwig = await this.twigsRepository.findOne({
         where: {
           userId: user.id,
@@ -942,9 +936,10 @@ export class TwigsService {
         }
       });
 
+      let windowSibs = [];
       if (window && !windowTwig) {
         // inc window sibling ranks
-        let otherWindows = await this.twigsRepository.find({
+        windowSibs = await this.twigsRepository.find({
           where: {
             userId: user.id,
             windowId: Not(IsNull()),
@@ -953,17 +948,15 @@ export class TwigsService {
           }
         });
   
-        otherWindows = otherWindows.map(w => {
+        windowSibs = windowSibs.map(w => {
           w.rank += 1;
           return w;
         });
   
-        otherWindows = await this.twigsRepository.save(otherWindows);
-        twigs.push(...otherWindows);
+        windowSibs = await this.twigsRepository.save(windowSibs);
   
         // create window
         [windowTwig] = await this.loadWindowTwigs(user, [window]);
-        twigs.push(windowTwig);
       }
 
       let groupTwig = await this.twigsRepository.findOne({
@@ -974,9 +967,10 @@ export class TwigsService {
           tabId: IsNull(),
         }
       })
+      let groupSibs = [];
       if (!groupTwig) {
         // inc group sibling rank
-        let otherGroups = await this.twigsRepository.find({
+        let groupSibs = await this.twigsRepository.find({
           where: {
             userId: user.id,
             windowId: group.windowId,
@@ -985,24 +979,23 @@ export class TwigsService {
           }
         });
     
-        otherGroups = otherGroups.map(g => {
+        groupSibs = groupSibs.map(g => {
           g.rank += 1;
           return g;
         });
     
-        otherGroups = await this.twigsRepository.save(otherGroups);
-        twigs.push(...otherGroups);
+        groupSibs = await this.twigsRepository.save(groupSibs);
     
         // create group
         [groupTwig] = await this.loadGroupTwigs(user, [group], {
           [windowTwig.windowId]: windowTwig,
         });
-        twigs.push(groupTwig);
       }
 
-
+      let tabTwig;
+      let tabDescs = [];
       if (tab) {
-        let tabTwig = await this.twigsRepository.findOne({
+        tabTwig = await this.twigsRepository.findOne({
           where: {
             userId: user.id,
             windowId: tab.windowId,
@@ -1033,12 +1026,10 @@ export class TwigsService {
                 : {}
             ),
           });
-    
-          twigs.push(tabTwig);
         }
       }
       else if (tabTwigId) {
-        let tabTwig = await this.getTwigById(tabTwigId);
+        tabTwig = await this.getTwigById(tabTwigId);
         if (!tabTwig) {
           throw new BadRequestException('This tab Twig does not exist');
         }
@@ -1052,30 +1043,35 @@ export class TwigsService {
         tabTwig.index = groupTwig.index + 1;
         tabTwig.color = groupTwig.color;
         tabTwig = await this.twigsRepository.save(tabTwig);
-        twigs.push(tabTwig);
   
         const descs = await this.twigsRepository.manager.getTreeRepository(Twig)
           .findDescendants(tabTwig);
         
-        let descs1 = [];
+        let tabDescs = [];
         descs.forEach(desc => {
           if (desc.id !== tabTwigId) {
             desc.groupId = groupTwig.groupId;
-            desc.degree += dDegree;
             desc.index += dIndex;
+            desc.degree += dDegree;
             desc.color = groupTwig.color;
-            descs1.push(desc);
+            tabDescs.push(desc);
           }
         });
   
-        descs1 = await this.twigsRepository.save(descs1);
-        twigs.push(...descs1);
+        tabDescs = await this.twigsRepository.save(tabDescs);
       }
       else {
         throw new BadRequestException('Either tabEntry or tabTwigId must be provided')
       }
   
-      return twigs;
+      return {
+        window: windowTwig,
+        windowSibs,
+        group: groupTwig,
+        groupSibs,
+        tab: tabTwig,
+        tabDescs,
+      };
     } catch (err) {
       throw err;
     } finally {
@@ -1093,14 +1089,11 @@ export class TwigsService {
     if (!twig) {
       throw new BadRequestException('This twig does not exist');
     }
-    console.log(1);
     const abstract = await this.arrowsService.getArrowById(user.frameId);
-    console.log(2)
     const arrows = await this.arrowsService.loadTabArrows(user, abstract, [{
       url,
       title,
     }]);
-    console.log(3)
     if (twig.detailId === arrows[0].id) {
       return {
         twig,
@@ -1108,12 +1101,10 @@ export class TwigsService {
       };
     }
     else {
-      console.log(4, arrows);
       twig.detailId = arrows[0].id;
       await this.twigsRepository.update({id: twigId}, {
         detailId: arrows[0].id,
       });
-      console.log(5)
       const date = new Date();
       let deleted = [...twig.ins, ...twig.outs];
       deleted = deleted.map(linkTwig => {
@@ -1121,10 +1112,8 @@ export class TwigsService {
         return linkTwig;
       });
       deleted = await this.twigsRepository.save(deleted);
-      console.log(6)
       await this.arrowsService.linkArrows(user, abstract, twig.detailId, arrows[0].id);
 
-      console.log(7)
       return {
         twig,
         deleted,
@@ -1218,7 +1207,7 @@ export class TwigsService {
   }
 
   async removeTabTwig(user: User, tabId: number) {
-    const twig = await this.twigsRepository.findOne({
+    let twig = await this.twigsRepository.findOne({
       where: {
         userId: user.id,
         tabId,
@@ -1232,28 +1221,42 @@ export class TwigsService {
 
     const date = new Date();
     twig.deleteDate = date;
-    const twig1 = await this.twigsRepository.save(twig);
+    twig =  await this.twigsRepository.save(twig);
 
-    const children0 = twig.children.map((child, i) => {
-      child.parent = twig.parent;
-      child.degree = child.degree - 1;
-      child.rank = twig.rank + i;
-      return child;
-    });
+    let children = twig.children
+      .sort((a,b) => a.rank < b.rank ? -1 : 1)
+      .map((child, i) => {
+        child.parent = twig.parent;
+        child.degree = child.degree - 1;
+        child.rank = twig.rank + i;
+        return child;
+      });
 
-    const children1 = await this.twigsRepository.save(children0);
+    children = await this.twigsRepository.save(children);
 
-    const sibs0 = (twig.parent?.children || []).filter(sib => sib.rank > twig.rank)
+    let descs = await this.twigsRepository.manager.getTreeRepository(Twig)
+      .findDescendants(twig);
+    
+    const descs1 = [];
+    descs.forEach(desc => {
+      if (!children.some(child => child.id === desc.id)) {
+        desc.degree -= 1;
+        descs1.push(desc);
+      }
+    })
+
+    descs = await this.twigsRepository.save(descs1);
+
+    let sibs = (twig.parent?.children || []).filter(sib => sib.rank > twig.rank)
       .map(sib => {
-        sib.rank = sib.rank - 1 + twig.children.length;
+        sib.rank += twig.children.length - 1;
         return sib;
       });
 
-    const sibs1 = await this.twigsRepository.save(sibs0);
+    sibs = await this.twigsRepository.save(sibs);
 
-    const links = [...twig.ins, ...twig.outs];
-    const links0 = [];
-    await links.reduce(async (acc, link) => {
+    let links = [];
+    await [...twig.ins, ...twig.outs].reduce(async (acc, link) => {
       await acc;
 
       const descs = await this.twigsRepository.manager.getTreeRepository(Twig)
@@ -1261,16 +1264,18 @@ export class TwigsService {
 
       descs.forEach(desc => {
         desc.deleteDate = date;
-        links0.push(desc);
+        links.push(desc);
       })
     }, Promise.resolve());
 
-    const links1 = await this.twigsRepository.save(links0);
+    links = await this.twigsRepository.save(links);
     
     return {
-      twigs: [twig1, ...links1],
-      children: children1,
-      sibs: sibs1,
+      tab: twig,
+      tabChildren: children,
+      tabDescs: descs,
+      tabSibs: sibs,
+      tabLinks: links,
     }
   }
 
@@ -1298,8 +1303,8 @@ export class TwigsService {
       const sibs1 = await this.twigsRepository.save(sibs0);
   
       return {
-        twig: twig1,
-        sibs: sibs1,
+        group: twig1,
+        groupSibs: sibs1,
       };
     } catch (err) {
     } finally {

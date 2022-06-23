@@ -59,6 +59,15 @@ type Arrow {
   weight: Float!
 }
 
+type CreateGroupResult {
+  group: Twig!
+  groupSibs: [Twig!]!
+  tab: Twig!
+  tabDescs: [Twig!]!
+  window: Twig
+  windowSibs: [Twig!]!
+}
+
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
@@ -104,7 +113,7 @@ type MoveTwigResult {
 type Mutation {
   addTwig(arrowId: String!, parentTwigId: String!, sessionId: String!): AddTwigResult!
   adjustTwigs(abstractId: String!, twigIds: [String!]!, xs: [Int!]!, ys: [Int!]!): [Twig!]!
-  createGroup(group: GroupEntry!, tab: TabEntry, tabTwigId: String, window: WindowEntry): [Twig!]!
+  createGroup(group: GroupEntry!, tab: TabEntry, tabTwigId: String, window: WindowEntry): CreateGroupResult!
   createTab(tab: TabEntry): [Twig!]!
   dragTwig(abstractId: String!, dx: Int!, dy: Int!, sessionId: String!, twigId: String!): Twig!
   followUser(userId: String!): Lead!
@@ -123,7 +132,7 @@ type Mutation {
   logoutUser: User!
   moveTab(groupId: Int!, parentTabId: Int, twigId: String!, windowId: Int!): [Twig!]!
   moveTwig(displayMode: String!, sessionId: String!, twigId: String!, x: Int!, y: Int!): MoveTwigResult!
-  openTwig(isOpen: Boolean!, sessionId: String!, twigId: String!): OpenTwigResult!
+  openTwig(sessionId: String!, shouldOpen: Boolean!, twigId: String!): OpenTwigResult!
   publishCursor(abstractId: String!, sessionId: String!, x: Int!, y: Int!): User!
   refreshToken: User!
   registerGoogleUser(token: String!): User!
@@ -158,14 +167,16 @@ type Query {
 }
 
 type RemoveGroupTwigResult {
-  sibs: [Twig!]!
-  twig: Twig!
+  group: Twig!
+  groupSibs: [Twig!]!
 }
 
 type RemoveTabTwigResult {
-  children: [Twig!]!
-  sibs: [Twig!]!
-  twigs: [Twig!]!
+  tab: Twig!
+  tabChildren: [Twig!]!
+  tabDescs: [Twig!]!
+  tabLinks: [Twig!]!
+  tabSibs: [Twig!]!
 }
 
 type RemoveTwigResult {
@@ -262,7 +273,6 @@ type Twig {
   id: String!
   index: Int
   isOpen: Boolean!
-  isPositionReady: Boolean!
   isRoot: Boolean!
   ownHeight: Int!
   ownWidth: Int!

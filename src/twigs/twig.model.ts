@@ -52,9 +52,6 @@ export class Twig {
 
   @Field(() => Int)
   z: number;
-
-  @Field()
-  isPositionReady: boolean;
   
   @Field({ nullable: true })
   color: string;
@@ -277,6 +274,28 @@ export class TabEntry {
   color: string;
 }
 
+@ObjectType() 
+export class CreateGroupResult {
+  @Field(() => Twig, {nullable: true})
+  window: Twig;
+
+  @Field(() => [Twig])
+  windowSibs: Twig[];
+
+  @Field(() => Twig)
+  group: Twig;
+
+  @Field(() => [Twig])
+  groupSibs: Twig[];
+
+  @Field(() => Twig)
+  tab: Twig;
+
+  @Field(() => [Twig])
+  tabDescs: Twig[];
+
+}
+
 @ObjectType()
 export class UpdateTabResult {
   @Field(() => Twig)
@@ -288,23 +307,29 @@ export class UpdateTabResult {
 
 @ObjectType()
 export class RemoveTabTwigResult {
-  @Field(() => [Twig])
-  twigs: Twig[];
+  @Field(() => Twig)
+  tab: Twig;
 
   @Field(() => [Twig])
-  children: Twig[];
+  tabChildren: Twig[];
 
   @Field(() => [Twig])
-  sibs: Twig[];
+  tabDescs: Twig[];
+
+  @Field(() => [Twig])
+  tabSibs: Twig[];
+
+  @Field(() => [Twig])
+  tabLinks: Twig[];
 }
 
 @ObjectType()
 export class RemoveGroupTwigResult {
   @Field(() => Twig)
-  twig: Twig;
+  group: Twig;
 
   @Field(() => [Twig])
-  sibs: Twig[];
+  groupSibs: Twig[];
 }
 
 @ObjectType()
