@@ -97,28 +97,13 @@ export class Twig {
 
   @TreeChildren()
   children: Twig[];
-
-  @Column({ nullable: true })
-  index: number;
-
+  
   @Column({ default: 1 })
   degree: number;
 
   @Column({ default: 1 })
   rank: number;
-
-  @Column({ default: TWIG_WIDTH })
-  ownWidth: number;
-
-  @Column({ default: TWIG_HEIGHT })
-  ownHeight: number;
-
-  @Column({ default: TWIG_WIDTH })
-  width: number;
-
-  @Column({ default: TWIG_HEIGHT })
-  height: number;
-
+  
   @Column({
     type: 'enum',
     enum: DisplayMode,

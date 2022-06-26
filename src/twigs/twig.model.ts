@@ -65,26 +65,11 @@ export class Twig {
   @Field(() => [Twig])
   children: Twig[];
 
-  @Field(() => Int, { nullable: true })
-  index: number;
-
   @Field(() => Int)
   degree: number;
 
   @Field(() => Int)
   rank: number;
-
-  @Field(() => Int)
-  ownWidth: number;
-
-  @Field(() => Int)
-  ownHeight: number;
-
-  @Field(() => Int)
-  width: number;
-
-  @Field(() => Int)
-  height: number;
 
   @Field()
   displayMode: string;
@@ -210,8 +195,11 @@ export class OpenTwigResult {
 
 @InputType()
 export class WindowEntry {
-  @Field({ nullable: true})
+  @Field()
   twigId: string;
+
+  @Field()
+  parentTwigId: string;
 
   @Field(() => Int)
   windowId: number;
@@ -222,8 +210,11 @@ export class WindowEntry {
 
 @InputType()
 export class GroupEntry {
-  @Field({ nullable: true })
+  @Field()
   twigId: string;
+
+  @Field()
+  parentTwigId: string;
 
   @Field(() => Int)
   windowId: number;
@@ -240,8 +231,11 @@ export class GroupEntry {
 
 @InputType()
 export class TabEntry {
-  @Field({ nullable: true})
+  @Field()
   twigId: string;
+
+  @Field()
+  parentTwigId: string;
 
   @Field(() => Int)
   windowId: number;
@@ -249,14 +243,8 @@ export class TabEntry {
   @Field(() => Int)
   groupId: number;
 
-  @Field({ nullable: true })
-  parentTabId: number;
-
   @Field(() => Int)
   tabId: number;
-
-  @Field(() => Int)
-  index: number;
 
   @Field(() => Int)
   degree: number;
@@ -274,26 +262,28 @@ export class TabEntry {
   color: string;
 }
 
-@ObjectType() 
-export class CreateGroupResult {
-  @Field(() => Twig, {nullable: true})
-  window: Twig;
+@ObjectType()
+export class SyncTabStateResult {
+  @Field(() => [Twig])
+  windows: Twig[];
 
   @Field(() => [Twig])
-  windowSibs: Twig[];
+  groups: Twig[];
 
+  @Field(() => [Twig])
+  tabs: Twig[];
+
+  @Field(() => [Twig])
+  deleted: Twig[];
+}
+
+@ObjectType()
+export class CreateTabResult {
   @Field(() => Twig)
-  group: Twig;
+  twig: Twig;
 
   @Field(() => [Twig])
-  groupSibs: Twig[];
-
-  @Field(() => Twig)
-  tab: Twig;
-
-  @Field(() => [Twig])
-  tabDescs: Twig[];
-
+  sibs: Twig[];
 }
 
 @ObjectType()
@@ -306,37 +296,34 @@ export class UpdateTabResult {
 }
 
 @ObjectType()
-export class RemoveTabTwigResult {
-  @Field(() => Twig)
-  tab: Twig;
-
-  @Field(() => [Twig])
-  tabChildren: Twig[];
-
-  @Field(() => [Twig])
-  tabDescs: Twig[];
-
-  @Field(() => [Twig])
-  tabSibs: Twig[];
-
-  @Field(() => [Twig])
-  tabLinks: Twig[];
-}
-
-@ObjectType()
-export class RemoveGroupTwigResult {
-  @Field(() => Twig)
-  group: Twig;
-
-  @Field(() => [Twig])
-  groupSibs: Twig[];
-}
-
-@ObjectType()
-export class RemoveWindowTwigResult {
+export class MoveTabResult {
   @Field(() => Twig)
   twig: Twig;
 
   @Field(() => [Twig])
+  prevSibs: Twig[];
+
+  @Field(() => [Twig])
   sibs: Twig[];
+
+  @Field(() => [Twig])
+  descs: Twig[];
+}
+
+@ObjectType()
+export class RemoveTabResult {
+  @Field(() => Twig)
+  twig: Twig;
+
+  @Field(() => [Twig])
+  children: Twig[];
+
+  @Field(() => [Twig])
+  descs: Twig[];
+
+  @Field(() => [Twig])
+  sibs: Twig[];
+
+  @Field(() => [Twig])
+  links: Twig[];
 }

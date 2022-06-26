@@ -7,18 +7,18 @@ import { PUB_SUB } from 'src/pub-sub/pub-sub.module';
 import { UsersService } from 'src/users/users.service';
 import { 
   AddTwigResult,
-  CreateGroupResult,
+  CreateTabResult,
   DragTwigResult,
   GroupEntry,
   LinkTwigsResult,
+  MoveTabResult,
   MoveTwigResult,
   OpenTwigResult,
-  RemoveGroupTwigResult,
-  RemoveTabTwigResult,
+  RemoveTabResult,
   RemoveTwigResult,
-  RemoveWindowTwigResult,
   ReplyTwigResult,
   SelectTwigResult, 
+  SyncTabStateResult, 
   TabEntry, 
   Twig,
   UpdateTabResult,
@@ -270,40 +270,43 @@ export class TwigsResolver {
     };
   }
 
-
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => [Twig], {name: 'loadTabs'})
-  async loadTabs(
+  @Mutation(() => SyncTabStateResult, {name: 'syncTabState'})
+  async syncTabState(
     @CurrentUser() user: UserEntity,
+    @Args('twigId') twigId: string,
     @Args('windows', {type: () => [WindowEntry]}) windows: WindowEntry[],
     @Args('groups', {type: () => [GroupEntry]}) groups: GroupEntry[],
     @Args('tabs', {type: () => [TabEntry]}) tabs: TabEntry[],
   ) {
-    console.log('loadTabs', windows, groups, tabs);
-    return this.twigsService.loadTabs(user, windows, groups, tabs);
+    return this.twigsService.syncTabState(user, twigId, windows, groups, tabs);
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => [Twig], {name: 'createTab'})
-  async createTab(
+  @Mutation(() => CreateTabResult, {name: 'createWindow'})
+  async createWindow(
     @CurrentUser() user: UserEntity,
-    @Args('tab', {type: () => TabEntry, nullable: true}) tab: TabEntry,
+    @Args('windowEntry', {type: () => WindowEntry}) windowEntry: WindowEntry,
   ) {
-    console.log('createTab', tab)
-    return this.twigsService.createTab(user, tab);
+    return this.twigsService.createWindow(user, windowEntry);
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => CreateGroupResult, {name: 'createGroup'})
+  @Mutation(() => CreateTabResult, {name: 'createGroup'})
   async createGroup(
     @CurrentUser() user: UserEntity,
-    @Args('group', {type: () => GroupEntry}) group: GroupEntry,
-    @Args('window', {type: () => WindowEntry, nullable: true}) window: WindowEntry,
-    @Args('tab', {type: () => TabEntry, nullable: true}) tab: TabEntry,
-    @Args('tabTwigId', {nullable: true}) tabTwigId: string,
+    @Args('groupEntry', {type: () => GroupEntry}) groupEntry: GroupEntry,
   ) {
-    console.log('createGroup', group, tab, window)
-    return this.twigsService.createGroup(user, group, window, tab, tabTwigId);
+    return this.twigsService.createGroup(user, groupEntry);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => CreateTabResult, {name: 'createTab'})
+  async createTab(
+    @CurrentUser() user: UserEntity,
+    @Args('tabEntry', {type: () => TabEntry, nullable: true}) tabEntry: TabEntry,
+  ) {
+    return this.twigsService.createTab(user, tabEntry);
   }
   
   @UseGuards(GqlAuthGuard)
@@ -314,28 +317,24 @@ export class TwigsResolver {
     @Args('title') title: string,
     @Args('url') url: string,
   ) {
-    console.log('updateTab', twigId, title, url)
     return this.twigsService.updateTab(user, twigId, title, url);
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => [Twig], {name: 'moveTab'})
+  @Mutation(() => MoveTabResult, {name: 'moveTab'})
   async moveTab(
     @CurrentUser() user: UserEntity,
     @Args('twigId') twigId: string,
-    @Args('windowId', { type: () => Int }) windowId: number,
-    @Args('groupId', { type: () => Int }) groupId: number,
-    @Args('parentTabId', {type: () => Int, nullable: true}) parentTabId: number,
+    @Args('groupTwigId') groupTwigId: string,
+    @Args('parentTwigId', {nullable: true}) parentTwigId: string,
   ) {
-    console.log('moveTab', twigId, groupId, parentTabId);
-    return this.twigsService.moveTab(user, twigId, windowId, groupId, parentTabId);
+    console.log('moveTwig', twigId, groupTwigId, parentTwigId);
+    return this.twigsService.moveTab(user, twigId, groupTwigId, parentTwigId);
   }
 
 
-
-
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => RemoveTabTwigResult, {name: 'removeTabTwig'})
+  @Mutation(() => RemoveTabResult, {name: 'removeTabTwig'})
   async removeTabTwig(
     @CurrentUser() user: UserEntity,
     @Args('tabId', {type: () => Int}) tabId: number,
@@ -344,7 +343,7 @@ export class TwigsResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => RemoveGroupTwigResult, {name: 'removeGroupTwig'})
+  @Mutation(() => CreateTabResult, {name: 'removeGroupTwig'})
   async removeGroupTwig(
     @CurrentUser() user: UserEntity,
     @Args('groupId', {type: () => Int}) groupId: number,
@@ -353,7 +352,7 @@ export class TwigsResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => RemoveWindowTwigResult, {name: 'removeWindowTwig'})
+  @Mutation(() => CreateTabResult, {name: 'removeWindowTwig'})
   async removeWindowTwig(
     @CurrentUser() user: UserEntity,
     @Args('windowId', {type: () => Int}) windowId: number,

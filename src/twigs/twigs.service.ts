@@ -86,50 +86,6 @@ export class TwigsService {
     return child?.parent;
   }
 
-  async getTwigWithChildrenByUserIdAndTabId(userId: string, tabId: number) {
-    return this.twigsRepository.findOne({
-      where: {
-        userId,
-        tabId,
-      },
-      relations: ['children'],
-    });
-  }
-
-  async getGroupTwigsByUserIdAndWindowId(userId: string, windowId: number) {
-    return this.twigsRepository.find({
-      where: {
-        userId,
-        windowId,
-        groupId: Not(IsNull()),
-        tabId: IsNull(),
-      }
-    })
-  }
-
-  async getTwigWithChildrenByUserIdAndGroupId(userId: string, groupId: number) {
-    return this.twigsRepository.findOne({
-      where: {
-        userId,
-        groupId,
-        tabId: IsNull(),
-      },
-      relations: ['children'],
-    });
-  }
-
-
-  async getTwigByUserIdAndWindowId(userId: string, windowId: number) {
-    return this.twigsRepository.findOne({
-      where: {
-        userId,
-        windowId,
-        groupId: IsNull(),
-        tabId: IsNull(),
-      },
-    });
-  }
-
   async createRootTwigs(user: User, arrows: Arrow[]) {
     const twigs0 = arrows.map(arrow => {
       const twig0 = new Twig();
@@ -603,480 +559,272 @@ export class TwigsService {
     }
   }
 
-  async loadWindowTwigs(user: User, windows: WindowEntry[]) {
-    const abstract = await this.arrowsService.getArrowById(user.frameId);
-    const rootTwig = await this.getRootTwigByAbstractId(user.frameId);
+  async syncTabState(user: User, twigId: string, windowEntries: WindowEntry[], groupEntries: GroupEntry[], tabEntries: TabEntry[]) {
+    const twig = await this.getTwigById(twigId);
 
-    const arrows = await this.arrowsService.loadWindowArrows(user, abstract, windows);
+    let descs = await this.twigsRepository.manager.getTreeRepository(Twig)
+      .findDescendants(twig);
+
+    const date = new Date();
+    descs = descs
+      .filter(desc => !!desc.windowId)
+      .map(desc => {
+        desc.deleteDate = date;
+        return desc;
+      });
+
+    descs = await this.twigsRepository.save(descs);
+
+    const windowTwigs = await this.loadWindows(user, windowEntries);
+
+    const groupTwigs = await this.loadGroups(user, groupEntries);
+
+    const tabTwigs = await this.loadTabs(user, tabEntries);
+
+    return {
+      windows: windowTwigs,
+      groups: groupTwigs, 
+      tabs: tabTwigs,
+      deleted: descs,
+    };
+  }
+
+  async loadWindows(user: User, windowEntries: WindowEntry[]) {
+    const abstract = await this.arrowsService.getArrowById(user.frameId);
+
+    const parentTwigs = await this.getTwigsByIds(windowEntries.map(entry => entry.parentTwigId));
+
+    const idToParentTwig = parentTwigs.reduce((acc, twig) => {
+      acc[twig.id] = twig;
+      return acc;
+    }, {})
+
+    const arrows = await this.arrowsService.loadWindowArrows(user, abstract, windowEntries);
     const windowIdToArrow = arrows.reduce((acc, arrow) => {
       acc[arrow.title] = arrow;
       return acc;
     }, {});
 
-    const windows0 = windows.map((entry, i) => {
-      const window0 = new Twig();
-      window0.userId = user.id;
-      window0.abstractId = abstract.id;
-      window0.detailId = windowIdToArrow[entry.windowId].id;
-      window0.parent = rootTwig;
-      window0.i = abstract.twigN + i + 1;
-      window0.x = 0;
-      window0.y = 0;
-      window0.z = abstract.twigZ + i + 1;
-      window0.windowId = entry.windowId;
-      window0.degree = 1;
-      window0.rank = entry.rank;
-      window0.displayMode = DisplayMode.VERTICAL;
-      return window0;
+    let windowTwigs = windowEntries.map((entry, i) => {
+      const parentTwig = idToParentTwig[entry.parentTwigId]
+      const twig = new Twig();
+      twig.id = entry.twigId;
+      twig.userId = user.id;
+      twig.abstractId = abstract.id;
+      twig.detailId = windowIdToArrow[entry.windowId].id;
+      twig.parent = parentTwig;
+      twig.i = abstract.twigN + i + 1;
+      twig.x = parentTwig.x;
+      twig.y = parentTwig.y;
+      twig.z = abstract.twigZ + i + 1;
+      twig.windowId = entry.windowId;
+      twig.degree = parentTwig.degree + 1;
+      twig.rank = entry.rank;
+      twig.displayMode = DisplayMode.VERTICAL;
+      return twig;
     });
-    const windows1 = await this.twigsRepository.save(windows0);
-    await this.arrowsService.incrementTwigN(abstract.id, windows.length);
-    await this.arrowsService.incrementTwigZ(abstract.id, windows.length);
 
-    return windows1;
+    windowTwigs = await this.twigsRepository.save(windowTwigs);
+
+    await this.arrowsService.incrementTwigN(abstract.id, windowTwigs.length);
+    await this.arrowsService.incrementTwigZ(abstract.id, windowTwigs.length);
+
+    return windowTwigs;
   }
-
-  async loadGroupTwigs(user: User, groups: GroupEntry[], windowIdToTwig: any) {
+  
+  async loadGroups(user: User, groupEntries: GroupEntry[]) {
     const abstract = await this.arrowsService.getArrowById(user.frameId);
-    const arrows = await this.arrowsService.loadGroupArrows(user, abstract, groups);
+
+    const parentTwigs = await this.getTwigsByIds(groupEntries.map(entry => entry.parentTwigId));
+
+    const idToParentTwig = parentTwigs.reduce((acc, twig) => {
+      acc[twig.id] = twig;
+      return acc;
+    }, {})
+
+    const arrows = await this.arrowsService.loadGroupArrows(user, abstract, groupEntries);
     const groupIdToArrow = arrows.reduce((acc, arrow) => {
       acc[arrow.title] = arrow;
       return acc;
     }, {});
 
-    const groups0 = groups.map((entry, i) => {
-      const parentTwig = windowIdToTwig[entry.windowId];
+    let groupTwigs = groupEntries.map((entry, i) => {
+      const parentTwig = idToParentTwig[entry.parentTwigId];
 
-      if (!parentTwig) {
-        console.error(entry);
-        throw new Error('Missing group parentTwig');
-      }
-  
-      const group0 = new Twig();
-      group0.userId = user.id;
-      group0.abstractId = abstract.id;
-      group0.detailId = groupIdToArrow[entry.groupId].id;
-      group0.parent = parentTwig;
-      group0.i = abstract.twigN + i;
-      group0.x = parentTwig.x;
-      group0.y = parentTwig.y;
-      group0.z = abstract.twigZ + i;
-      group0.windowId = entry.windowId;
-      group0.groupId = entry.groupId;
-      group0.degree = 2;
-      group0.rank = entry.rank;
-      group0.color = entry.color;
-      group0.displayMode = DisplayMode.HORIZONTAL;
-      return group0;
+      const twig = new Twig();
+      twig.id = entry.twigId;
+      twig.userId = user.id;
+      twig.abstractId = abstract.id;
+      twig.detailId = groupIdToArrow[entry.groupId].id;
+      twig.parent = parentTwig;
+      twig.i = abstract.twigN + i + 1;
+      twig.x = parentTwig.x;
+      twig.y = parentTwig.y;
+      twig.z = abstract.twigZ + i + 1;
+      twig.windowId = entry.windowId;
+      twig.groupId = entry.groupId;
+      twig.degree = parentTwig.degree + 1;
+      twig.rank = entry.rank;
+      twig.color = entry.color;
+      twig.displayMode = DisplayMode.HORIZONTAL;
+      return twig;
     });
-    const groups1 = await this.twigsRepository.save(groups0);
 
-    await this.arrowsService.incrementTwigN(abstract.id, groups.length);
-    await this.arrowsService.incrementTwigZ(abstract.id, groups.length);
+    groupTwigs = await this.twigsRepository.save(groupTwigs);
 
-    return groups1;
+    await this.arrowsService.incrementTwigN(abstract.id, groupTwigs.length);
+    await this.arrowsService.incrementTwigZ(abstract.id, groupTwigs.length);
+
+    return groupTwigs;
   }
 
-  async loadTabTwigs(user: User, tabs: TabEntry[], groupIdToTwig: any, tabIdToTwig: any) {
+  async loadTabs(user: User, tabEntries: TabEntry[]) {
     const abstract = await this.arrowsService.getArrowById(user.frameId);
-    const arrows = await this.arrowsService.loadTabArrows(user, abstract, tabs);
+
+    const parentTwigs = await this.getTwigsByIds(tabEntries.map(entry => entry.parentTwigId));
+
+    const idToParentTwig = parentTwigs.reduce((acc, twig) => {
+      acc[twig.id] = twig;
+      return acc;
+    }, {})
+
+    const arrows = await this.arrowsService.loadTabArrows(user, abstract, tabEntries);
+
     const urlToArrow = arrows.reduce((acc, arrow) => {
       acc[arrow.url] = arrow;
       return acc;
     }, {});
 
-    const idToTabTwig = {};
-    let degree = 3;
-    let i = 1;
-    while (tabs.length) {
-      const nextTabs = [];
-      const tabs0 = [];
-      tabs.forEach(entry => {
-        if (entry.degree === degree) {
-          const parentTwig = entry.parentTabId
-            ? tabIdToTwig[entry.parentTabId]
-            : groupIdToTwig[entry.groupId];
 
+    const tabTwigs = [];
+    tabEntries.sort((a, b) => a.degree < b.degree ? -1 : 1);
+
+    let degree = tabEntries[0].degree;
+    let i = 0;
+    while (tabEntries.length) {
+      const nextEntries = [];
+      let twigs = [];
+      tabEntries.forEach(entry => {
+        if (entry.degree === degree) {
+          const parentTwig = idToParentTwig[entry.parentTwigId];
+          
           if (!parentTwig) {
-            console.error(entry);
-            throw new Error('Missing parentTwig for tabId ' + entry.tabId)
+            throw Error('Missing parent twig for entry with parentTwigId ' + entry.parentTwigId)
           }
-      
-          const tab0 = new Twig();
-          tab0.userId = user.id;
-          tab0.abstractId = abstract.id;
-          tab0.detailId = urlToArrow[entry.url].id;
-          tab0.parent = parentTwig;
-          tab0.i = abstract.twigN + i;
-          tab0.x = parentTwig.x;
-          tab0.y = parentTwig.y;
-          tab0.z = abstract.twigZ + i;
-          tab0.color = entry.color;
-          tab0.windowId = entry.windowId;
-          tab0.groupId = entry.groupId;
-          tab0.tabId = entry.tabId;
-          tab0.degree = entry.degree;
-          tab0.rank = entry.rank;
-          tab0.index = entry.index;
-          tab0.displayMode = DisplayMode.VERTICAL;
-          tabs0.push(tab0);
+
+          const twig = new Twig();
+          twig.id = entry.twigId;
+          twig.userId = user.id;
+          twig.abstractId = abstract.id;
+          twig.detailId = urlToArrow[entry.url].id;
+          twig.parent = parentTwig;
+          twig.i = abstract.twigN + i + 1;
+          twig.x = parentTwig.x;
+          twig.y = parentTwig.y;
+          twig.z = abstract.twigZ + i + 1;
+          twig.color = entry.color;
+          twig.windowId = entry.windowId;
+          twig.groupId = entry.groupId;
+          twig.tabId = entry.tabId;
+          twig.degree = entry.degree;
+          twig.rank = entry.rank;
+          twig.displayMode = DisplayMode.VERTICAL;
+          twigs.push(twig);
           i++;
         }
         else {
-          nextTabs.push(entry);
+          nextEntries.push(entry);
         }
       });
 
-      const tabs1 = await this.twigsRepository.save(tabs0);
-      tabs1.forEach(twig => {
-        tabIdToTwig[twig.tabId] = twig;
-        idToTabTwig[twig.id] = twig;
+      twigs = await this.twigsRepository.save(twigs);
+      twigs.forEach(twig => {
+        tabTwigs.push(twig);
+        idToParentTwig[twig.id] = twig;
       });
-      tabs = nextTabs;
+      tabEntries = nextEntries;
       degree++;
     }
-    const twigs = Object.keys(idToTabTwig || {}).map(id => idToTabTwig[id]);
-    await this.arrowsService.incrementTwigN(abstract.id, twigs.length);
-    await this.arrowsService.incrementTwigZ(abstract.id, twigs.length);
 
-    return twigs;
+    await this.arrowsService.incrementTwigN(abstract.id, tabTwigs.length);
+    await this.arrowsService.incrementTwigZ(abstract.id, tabTwigs.length);
+
+    return tabTwigs;
   }
 
-  async loadTabs(user: User, windows: WindowEntry[], groups: GroupEntry[], tabs: TabEntry[]) {
-    try {
-      const windowIds = windows.map(entry => entry.windowId);
-      const windowTwigs = await this.twigsRepository.find({
-        where: {
-          userId: user.id, 
-          windowId: In(windowIds),
-          groupId: IsNull(),
-          tabId: IsNull(),
-        }
-      });
-      const windowIdToTwig = windowTwigs.reduce((acc, twig) => {
-        acc[twig.windowId] = twig;
-        return acc;
-      }, {});
-      
-      const windows1 = windows.filter(entry => !windowIdToTwig[entry.windowId]);
-  
-      const windowTwigs1 = await this.loadWindowTwigs(user, windows1);
-  
-      const windowIdToTwig1 = windowTwigs1.reduce((acc, twig) => {
-        acc[twig.windowId] = twig;
-        return acc;
-      }, windowIdToTwig);
-  
-      const groupIds = groups.map(entry => entry.groupId);
-      const groupTwigs = await this.twigsRepository.find({
-        where: {
-          userId: user.id,
-          groupId: In(groupIds),
-          tabId: IsNull(),
-        },
-      });
-      const groupIdToTwig = groupTwigs.reduce((acc, twig) => {
-        acc[twig.groupId] = twig;
-        return acc;
-      }, {});
-  
-      const groups1 = groups.filter(entry => !groupIdToTwig[entry.groupId]);
-  
-      const groupTwigs1 = await this.loadGroupTwigs(
-        user,  
-        groups1, 
-        windowIdToTwig1,
-      );
-  
-      const groupIdToTwig1 = groupTwigs1.reduce((acc, twig) => {
-        acc[twig.groupId] = twig;
-        return acc;
-      }, groupIdToTwig);
-  
-      const tabIds = tabs.map(entry => entry.tabId);
-      const tabTwigs = await this.twigsRepository.find({
-        where: {
-          userId: user.id, 
-          tabId: In(tabIds)
-        }
-      });
-      const tabIdToTwig = tabTwigs.reduce((acc, twig) => {
-        acc[twig.tabId] = twig;
-        return acc;
-      }, {});
-  
-      const tabs1 = tabs.filter(entry => !tabIdToTwig[entry.tabId]);
-      
-      const tabTwigs1 = await this.loadTabTwigs(
-        user,
-        tabs1,
-        groupIdToTwig1,
-        tabIdToTwig,
-      );
-  
-      return [...windowTwigs1, ...groupTwigs1, ...tabTwigs1];
-    } catch (err) {
-      throw err;
-    } finally {
-     
-    }
+  async createWindow(user, windowEntry: WindowEntry) {
+    const parent = await this.twigsRepository.findOne({
+      where: {
+        id: windowEntry.parentTwigId,
+      },
+      relations: ['children'],
+    });
 
+    let sibs = parent.children;
+    sibs.filter(sib => sib.rank >= windowEntry.rank)
+      .map(sib => {
+        sib.rank += 1;
+        return sib;
+      });
+
+    sibs = await this.twigsRepository.save(sibs);
+
+    const [twig] = await this.loadWindows(user, [windowEntry]);
+
+    return {
+      twig,
+      sibs,
+    };
   }
 
-  async createTab(user: User, tab: TabEntry) {
-    try {
-      const twigs = [];
-      const group = await this.twigsRepository.findOne({
-        where: {
-          userId: user.id,
-          windowId: tab.windowId,
-          groupId: tab.groupId,
-          tabId: IsNull(),
-        },
-        relations: ['children', 'abstract'],
+  async createGroup(user, groupEntry: GroupEntry) {
+    const parent = await this.twigsRepository.findOne({
+      where: {
+        id: groupEntry.parentTwigId,
+      },
+      relations: ['children'],
+    });
+
+    let sibs = parent.children;
+    sibs.filter(sib => sib.rank >= groupEntry.rank)
+      .map(sib => {
+        sib.rank += 1;
+        return sib;
       });
 
-      let parent;
+    sibs = await this.twigsRepository.save(sibs);
 
-      let parentTab;
-      if (tab.parentTabId) {
-        parentTab = await this.twigsRepository.findOne({
-          where: {
-            userId: user.id,
-            windowId: tab.windowId,
-            groupId: tab.groupId,
-            tabId: tab.parentTabId,
-          },
-          relations: ['children']
-        });
-        parent = parentTab;
-      }
-      else {
-        parent = group
-      }
+    const [twig] = await this.loadGroups(user, [groupEntry]);
 
-      if (!parent) {
-        console.log('missing parent twig for ', tab)
-        throw Error('missing parent twig')
-      }
-
-      // increment sib rank
-      let sibs = (parent?.children || []).filter(sib => sib.rank > tab.rank)
-        .map(sib => {
-          sib.rank += 1;
-          return sib;
-        });
-      sibs = await this.twigsRepository.save(sibs);
-      twigs.push(...sibs);
-
-      const [tabTwig] = await this.loadTabTwigs(user, [tab], {
-        [group.groupId]: group,
-      }, {
-        ...(
-          parentTab
-            ? {[parentTab.tabId]: parentTab}
-            : {}
-        ),
-      });
-      twigs.push(tabTwig)
-
-      if (parentTab && parentTab.detailId !== tabTwig.detailId) {
-        const { arrow: link, isPreexisting } = await this.arrowsService.linkArrows(
-          user,
-          group.abstract,
-          parentTab.detailId, 
-          tabTwig.detailId
-        );
-        const x = Math.round((parentTab.x + tabTwig.x) / 2);
-        const y = Math.round((parentTab.y + tabTwig.y) / 2);
-    
-        const linkTwig = await this.createTwig(
-          user, 
-          group.abstract, 
-          link, 
-          null, 
-          null,
-          parentTab.id,
-          tabTwig.id,
-          group.abstract.twigN + 2,
-          x,
-          y,
-          group.abstract.twigN + 2,
-          false,
-        );
-        twigs.push(linkTwig, parentTab);
-
-        await this.arrowsService.incrementTwigN(group.abstractId, 1);
-        await this.arrowsService.incrementTwigZ(group.abstractId, 1);
-      }
-
-      return twigs;
-    } catch (err) {
-      throw err;
-    } finally {
-
-    }
-
+    return {
+      twig,
+      sibs,
+    };
   }
-  
-  async createGroup(
-    user: User, 
-    group: GroupEntry, 
-    window: WindowEntry | null, 
-    tab: TabEntry | null, 
-    tabTwigId: string | null,
-  ) {
-    try {
-      let windowTwig = await this.twigsRepository.findOne({
-        where: {
-          userId: user.id,
-          windowId: group.windowId,
-          groupId: IsNull(),
-          tabId: IsNull(),
-        }
+
+  async createTab(user, tabEntry: TabEntry) {
+    const parent = await this.twigsRepository.findOne({
+      where: {
+        id: tabEntry.parentTwigId,
+      },
+      relations: ['children'],
+    });
+
+    let sibs = parent.children;
+    sibs.filter(sib => sib.rank >= tabEntry.rank)
+      .map(sib => {
+        sib.rank += 1;
+        return sib;
       });
 
-      let windowSibs = [];
-      if (window && !windowTwig) {
-        // inc window sibling ranks
-        windowSibs = await this.twigsRepository.find({
-          where: {
-            userId: user.id,
-            windowId: Not(IsNull()),
-            groupId: IsNull(),
-            tabId: IsNull(),
-          }
-        });
-  
-        windowSibs = windowSibs.map(w => {
-          w.rank += 1;
-          return w;
-        });
-  
-        windowSibs = await this.twigsRepository.save(windowSibs);
-  
-        // create window
-        [windowTwig] = await this.loadWindowTwigs(user, [window]);
-      }
+    sibs = await this.twigsRepository.save(sibs);
 
-      let groupTwig = await this.twigsRepository.findOne({
-        where: {
-          userId: user.id,
-          windowId: group.windowId,
-          groupId: group.groupId,
-          tabId: IsNull(),
-        }
-      })
-      let groupSibs = [];
-      if (!groupTwig) {
-        // inc group sibling rank
-        let groupSibs = await this.twigsRepository.find({
-          where: {
-            userId: user.id,
-            windowId: group.windowId,
-            tabId: IsNull(),
-            rank: MoreThanOrEqual(group.rank),
-          }
-        });
-    
-        groupSibs = groupSibs.map(g => {
-          g.rank += 1;
-          return g;
-        });
-    
-        groupSibs = await this.twigsRepository.save(groupSibs);
-    
-        // create group
-        [groupTwig] = await this.loadGroupTwigs(user, [group], {
-          [windowTwig.windowId]: windowTwig,
-        });
-      }
+    const [twig] = await this.loadTabs(user, [tabEntry]);
 
-      let tabTwig;
-      let tabDescs = [];
-      if (tab) {
-        tabTwig = await this.twigsRepository.findOne({
-          where: {
-            userId: user.id,
-            windowId: tab.windowId,
-            groupId: tab.groupId,
-            tabId: tab.tabId,
-          }
-        });
-  
-        if (!tabTwig) {
-          // group is newly created, so no siblings to move
-          let parentTab; 
-          if (tab.parentTabId) {
-            parentTab = await this.twigsRepository.findOne({
-              where: {
-                userId: user.id,
-                windowId: tab.windowId,
-                groupId: tab.groupId,
-                tabId: tab.parentTabId,
-              }
-            });
-          }
-    
-          [tabTwig] = await this.loadTabTwigs(user, [tab], {
-            [groupTwig.groupId]: groupTwig,
-          }, {
-            ...(parentTab 
-                ? {[parentTab.tabId]: parentTab}
-                : {}
-            ),
-          });
-        }
-      }
-      else if (tabTwigId) {
-        tabTwig = await this.getTwigById(tabTwigId);
-        if (!tabTwig) {
-          throw new BadRequestException('This tab Twig does not exist');
-        }
-        const dDegree = 3 - tabTwig.degree;
-        const dIndex = groupTwig.index + 1 - tabTwig.index;
-  
-        tabTwig.parent = groupTwig;
-        tabTwig.groupId = groupTwig.groupId;
-        tabTwig.degree = 3;
-        tabTwig.rank = 1;
-        tabTwig.index = groupTwig.index + 1;
-        tabTwig.color = groupTwig.color;
-        tabTwig = await this.twigsRepository.save(tabTwig);
-  
-        const descs = await this.twigsRepository.manager.getTreeRepository(Twig)
-          .findDescendants(tabTwig);
-        
-        let tabDescs = [];
-        descs.forEach(desc => {
-          if (desc.id !== tabTwigId) {
-            desc.groupId = groupTwig.groupId;
-            desc.index += dIndex;
-            desc.degree += dDegree;
-            desc.color = groupTwig.color;
-            tabDescs.push(desc);
-          }
-        });
-  
-        tabDescs = await this.twigsRepository.save(tabDescs);
-      }
-      else {
-        throw new BadRequestException('Either tabEntry or tabTwigId must be provided')
-      }
-  
-      return {
-        window: windowTwig,
-        windowSibs,
-        group: groupTwig,
-        groupSibs,
-        tab: tabTwig,
-        tabDescs,
-      };
-    } catch (err) {
-      throw err;
-    } finally {
-
-    }
+    return {
+      twig,
+      sibs,
+    };
   }
 
   async updateTab(user: User, twigId: string, title: string, url: string) {
@@ -1094,6 +842,7 @@ export class TwigsService {
       url,
       title,
     }]);
+
     if (twig.detailId === arrows[0].id) {
       return {
         twig,
@@ -1102,16 +851,22 @@ export class TwigsService {
     }
     else {
       twig.detailId = arrows[0].id;
+
       await this.twigsRepository.update({id: twigId}, {
         detailId: arrows[0].id,
       });
+
       const date = new Date();
+
       let deleted = [...twig.ins, ...twig.outs];
+
       deleted = deleted.map(linkTwig => {
         linkTwig.deleteDate = date;
         return linkTwig;
       });
+
       deleted = await this.twigsRepository.save(deleted);
+
       await this.arrowsService.linkArrows(user, abstract, twig.detailId, arrows[0].id);
 
       return {
@@ -1121,41 +876,37 @@ export class TwigsService {
     }
   }
 
-  async moveTab(user: User, twigId: string, windowId: number, groupId: number, parentTabId: number | null) {
-    const twig = await this.twigsRepository.findOne({
+  async moveTab(user: User, twigId: string, groupTwigId: string, parentTwigId: string | null) {
+    let tabTwig = await this.twigsRepository.findOne({
       where: {
         id: twigId
       },
       relations: ['parent', 'parent.children']
     });
-    if (!twig) {
-      throw new BadRequestException('This twig does not exist');
+    if (!tabTwig) {
+      throw new BadRequestException('This tab twig does not exist');
     }
 
     const groupTwig = await this.twigsRepository.findOne({
       where: {
-        userId: user.id,
-        windowId,
-        groupId,
-        tabId: IsNull(),
+        id: groupTwigId,
       },
-      relations: ['children']
+      relations: ['children'],
     });
+
     if (!groupTwig) {
       throw new BadRequestException('This group twig does not exist');
     }
 
     let parentTwig;
-    if (parentTabId) {
+    if (parentTwigId) {
       parentTwig = await this.twigsRepository.findOne({
         where: {
-          userId: user.id, 
-          windowId,
-          groupId,
-          tabId: parentTabId
+          id: parentTwigId,
         },
         relations: ['children']
       });
+      
       if (!parentTwig) {
         throw new BadRequestException('This parent tab twig does not exist');
       }
@@ -1164,46 +915,53 @@ export class TwigsService {
       parentTwig = groupTwig;
     }
 
-    // shift sibs
-    let prevSibs = (twig.parent?.children || [])
-      .filter(prevSib => prevSib.rank > twig.rank)
+    let prevSibs = (tabTwig.parent?.children || [])
+      .filter(prevSib => prevSib.rank > tabTwig.rank)
       .map(prevSib => {
         prevSib.rank -= 1;
         return prevSib;
       });
+    prevSibs = await this.twigsRepository.save(prevSibs);
 
-    const sibs = parentTwig.children.map(sib => {
-      sib.rank += 1;
-      return sib;
-    });
+    let sibs = (parentTwig.children || [])
+      .filter(sib => sib.id !== tabTwig.id)
+      .map(sib => {
+        sib.rank += 1;
+        return sib;
+      });
+    sibs = await this.twigsRepository.save(sibs);
 
-    const dDegree = parentTwig.degree + 1 - twig.degree;
-    const dIndex = parentTwig.index + 1 - twig.index;
+    const dDegree = parentTwig.degree + 1 - tabTwig.degree;
     // move tab
-    twig.parent = parentTwig;
-    twig.groupId = groupId;
-    twig.color = groupTwig.color;
-    twig.degree = parentTwig.degree + 1;
-    twig.rank = 1;
-    twig.index = parentTwig.index + 1;
-    twig.windowId = windowId;
+    tabTwig.parent = parentTwig;
+    tabTwig.windowId = groupTwig.windowId;
+    tabTwig.groupId = groupTwig.groupId;
+    tabTwig.color = groupTwig.color;
+    tabTwig.degree = parentTwig.degree + 1;
+    tabTwig.rank = 1;
+    tabTwig = await this.twigsRepository.save(tabTwig);
 
-    const descs = await this.twigsRepository.manager.getTreeRepository(Twig)
-      .findDescendants(twig);
+    let descs = await this.twigsRepository.manager.getTreeRepository(Twig)
+      .findDescendants(tabTwig);
     
     const descs1 = [];
     descs.forEach(desc => {
-      if (desc.id !== twig.id) {
-        desc.windowId = windowId;
-        desc.groupId = groupId;
+      if (desc.id !== tabTwig.id) {
+        desc.windowId = groupTwig.windowId;
+        desc.groupId = groupTwig.groupId;
         desc.color = groupTwig.color;
         desc.degree += dDegree;
-        desc.index += dIndex;
         descs1.push(desc);
       }
     })
+    descs = await this.twigsRepository.save(descs1);
 
-    return this.twigsRepository.save([twig, ...prevSibs, ...sibs, ...descs1]);
+    return {
+      twig: tabTwig,
+      prevSibs,
+      sibs,
+      descs,
+    }
   }
 
   async removeTabTwig(user: User, tabId: number) {
@@ -1221,7 +979,7 @@ export class TwigsService {
 
     const date = new Date();
     twig.deleteDate = date;
-    twig =  await this.twigsRepository.save(twig);
+    twig = await this.twigsRepository.save(twig);
 
     let children = twig.children
       .sort((a,b) => a.rank < b.rank ? -1 : 1)
@@ -1271,45 +1029,40 @@ export class TwigsService {
     links = await this.twigsRepository.save(links);
     
     return {
-      tab: twig,
-      tabChildren: children,
-      tabDescs: descs,
-      tabSibs: sibs,
-      tabLinks: links,
+      twig,
+      children,
+      descs,
+      sibs,
+      links,
     }
   }
 
   async removeGroupTwig(user: User, groupId: number) {
-    try {
-      const twig = await this.twigsRepository.findOne({
-        where: {
-          userId: user.id,
-          groupId,
-          tabId: IsNull(),
-        },
-        relations: ['parent', 'parent.children']
-      });
-      if (!twig) {
-        throw new BadRequestException('This group twig does not exist')
-      }
-      twig.deleteDate = new Date();
-      const twig1 = await this.twigsRepository.save(twig);
-  
-      const sibs0 = (twig.parent?.children || []).filter(sib => sib.rank > twig.rank)
-        .map(sib => {
-          sib.rank -= 1;
-          return sib;
-        })
-      const sibs1 = await this.twigsRepository.save(sibs0);
-  
-      return {
-        group: twig1,
-        groupSibs: sibs1,
-      };
-    } catch (err) {
-    } finally {
+    const twig = await this.twigsRepository.findOne({
+      where: {
+        userId: user.id,
+        groupId,
+        tabId: IsNull(),
+      },
+      relations: ['parent', 'parent.children']
+    });
+    if (!twig) {
+      throw new BadRequestException('This group twig does not exist')
     }
+    twig.deleteDate = new Date();
+    const twig1 = await this.twigsRepository.save(twig);
 
+    const sibs0 = (twig.parent?.children || []).filter(sib => sib.rank > twig.rank)
+      .map(sib => {
+        sib.rank -= 1;
+        return sib;
+      })
+    const sibs1 = await this.twigsRepository.save(sibs0);
+
+    return {
+      twig: twig1,
+      sibs: sibs1,
+    };
   }
 
   async removeWindowTwig(user: User, windowId: number) {

@@ -59,13 +59,9 @@ type Arrow {
   weight: Float!
 }
 
-type CreateGroupResult {
-  group: Twig!
-  groupSibs: [Twig!]!
-  tab: Twig!
-  tabDescs: [Twig!]!
-  window: Twig
-  windowSibs: [Twig!]!
+type CreateTabResult {
+  sibs: [Twig!]!
+  twig: Twig!
 }
 
 """
@@ -82,8 +78,9 @@ type DragTwigResult {
 input GroupEntry {
   color: String!
   groupId: Int!
+  parentTwigId: String!
   rank: Int!
-  twigId: String
+  twigId: String!
   windowId: Int!
 }
 
@@ -105,6 +102,13 @@ type LinkTwigsResult {
   twig: Twig!
 }
 
+type MoveTabResult {
+  descs: [Twig!]!
+  prevSibs: [Twig!]!
+  sibs: [Twig!]!
+  twig: Twig!
+}
+
 type MoveTwigResult {
   role: Role
   twigs: [Twig!]!
@@ -113,8 +117,9 @@ type MoveTwigResult {
 type Mutation {
   addTwig(arrowId: String!, parentTwigId: String!, sessionId: String!): AddTwigResult!
   adjustTwigs(abstractId: String!, twigIds: [String!]!, xs: [Int!]!, ys: [Int!]!): [Twig!]!
-  createGroup(group: GroupEntry!, tab: TabEntry, tabTwigId: String, window: WindowEntry): CreateGroupResult!
-  createTab(tab: TabEntry): [Twig!]!
+  createGroup(groupEntry: GroupEntry!): CreateTabResult!
+  createTab(tabEntry: TabEntry): CreateTabResult!
+  createWindow(windowEntry: WindowEntry!): CreateTabResult!
   dragTwig(abstractId: String!, dx: Int!, dy: Int!, sessionId: String!, twigId: String!): Twig!
   followUser(userId: String!): Lead!
   getArrowByRouteName(routeName: String!): Arrow
@@ -126,22 +131,21 @@ type Mutation {
   initUser(token: String): User!
   inviteRole(arrowId: String!, sessionId: String!, userName: String!): Role!
   linkTwigs(abstractId: String!, sessionId: String!, sourceId: String!, targetId: String!): LinkTwigsResult!
-  loadTabs(groups: [GroupEntry!]!, tabs: [TabEntry!]!, windows: [WindowEntry!]!): [Twig!]!
   loginGoogleUser(token: String!): User!
   loginUser(email: String!, pass: String!): User!
   logoutUser: User!
-  moveTab(groupId: Int!, parentTabId: Int, twigId: String!, windowId: Int!): [Twig!]!
+  moveTab(groupTwigId: String!, parentTwigId: String, twigId: String!): MoveTabResult!
   moveTwig(displayMode: String!, sessionId: String!, twigId: String!, x: Int!, y: Int!): MoveTwigResult!
   openTwig(sessionId: String!, shouldOpen: Boolean!, twigId: String!): OpenTwigResult!
   publishCursor(abstractId: String!, sessionId: String!, x: Int!, y: Int!): User!
   refreshToken: User!
   registerGoogleUser(token: String!): User!
   registerUser(email: String!, pass: String!): User!
-  removeGroupTwig(groupId: Int!): RemoveGroupTwigResult!
+  removeGroupTwig(groupId: Int!): CreateTabResult!
   removeRole(roleId: String!, sessionId: String!): Role!
-  removeTabTwig(tabId: Int!): RemoveTabTwigResult!
+  removeTabTwig(tabId: Int!): RemoveTabResult!
   removeTwig(sessionId: String!, twigId: String!): RemoveTwigResult!
-  removeWindowTwig(windowId: Int!): RemoveWindowTwigResult!
+  removeWindowTwig(windowId: Int!): CreateTabResult!
   replyTwig(draft: String!, parentTwigId: String!, postId: String!, sessionId: String!, twigId: String!, x: Int!, y: Int!): ReplyTwigResult!
   requestRole(arrowId: String!, sessionId: String!): Role!
   resendUserVerification: User!
@@ -151,6 +155,7 @@ type Mutation {
   setUserFocusByRouteName(arrowRouteName: String!, sessionId: String!): User!
   setUserMap(lat: Float!, lng: Float!, zoom: Float!): User!
   setUserName(name: String!, sessionId: String!): User!
+  syncTabState(groups: [GroupEntry!]!, tabs: [TabEntry!]!, twigId: String!, windows: [WindowEntry!]!): SyncTabStateResult!
   unfollowUser(userId: String!): Lead!
   updateTab(title: String!, twigId: String!, url: String!): UpdateTabResult!
   verifyUser(code: String!): User!
@@ -166,17 +171,12 @@ type Query {
   getUserByName(name: String!): User
 }
 
-type RemoveGroupTwigResult {
-  group: Twig!
-  groupSibs: [Twig!]!
-}
-
-type RemoveTabTwigResult {
-  tab: Twig!
-  tabChildren: [Twig!]!
-  tabDescs: [Twig!]!
-  tabLinks: [Twig!]!
-  tabSibs: [Twig!]!
+type RemoveTabResult {
+  children: [Twig!]!
+  descs: [Twig!]!
+  links: [Twig!]!
+  sibs: [Twig!]!
+  twig: Twig!
 }
 
 type RemoveTwigResult {
@@ -184,11 +184,6 @@ type RemoveTwigResult {
   parent: Twig!
   role: Role
   twigs: [Twig!]!
-}
-
-type RemoveWindowTwigResult {
-  sibs: [Twig!]!
-  twig: Twig!
 }
 
 type ReplyTwigResult {
@@ -242,16 +237,22 @@ type Subscription {
   userRole(sessionId: String!, userId: String!): Role!
 }
 
+type SyncTabStateResult {
+  deleted: [Twig!]!
+  groups: [Twig!]!
+  tabs: [Twig!]!
+  windows: [Twig!]!
+}
+
 input TabEntry {
   color: String!
   degree: Int!
   groupId: Int!
-  index: Int!
-  parentTabId: Float
+  parentTwigId: String!
   rank: Int!
   tabId: Int!
   title: String!
-  twigId: String
+  twigId: String!
   url: String!
   windowId: Int!
 }
@@ -268,14 +269,10 @@ type Twig {
   detailId: String!
   displayMode: String!
   groupId: Int
-  height: Int!
   i: Int!
   id: String!
-  index: Int
   isOpen: Boolean!
   isRoot: Boolean!
-  ownHeight: Int!
-  ownWidth: Int!
   parent: Twig
   rank: Int!
   source: Twig
@@ -286,7 +283,6 @@ type Twig {
   updateDate: DateTime!
   user: User!
   userId: String!
-  width: Int!
   windowId: Int
   x: Int!
   y: Int!
@@ -347,7 +343,8 @@ type Vote {
 }
 
 input WindowEntry {
+  parentTwigId: String!
   rank: Int!
-  twigId: String
+  twigId: String!
   windowId: Int!
 }
