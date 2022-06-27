@@ -9,6 +9,7 @@ import { VotesModule } from 'src/votes/votes.module';
 import { PubSubModule } from 'src/pub-sub/pub-sub.module';
 import { RolesModule } from 'src/roles/roles.module';
 import { SubsModule } from 'src/subs/subs.module';
+import { SheafsModule } from 'src/sheafs/sheafs.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { SubsModule } from 'src/subs/subs.module';
     forwardRef(() => UsersModule),
     forwardRef(() => ArrowsModule),
     forwardRef(() => RolesModule),
+    SheafsModule,
     VotesModule,
     PubSubModule,
   ],

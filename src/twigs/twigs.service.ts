@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { uuidRegexExp } from 'src/constants';
 import { ArrowsService } from 'src/arrows/arrows.service';
 import { RolesService } from 'src/roles/roles.service';
-import { In, IsNull, MoreThanOrEqual, Not, QueryRunner, Repository } from 'typeorm';
+import { In, IsNull, Repository } from 'typeorm';
 import { Twig } from './twig.entity';
 import { DisplayMode, RoleType } from '../enums';
 import { Arrow } from 'src/arrows/arrow.entity';
@@ -11,6 +11,8 @@ import { User } from 'src/users/user.entity';
 import { VotesService } from 'src/votes/votes.service';
 import { checkPermit } from 'src/utils';
 import { WindowEntry, GroupEntry, TabEntry } from './twig.model';
+import { SheafsService } from 'src/sheafs/sheafs.service';
+import { Sheaf } from 'src/sheafs/sheaf.entity';
 
 @Injectable()
 export class TwigsService {
@@ -19,6 +21,7 @@ export class TwigsService {
     private readonly twigsRepository: Repository<Twig>,
     @Inject(forwardRef(() => ArrowsService))
     private readonly arrowsService: ArrowsService,
+    private readonly sheafsService: SheafsService,
     private readonly votesService: VotesService,
     private readonly rolesService: RolesService,
   ) {}
@@ -103,7 +106,8 @@ export class TwigsService {
   async createTwig(
     user: User,
     abstract: Arrow, 
-    detail: Arrow, 
+    detail: Arrow | null, 
+    sheaf: Sheaf | null,
     parentTwig: Twig | null, 
     twigId: string | null, 
     sourceId: string | null,
@@ -120,7 +124,8 @@ export class TwigsService {
     twig0.targetId = targetId;
     twig0.userId = user.id;
     twig0.abstractId = abstract.id;
-    twig0.detailId = detail.id;
+    twig0.detailId = detail?.id;
+    twig0.sheafId = sheaf?.id;
     twig0.parent = parentTwig;
     twig0.i = i;
     twig0.x = x
@@ -174,21 +179,25 @@ export class TwigsService {
       postId, 
       postId, 
       postId, 
-      parentTwig.abstract, 
+      parentTwig.abstract,
+      null,
       draft,
     );
-    const { arrow: link } = await this.arrowsService.createArrow(
+    const sheaf = await this.sheafsService.createSheaf(parentTwig.detailId, post.id);
+    await this.arrowsService.createArrow(
       user, 
       null, 
       parentTwig.detailId, 
       post.id, 
       parentTwig.abstract, 
+      sheaf,
       null,
     )
     const postTwig = await this.createTwig(
       user,
       parentTwig.abstract,
       post,
+      null,
       parentTwig,
       twigId,
       null, 
@@ -199,10 +208,11 @@ export class TwigsService {
       parentTwig.abstract.twigZ + 1,
       true,
     );
-    const linkTwig = await this.createTwig(
+    const sheafTwig = await this.createTwig(
       user,
       parentTwig.abstract,
-      link,
+      null,
+      sheaf,
       null,
       null,
       parentTwig.id,
@@ -218,7 +228,7 @@ export class TwigsService {
     const abstract = await this.arrowsService.getArrowById(parentTwig.abstractId);
     return {
       abstract,
-      twigs: [postTwig, linkTwig],
+      twigs: [postTwig, sheafTwig],
       role: role1,
     };
   }
@@ -358,21 +368,27 @@ export class TwigsService {
       throw new BadRequestException('This targetTwig does not exist');
     }
 
-    const { arrow } = await this.arrowsService.createArrow(user, null, sourceId, targetId, abstract, null);
+    let sheaf = await this.sheafsService.getSheafBySourceIdAndTargetId(sourceId, targetId);
+    if (sheaf) {
+      sheaf = await this.sheafsService.incrementWeight(sheaf, 1, 0);
+    }
+    else {
+      sheaf = await this.sheafsService.createSheaf(sourceId, targetId);
+    }
+    await this.arrowsService.createArrow(user, null, sourceId, targetId, abstract, sheaf, null);
 
-    await this.arrowsService.incrementOutCount(source.id, 1);
-    await this.arrowsService.incrementInCount(target.id, 1);
-    
     const source1 = await this.arrowsService.getArrowById(source.id);
     const target1 = await this.arrowsService.getArrowById(target.id);
 
     const x = Math.round((sourceTwig.x + targetTwig.x) / 2);
     const y = Math.round((sourceTwig.y + targetTwig.y) / 2);
 
+    console.log('sheaf', sheaf);
     const twig = await this.createTwig(
       user, 
       abstract, 
-      arrow, 
+      null,
+      sheaf, 
       null, 
       null, 
       sourceTwig.id,
@@ -1013,27 +1029,27 @@ export class TwigsService {
 
     sibs = await this.twigsRepository.save(sibs);
 
-    let links = [];
-    await [...twig.ins, ...twig.outs].reduce(async (acc, link) => {
+    let sheafs = [];
+    await [...twig.ins, ...twig.outs].reduce(async (acc, sheaf) => {
       await acc;
 
       const descs = await this.twigsRepository.manager.getTreeRepository(Twig)
-        .findDescendants(link);
+        .findDescendants(sheaf);
 
       descs.forEach(desc => {
         desc.deleteDate = date;
-        links.push(desc);
+        sheafs.push(desc);
       })
     }, Promise.resolve());
 
-    links = await this.twigsRepository.save(links);
+    sheafs = await this.twigsRepository.save(sheafs);
     
     return {
       twig,
       children,
       descs,
       sibs,
-      links,
+      sheafs,
     }
   }
 

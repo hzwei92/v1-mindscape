@@ -10,6 +10,7 @@ import { UsersModule } from 'src/users/users.module';
 import { VotesModule } from 'src/votes/votes.module';
 import { PubSubModule } from 'src/pub-sub/pub-sub.module';
 import { TwigsModule } from 'src/twigs/twigs.module';
+import { SheafsModule } from 'src/sheafs/sheafs.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { TwigsModule } from 'src/twigs/twigs.module';
     forwardRef(() => UsersModule),
     forwardRef(() => TwigsModule),
     forwardRef(() => RolesModule),
+    forwardRef(() => SheafsModule),
     VotesModule,
     SubsModule,
     PubSubModule,

@@ -16,6 +16,7 @@ import { User } from 'src/users/user.entity';
 import { Arrow } from 'src/arrows/arrow.entity';
 import { TWIG_HEIGHT, TWIG_WIDTH } from 'src/constants';
 import { DisplayMode } from 'src/enums';
+import { Sheaf } from 'src/sheafs/sheaf.entity';
 
 @Entity()
 @Tree('closure-table', {
@@ -49,13 +50,13 @@ export class Twig {
   outs: Twig[];
   
 
-
   @Column()
   userId: string;
 
   @ManyToOne(() => User)
   @JoinColumn({ referencedColumnName: 'id' })
   user: User;
+
 
   @Column()
   abstractId: string;
@@ -64,13 +65,22 @@ export class Twig {
   @JoinColumn({ referencedColumnName: 'id' })
   abstract: Arrow;
 
-  @Column()
+  // each twig has either a detail or a sheaf
+  @Column({ nullable: true })
   detailId: string;
   
-  @ManyToOne(() => Arrow)
-  @JoinColumn({ referencedColumnName: 'id' })
+  @ManyToOne(() => Arrow, { nullable: true })
+  @JoinColumn({ referencedColumnName: 'id' }, )
   detail: Arrow;
 
+  @Column({nullable: true})
+  sheafId: string;
+
+  @ManyToOne(() => Sheaf, { nullable: true })
+  @JoinColumn({ referencedColumnName: 'id'})
+  sheaf: Sheaf;
+
+  
   @Column({ default: false })
   isRoot: boolean;
   
@@ -103,7 +113,7 @@ export class Twig {
 
   @Column({ default: 1 })
   rank: number;
-  
+
   @Column({
     type: 'enum',
     enum: DisplayMode,

@@ -28,6 +28,8 @@ import { TwigsService } from './twigs.service';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
 import { User } from 'src/users/user.model';
 import { User as UserEntity } from 'src/users/user.entity';
+import { Sheaf } from 'src/sheafs/sheaf.model';
+import { SheafsService } from 'src/sheafs/sheafs.service';
 
 @Resolver(() => Twig)
 export class TwigsResolver {
@@ -35,6 +37,7 @@ export class TwigsResolver {
     private readonly twigsService: TwigsService,
     private readonly usersService: UsersService,
     private readonly arrowsService: ArrowsService,
+    private readonly sheafsService: SheafsService,
     @Inject(PUB_SUB)
     private readonly pubSub: RedisPubSub
   ) {}
@@ -58,12 +61,22 @@ export class TwigsResolver {
     return this.usersService.getUserById(twig.userId);
   }
 
-  @ResolveField(() => Arrow, {name: 'detail'})
+  @ResolveField(() => Arrow, {name: 'detail', nullable: true})
   async getTwigDetail(
     @CurrentUser() user: UserEntity,
     @Parent() twig: Twig,
   ) {
+    if (!twig.detailId) return null;
     return this.arrowsService.getArrowByIdWithPrivacy(user, twig.detailId);
+  }
+
+  @ResolveField(() => Sheaf, {name: 'sheaf', nullable: true})
+  async getTwigSheaf(
+    @CurrentUser() user: UserEntity,
+    @Parent() twig: Twig,
+  ) {
+    if (!twig.sheafId) return null;
+    return this.sheafsService.getSheafById(twig.sheafId);
   }
   
   @ResolveField(() => Arrow, {name: 'abstract'})

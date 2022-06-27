@@ -20,6 +20,7 @@ import { PubSubModule } from './pub-sub/pub-sub.module';
 import { LeadsModule } from './leads/leads.module';
 import { EmailModule } from './email/email.module';
 import { TwigsModule } from './twigs/twigs.module';
+import { SheafsModule } from './sheafs/sheafs.module';
 
 @Module({
   imports: [
@@ -109,6 +110,7 @@ import { TwigsModule } from './twigs/twigs.module';
     UsersModule,
     VotesModule,
     TwigsModule,
+    SheafsModule,
   ],
 })
 export class AppModule {}

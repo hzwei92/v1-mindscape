@@ -89,6 +89,7 @@ export class UsersService {
       postId,
       null,
       null,
+      null,
     );
     user1.frameId = arrow.id;
 

@@ -39,6 +39,8 @@ type Arrow {
   rootTwigId: String!
   routeName: String!
   saveDate: DateTime!
+  sheaf: Sheaf
+  sheafId: String
   source: Arrow
   sourceId: String!
   state: String
@@ -174,7 +176,7 @@ type Query {
 type RemoveTabResult {
   children: [Twig!]!
   descs: [Twig!]!
-  links: [Twig!]!
+  sheafs: [Twig!]!
   sibs: [Twig!]!
   twig: Twig!
 }
@@ -210,6 +212,22 @@ type SelectTwigResult {
   abstract: Arrow!
   role: Role
   twigs: [Twig!]!
+}
+
+type Sheaf {
+  clicks: Int!
+  createDate: DateTime!
+  deleteDate: DateTime
+  id: String!
+  links: [Arrow!]!
+  routeName: String!
+  source: Arrow!
+  sourceId: String!
+  target: Arrow!
+  targetId: String!
+  tokens: Float!
+  updateDate: DateTime!
+  weight: Float!
 }
 
 type Sub {
@@ -265,8 +283,8 @@ type Twig {
   createDate: DateTime!
   degree: Int!
   deleteDate: DateTime
-  detail: Arrow!
-  detailId: String!
+  detail: Arrow
+  detailId: String
   displayMode: String!
   groupId: Int
   i: Int!
@@ -275,6 +293,8 @@ type Twig {
   isRoot: Boolean!
   parent: Twig
   rank: Int!
+  sheaf: Sheaf
+  sheafId: String
   source: Twig
   sourceId: String
   tabId: Int

@@ -1,5 +1,6 @@
 import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
 import { Role } from 'src/roles/role.model';
+import { Sheaf } from 'src/sheafs/sheaf.model';
 import { Sub } from 'src/subs/sub.model';
 import { Twig } from 'src/twigs/twig.model';
 import { User } from 'src/users/user.model';
@@ -49,6 +50,11 @@ export class Arrow {
   @Field(() => Arrow)
   target: Arrow;
 
+  @Field({nullable: true})
+  sheafId: string;
+
+  @Field(() => Sheaf, {nullable: true})
+  sheaf: Sheaf;
 
   @Field(() => [Arrow])
   ins: Arrow[];
@@ -164,19 +170,4 @@ export class Arrow {
 
   @Field({ nullable: true })
   deleteDate: Date;
-}
-
-@ObjectType()
-export class ReplyTwigResult {
-  @Field(() => Arrow)
-  abstract: Arrow;
-
-  @Field(() => Arrow)
-  twig: Arrow;
-
-  @Field(() => Arrow)
-  link: Arrow;
-
-  @Field(() => Role, { nullable: true })
-  role: Role;
 }

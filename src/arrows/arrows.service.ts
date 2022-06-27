@@ -13,12 +13,15 @@ import { RolesService } from 'src/roles/roles.service';
 import { TwigsService } from 'src/twigs/twigs.service';
 import { VotesService } from 'src/votes/votes.service';
 import { GroupEntry, WindowEntry } from 'src/twigs/twig.model';
+import { SheafsService } from 'src/sheafs/sheafs.service';
+import { Sheaf } from 'src/sheafs/sheaf.entity';
 
 @Injectable()
 export class ArrowsService {
   constructor(
     @InjectRepository(Arrow)
     private readonly arrowsRepository: Repository<Arrow>,
+    private readonly sheafsService: SheafsService,
     private readonly votesService: VotesService,
     private readonly twigsService: TwigsService,
     private readonly rolesService: RolesService,
@@ -30,6 +33,14 @@ export class ArrowsService {
     return this.arrowsRepository.findOne({
       where: {
         id,
+      },
+    });
+  }
+
+  async getArrowsBySheafId(sheafId: string) {
+    return this.arrowsRepository.find({
+      where: {
+        sheafId,
       },
     });
   }
@@ -81,6 +92,7 @@ export class ArrowsService {
     sourceId: string, 
     targetId: string, 
     abstract: Arrow | null, 
+    sheaf: Sheaf | null,
     draft: string | null,
   ) {
     const arrow0 = new Arrow();
@@ -89,6 +101,7 @@ export class ArrowsService {
     arrow0.targetId = targetId;
     arrow0.userId = user.id;
     arrow0.abstractId = abstract?.id || arrow0.id;
+    arrow0.sheafId = sheaf?.id;
     arrow0.draft = draft || getEmptyDraft();
     arrow0.routeName = arrow0.id;
     arrow0.color = user.color;
@@ -125,21 +138,29 @@ export class ArrowsService {
     });
     let isPreexisting;
     let vote;
+    let sheaf = await this.sheafsService.getSheafBySourceIdAndTargetId(sourceId, targetId)
     if (arrow) {
       isPreexisting = true;
       vote = await this.votesService.createVote(user, arrow, 1, 0);
       arrow.clicks += 1;
       arrow.weight = findDefaultWeight(arrow.clicks, arrow.tokens);
       arrow = await this.arrowsRepository.save(arrow);
+      if (sheaf) {
+        sheaf = await this.sheafsService.incrementWeight(sheaf, 1, 0);
+      }
+      else {
+        sheaf = await this.sheafsService.createSheaf(sourceId, targetId);
+      }
     }
     else {
       isPreexisting = false;
-      ({ arrow, vote } = await this.createArrow(user, null, sourceId, targetId, abstract, null));
-
-      await this.incrementOutCount(sourceId, 1);
-      await this.incrementInCount(targetId, 1);
+      if (!sheaf) {
+        sheaf = await this.sheafsService.createSheaf(sourceId, targetId);
+      }
+      ({ arrow, vote } = await this.createArrow(user, null, sourceId, targetId, abstract, sheaf, null));
     }
     return {
+      sheaf,
       arrow,
       vote,
       isPreexisting,

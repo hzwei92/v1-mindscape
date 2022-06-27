@@ -2,6 +2,7 @@ import { ObjectType, Field, Int, InputType } from '@nestjs/graphql';
 import { User } from 'src/users/user.model';
 import { Arrow } from 'src/arrows/arrow.model';
 import { Role } from 'src/roles/role.model';
+import { Sheaf } from 'src/sheafs/sheaf.model';
 
 @ObjectType()
 export class Twig {
@@ -32,11 +33,17 @@ export class Twig {
   @Field(() => Arrow)
   abstract: Arrow;
 
-  @Field()
+  @Field({ nullable: true })
   detailId: string;
   
-  @Field(() => Arrow)
+  @Field(() => Arrow, { nullable: true })
   detail: Arrow;
+
+  @Field({nullable: true})
+  sheafId: string;
+
+  @Field(() => Sheaf, {nullable: true})
+  sheaf: Sheaf;
 
   @Field()
   isRoot: boolean;
@@ -325,5 +332,5 @@ export class RemoveTabResult {
   sibs: Twig[];
 
   @Field(() => [Twig])
-  links: Twig[];
+  sheafs: Twig[];
 }

@@ -18,6 +18,7 @@ import { Role } from 'src/roles/role.entity';
 import { Vote } from 'src/votes/vote.entity';
 import { findDefaultWeight } from 'src/utils';
 import { Twig } from 'src/twigs/twig.entity';
+import { Sheaf } from 'src/sheafs/sheaf.entity';
 
 @Entity()
 export class Arrow {
@@ -76,6 +77,12 @@ export class Arrow {
   @JoinColumn({ name: 'targetId', referencedColumnName: 'id' })
   target: Arrow;
 
+  @Column({nullable: true})
+  sheafId: string;
+
+  @ManyToOne(() => Sheaf, {nullable: true})
+  sheaf: Sheaf;
+  
 
   @OneToMany(() => Arrow, arrow => arrow.target)
   ins: Arrow[];
