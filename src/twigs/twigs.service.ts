@@ -1412,7 +1412,7 @@ export class TwigsService {
       .map(desc => {
         desc.degree += dDegree;
         return desc;
-      })
+      });
 
     descs = await this.twigsRepository.save(descs);
 
