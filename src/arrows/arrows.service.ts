@@ -292,8 +292,6 @@ export class ArrowsService {
       return acc;
     }, {});
 
-    console.log('sheafs', sheafs, urlToTab);
-
     const readyArrows = []
     let updateArrows = [];
     let createSheafs = [];
