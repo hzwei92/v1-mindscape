@@ -12,9 +12,10 @@ import { PRIVATE_ARROW_DRAFT, PRIVATE_ARROW_TEXT } from 'src/constants';
 import { RolesService } from 'src/roles/roles.service';
 import { TwigsService } from 'src/twigs/twigs.service';
 import { VotesService } from 'src/votes/votes.service';
-import { GroupEntry, WindowEntry } from 'src/twigs/twig.model';
 import { SheafsService } from 'src/sheafs/sheafs.service';
 import { Sheaf } from 'src/sheafs/sheaf.entity';
+import { WindowEntry } from 'src/twigs/dto/window-entry.dto';
+import { GroupEntry } from 'src/twigs/dto/group-entry.dto';
 
 @Injectable()
 export class ArrowsService {
@@ -37,6 +38,14 @@ export class ArrowsService {
     });
   }
 
+  async getArrowByUserIdAndUrl(userId: string, url: string) {
+    return this.arrowsRepository.findOne({
+      where: {
+        userId,
+        url,
+      },
+    });
+  }
   async getArrowsBySheafId(sheafId: string) {
     return this.arrowsRepository.find({
       where: {
@@ -89,20 +98,24 @@ export class ArrowsService {
   async createArrow(
     user: User, 
     arrowId: string | null, 
-    sourceId: string, 
-    targetId: string, 
+    sourceId: string | null, 
+    targetId: string | null, 
     abstract: Arrow | null, 
-    sheaf: Sheaf | null,
+    sheaf: Sheaf,
     draft: string | null,
+    title: string | null,
+    url: string | null,
   ) {
     const arrow0 = new Arrow();
     arrow0.id = arrowId || v4();
-    arrow0.sourceId = sourceId;
-    arrow0.targetId = targetId;
+    arrow0.sourceId = sourceId || arrow0.id;
+    arrow0.targetId = targetId || arrow0.id;
     arrow0.userId = user.id;
     arrow0.abstractId = abstract?.id || arrow0.id;
-    arrow0.sheafId = sheaf?.id;
+    arrow0.sheafId = sheaf.id;
     arrow0.draft = draft || getEmptyDraft();
+    arrow0.title = title;
+    arrow0.url = url;
     arrow0.routeName = arrow0.id;
     arrow0.color = user.color;
     const arrow1 = await this.arrowsRepository.save(arrow0);
@@ -129,6 +142,24 @@ export class ArrowsService {
   }
 
   async linkArrows(user: User, abstract: Arrow, sourceId: string, targetId: string) {
+    const source = await this.arrowsRepository.findOne({
+      where: {
+        id: sourceId,
+      },
+    });
+    if (!source) {
+      throw new BadRequestException('This source arrow does not exist');
+    }
+
+    const target = await this.arrowsRepository.findOne({
+      where: {
+        id: targetId,
+      },
+    });
+    if (!target) {
+      throw new BadRequestException('This target arrow does not exist');
+    }
+
     let arrow = await this.arrowsRepository.findOne({
       where: {
         userId: user.id,
@@ -136,28 +167,37 @@ export class ArrowsService {
         targetId,
       },
     });
+
     let isPreexisting;
     let vote;
-    let sheaf = await this.sheafsService.getSheafBySourceIdAndTargetId(sourceId, targetId)
+    let sheaf = await this.sheafsService.getSheafBySourceIdAndTargetId(source.sheafId, target.sheafId)
     if (arrow) {
       isPreexisting = true;
-      vote = await this.votesService.createVote(user, arrow, 1, 0);
-      arrow.clicks += 1;
-      arrow.weight = findDefaultWeight(arrow.clicks, arrow.tokens);
-      arrow = await this.arrowsRepository.save(arrow);
+
       if (sheaf) {
         sheaf = await this.sheafsService.incrementWeight(sheaf, 1, 0);
       }
       else {
-        sheaf = await this.sheafsService.createSheaf(sourceId, targetId);
+        sheaf = await this.sheafsService.createSheaf(sourceId, targetId, null);
       }
+      
+      arrow.clicks += 1;
+      arrow.weight = findDefaultWeight(arrow.clicks, arrow.tokens);
+      arrow = await this.arrowsRepository.save(arrow);
+
+      vote = await this.votesService.createVote(user, arrow, 1, 0);
     }
     else {
       isPreexisting = false;
-      if (!sheaf) {
-        sheaf = await this.sheafsService.createSheaf(sourceId, targetId);
+
+      if (sheaf) {
+        sheaf = await this.sheafsService.incrementWeight(sheaf, 1, 0);
       }
-      ({ arrow, vote } = await this.createArrow(user, null, sourceId, targetId, abstract, sheaf, null));
+      else {
+        sheaf = await this.sheafsService.createSheaf(sourceId, targetId, null);
+      }
+
+      ({ arrow, vote } = await this.createArrow(user, null, sourceId, targetId, abstract, sheaf, null, null, null));
     }
     return {
       sheaf,
@@ -168,44 +208,72 @@ export class ArrowsService {
   }
 
   async loadWindowArrows(user: User, abstract: Arrow, windows: WindowEntry[]) {
-    const arrows0 = windows.map(entry => {
-      const arrow0 = new Arrow();
-      arrow0.id = v4();
-      arrow0.sourceId = arrow0.id;
-      arrow0.targetId = arrow0.id;
-      arrow0.userId = user.id;
-      arrow0.abstractId = abstract.id;
-      arrow0.title = entry.windowId.toString();
-      arrow0.routeName = arrow0.id;
-      arrow0.color = user.color;
-      return arrow0;
+    let arrows = [];
+    let sheafs = [];
+    windows.forEach(entry => {
+      const sheaf = new Sheaf();
+      sheaf.id = v4();
+      sheaf.sourceId = sheaf.id;
+      sheaf.targetId = sheaf.id;
+      sheaf.routeName = sheaf.id;
+      sheafs.push(sheaf);
+
+      const arrow = new Arrow();
+      arrow.id = v4();
+      arrow.sourceId = arrow.id;
+      arrow.targetId = arrow.id;
+      arrow.userId = user.id;
+      arrow.sheafId = sheaf.id;
+      arrow.abstractId = abstract.id;
+      arrow.title = 'window ' + entry.windowId.toString();
+      arrow.routeName = arrow.id;
+      arrow.color = user.color;
+      arrows.push(arrow);
     });
-    const arrows1 = await this.arrowsRepository.save(arrows0);
-    return this.finishArrows(user, arrows1);
+    await this.sheafsService.saveSheafs(sheafs);
+    arrows = await this.arrowsRepository.save(arrows);
+    return this.finishArrows(user, arrows);
   }
 
   async loadGroupArrows(user: User, abstract: Arrow, groups: GroupEntry[]) {
-    const arrows0 = groups.map(entry => {
-      const arrow0 = new Arrow();
-      arrow0.id = v4();
-      arrow0.sourceId = arrow0.id;
-      arrow0.targetId = arrow0.id;
-      arrow0.userId = user.id;
-      arrow0.abstractId = abstract.id;
-      arrow0.title = entry.groupId.toString();
-      arrow0.routeName = arrow0.id;
-      arrow0.color = user.color;
-      return arrow0;
+    let sheafs = [];
+    let arrows = []
+    groups.forEach(entry => {
+      const sheaf = new Sheaf();
+      sheaf.id = v4();
+      sheaf.sourceId = sheaf.id;
+      sheaf.targetId = sheaf.id;
+      sheaf.routeName = sheaf.id;
+      sheafs.push(sheaf);
+
+      const arrow = new Arrow();
+      arrow.id = v4();
+      arrow.sourceId = arrow.id;
+      arrow.targetId = arrow.id;
+      arrow.userId = user.id;
+      arrow.sheafId = sheaf.id;
+      arrow.abstractId = abstract.id;
+      arrow.title = 'group ' + entry.groupId.toString();
+      arrow.routeName = arrow.id;
+      arrow.color = user.color;
+      arrows.push(arrow);
     });
-    const arrows1 = await this.arrowsRepository.save(arrows0);
-    return this.finishArrows(user, arrows1);
+    await this.sheafsService.saveSheafs(sheafs);
+    arrows = await this.arrowsRepository.save(arrows);
+    return this.finishArrows(user, arrows);
   }
 
   async loadTabArrows(user: User, abstract: Arrow, tabs: {url: string, title: string}[]) {
-    const urlToTab = tabs.reduce((acc, entry) => {
-      acc[entry.url] = entry;
-      return acc;
-    }, {});
+    const urlToTab = {};
+    const nonUrlTabs = [];
+    tabs.forEach(entry => {
+      if (entry.url) {
+        urlToTab[entry.url] = entry;
+      }
+      else {
+        nonUrlTabs.push(entry);
+      }
+    });
 
     const arrows = await this.getArrowsByUrls(Object.keys(urlToTab));
     const urlToArrow = arrows.reduce((acc, arrow) => {
@@ -214,40 +282,52 @@ export class ArrowsService {
     }, {});
 
     const readyArrows = []
-    const createArrows = [];
-    const updateArrows = []
-    Object.keys(urlToTab || {})
-      .forEach(url => {
-        const entry = urlToTab[url];
-        const arrow = urlToArrow[url];
-        if (arrow) {
-          if (arrow.title === entry.title) {
-            readyArrows.push(arrow);
-          }
-          else {
-            arrow.title = entry.title;
-            updateArrows.push(arrow);
-          }
+    let updateArrows = [];
+    let sheafs = [];
+    let createArrows = [];
+
+    const urlTabs = Object.keys(urlToTab || {}).map(url => urlToTab[url]);
+
+    [...nonUrlTabs, ...urlTabs].forEach(entry => {
+      let arrow = urlToArrow[entry.url];
+      if (arrow) {
+        if (arrow.title === entry.title) {
+          readyArrows.push(arrow);
         }
         else {
-          const arrow0 = new Arrow();
-          arrow0.id = v4();
-          arrow0.sourceId = arrow0.id;
-          arrow0.targetId = arrow0.id;
-          arrow0.userId = user.id;
-          arrow0.abstractId = abstract.id;
-          arrow0.title = entry.title;
-          arrow0.url = entry.url;
-          arrow0.routeName = arrow0.id;
-          arrow0.color = user.color;
-          createArrows.push(arrow0);
+          arrow.title = entry.title;
+          updateArrows.push(arrow);
         }
-      });
+      }
+      else {
+        const sheaf = new Sheaf();
+        sheaf.id = v4();
+        sheaf.sourceId = sheaf.id;
+        sheaf.targetId = sheaf.id;
+        sheaf.routeName = sheaf.id;
+        sheaf.url = entry.url;
+        sheafs.push(sheaf);
 
-    const updateArrows1 = await this.arrowsRepository.save(updateArrows);
-    const createArrows1 = await this.arrowsRepository.save(createArrows);
-    const createArrows2 = await this.finishArrows(user, createArrows1);
-    return [...readyArrows, ...updateArrows1, ...createArrows2];
+        arrow = new Arrow();
+        arrow.id = v4();
+        arrow.sourceId = arrow.id;
+        arrow.targetId = arrow.id;
+        arrow.userId = user.id;
+        arrow.sheafId = sheaf.id;
+        arrow.abstractId = abstract.id;
+        arrow.title = entry.title;
+        arrow.url = entry.url;
+        arrow.routeName = arrow.id;
+        arrow.color = user.color;
+        createArrows.push(arrow);
+      }
+    });
+
+    updateArrows = await this.arrowsRepository.save(updateArrows);
+    await this.sheafsService.saveSheafs(sheafs);
+    createArrows = await this.arrowsRepository.save(createArrows);
+    createArrows = await this.finishArrows(user, createArrows);
+    return [...readyArrows, ...updateArrows, ...createArrows];
   }
 
   async finishArrows(user: User, arrows: Arrow[]) {

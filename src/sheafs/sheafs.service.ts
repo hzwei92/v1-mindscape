@@ -23,6 +23,14 @@ export class SheafsService {
     });
   }
 
+  async getSheafByUrl(url: string) {
+    return this.sheafsRepository.findOne({
+      where: {
+        url,
+      }
+    });
+  }
+
   async getSheafBySourceIdAndTargetId(sourceId: string, targetId: string) {
     return this.sheafsRepository.findOne({
       where: {
@@ -32,25 +40,28 @@ export class SheafsService {
     });
   }
 
-  async createSheaf(sourceId: string, targetId: string) {
+  async createSheaf(sourceId: string | null, targetId: string | null, url: string | null) {
     await this.arrowsService.incrementOutCount(sourceId, 1);
     await this.arrowsService.incrementInCount(targetId, 1);
 
     const sheaf = new Sheaf();
     sheaf.id = v4();
-    sheaf.sourceId = sourceId;
-    sheaf.targetId = targetId;
+    sheaf.sourceId = sourceId || sheaf.id;
+    sheaf.targetId = targetId || sheaf.id;
     sheaf.routeName = sheaf.id;
+    sheaf.url = url
     return this.sheafsRepository.save(sheaf);
   }
 
-  async incrementWeight(sheaf: Sheaf, clicks: number, tokens: number) {
-    const sheaf0 = new Sheaf();
-    sheaf0.id = sheaf.id;
-    sheaf0.clicks = sheaf.clicks + clicks;
-    sheaf0.tokens = sheaf.tokens + tokens;
-    sheaf0.weight = findDefaultWeight(sheaf0.clicks, sheaf0.tokens);
+  async saveSheafs(sheafs: Sheaf[]) {
+    return this.sheafsRepository.save(sheafs);
+  }
 
-    return this.sheafsRepository.save(sheaf0);
+  async incrementWeight(sheaf: Sheaf, clicks: number, tokens: number) {
+    sheaf.clicks = sheaf.clicks + clicks;
+    sheaf.tokens = sheaf.tokens + tokens;
+    sheaf.weight = findDefaultWeight(sheaf.clicks, sheaf.tokens);
+
+    return this.sheafsRepository.save(sheaf);
   }
 }

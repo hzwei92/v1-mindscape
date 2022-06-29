@@ -66,21 +66,14 @@ export class Twig {
   abstract: Arrow;
 
   // each twig has either a detail or a sheaf
-  @Column({ nullable: true })
+  @Column()
   detailId: string;
   
-  @ManyToOne(() => Arrow, { nullable: true })
+  @ManyToOne(() => Arrow)
   @JoinColumn({ referencedColumnName: 'id' }, )
   detail: Arrow;
 
-  @Column({nullable: true})
-  sheafId: string;
 
-  @ManyToOne(() => Sheaf, { nullable: true })
-  @JoinColumn({ referencedColumnName: 'id'})
-  sheaf: Sheaf;
-
-  
   @Column({ default: false })
   isRoot: boolean;
   
@@ -130,6 +123,9 @@ export class Twig {
   @Column({ nullable: true })
   tabId: number;
   
+  @Column({ nullable: true })
+  bookmarkId: string;
+
   @CreateDateColumn()
   createDate: Date;
 

@@ -7,6 +7,7 @@ import { adjectives, animals, NumberDictionary, uniqueNamesGenerator } from 'uni
 import { SearchService } from 'src/search/search.service';
 import { ArrowsService } from 'src/arrows/arrows.service';
 import { v4 } from 'uuid';
+import { SheafsService } from 'src/sheafs/sheafs.service';
 
 const numbers = NumberDictionary.generate({ min: 100, max: 999 });
 
@@ -15,6 +16,7 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    private readonly sheafsService: SheafsService,
     private readonly arrowsService: ArrowsService,
     private readonly searchService: SearchService,
   ) {}
@@ -82,11 +84,14 @@ export class UsersService {
     const user1 = await this.usersRepository.save(user0);
 
     const postId = v4();
+    const sheaf = await this.sheafsService.createSheaf(null, null, null);
     const { arrow } = await this.arrowsService.createArrow(
       user1,
       postId,
       postId,
       postId,
+      null,
+      sheaf,
       null,
       null,
       null,

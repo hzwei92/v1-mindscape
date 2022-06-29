@@ -9,22 +9,38 @@ export class Sheaf {
   @Field()
   routeName: string;
 
+  @Field({nullable: true})
+  url: string;
+  
 
   @Field()
   sourceId: string;
 
-  @Field(() => Arrow)
-  source: Arrow;
+  @Field(() => Sheaf)
+  source: Sheaf;
 
   @Field()
   targetId: string;
   
-  @Field(() => Arrow)
-  target: Arrow;
+  @Field(() => Sheaf)
+  target: Sheaf;
 
 
+  @Field(() => [Sheaf])
+  ins: Sheaf[];
+
+  @Field(() => [Sheaf])
+  outs: Sheaf[];
+  
+  @Field()
+  inCount: number;
+
+  @Field()
+  outCount: number;
+
+  
   @Field(() => [Arrow])
-  links: Arrow[];
+  arrows: Arrow[];
 
 
   @Field(() => Int)
@@ -35,7 +51,6 @@ export class Sheaf {
 
   @Field(() => Float)
   weight: number;
-
 
 
   @Field()

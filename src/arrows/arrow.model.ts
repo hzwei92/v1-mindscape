@@ -50,11 +50,13 @@ export class Arrow {
   @Field(() => Arrow)
   target: Arrow;
 
-  @Field({nullable: true})
+
+  @Field()
   sheafId: string;
 
-  @Field(() => Sheaf, {nullable: true})
+  @Field(() => Sheaf)
   sheaf: Sheaf;
+
 
   @Field(() => [Arrow])
   ins: Arrow[];

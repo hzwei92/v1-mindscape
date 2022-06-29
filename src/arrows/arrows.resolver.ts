@@ -14,6 +14,8 @@ import { RolesService } from 'src/roles/roles.service';
 import { VotesService } from 'src/votes/votes.service';
 import { Vote } from 'src/votes/vote.model';
 import { User as UserEntity } from 'src/users/user.entity';
+import { Sheaf } from 'src/sheafs/sheaf.model';
+import { SheafsService } from 'src/sheafs/sheafs.service';
 
 @Resolver(() => Arrow)
 export class ArrowsResolver {
@@ -23,6 +25,7 @@ export class ArrowsResolver {
     private readonly rolesService: RolesService,
     private readonly subsService: SubsService,
     private readonly votesService: VotesService,
+    private readonly sheafsService: SheafsService,
     @Inject(PUB_SUB)
     private readonly pubSub: RedisPubSub,
   ) {}
@@ -38,7 +41,6 @@ export class ArrowsResolver {
   async getArrowSource(
     @Parent() arrow: Arrow,
   ) {
-    if (!arrow.sourceId) return null;
     return this.arrowsService.getArrowById(arrow.sourceId);
   }
 
@@ -46,8 +48,14 @@ export class ArrowsResolver {
   async getArrowTarget(
     @Parent() arrow: Arrow,
   ) {
-    if (!arrow.targetId) return null;
     return this.arrowsService.getArrowById(arrow.targetId);
+  }
+
+  @ResolveField(() => Sheaf, {name: 'sheaf'})
+  async getArrowSheaf(
+    @Parent() arrow: Arrow,
+  ) {
+    return this.sheafsService.getSheafById(arrow.sheafId);
   }
 
   @ResolveField(() => Arrow, {name: 'abstract'})

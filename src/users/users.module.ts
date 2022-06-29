@@ -8,10 +8,12 @@ import { PubSubModule } from 'src/pub-sub/pub-sub.module';
 import { RolesModule } from 'src/roles/roles.module';
 import { LeadsModule } from 'src/leads/leads.module';
 import { ArrowsModule } from 'src/arrows/arrows.module';
+import { SheafsModule } from 'src/sheafs/sheafs.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
+    SheafsModule,
     ArrowsModule,
     RolesModule,
     LeadsModule,

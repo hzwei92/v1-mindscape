@@ -21,6 +21,41 @@ export class Sheaf {
   @Column()
   routeName: string;
 
+  @Index({ unique: true, where: 'url IS NOT NULL'})
+  @Column({ nullable: true })
+  url: string;
+
+  @Column()
+  sourceId: string;
+
+  @ManyToOne(() => Sheaf)
+  @JoinColumn({ name: 'sourceId', referencedColumnName: 'id' })
+  source: Sheaf;
+
+  @Column()
+  targetId: string;
+  
+  @ManyToOne(() => Sheaf)
+  @JoinColumn({ name: 'targetId', referencedColumnName: 'id' })
+  target: Sheaf;
+
+
+  @OneToMany(() => Sheaf, sheaf => sheaf.target)
+  ins: Sheaf[];
+
+  @OneToMany(() => Sheaf, sheaf => sheaf.source)
+  outs: Sheaf[];
+  
+  @Column({ default: 0 })
+  inCount: number;
+
+  @Column({ default: 0 })
+  outCount: number;
+
+
+  @OneToMany(() => Arrow, arrow => arrow.sheaf)
+  arrows: Arrow[];
+
   
   @Column({ default: 1 })
   clicks: number;
@@ -30,25 +65,6 @@ export class Sheaf {
 
   @Column({ default: findDefaultWeight(1, 0) })
   weight: number;
-
-
-  @Column()
-  sourceId: string;
-
-  @ManyToOne(() => Arrow)
-  @JoinColumn({ name: 'sourceId', referencedColumnName: 'id' })
-  source: Arrow;
-
-  @Column()
-  targetId: string;
-  
-  @ManyToOne(() => Arrow)
-  @JoinColumn({ name: 'targetId', referencedColumnName: 'id' })
-  target: Arrow;
-
-
-  @OneToMany(() => Arrow, arrow => arrow.sheaf)
-  links: Arrow[];
 
 
   @CreateDateColumn()

@@ -77,10 +77,12 @@ export class Arrow {
   @JoinColumn({ name: 'targetId', referencedColumnName: 'id' })
   target: Arrow;
 
-  @Column({nullable: true})
+
+  @Column()
   sheafId: string;
 
-  @ManyToOne(() => Sheaf, {nullable: true})
+  @ManyToOne(() => Sheaf)
+  @JoinColumn({ name: 'sheafId', referencedColumnName: 'id' })
   sheaf: Sheaf;
   
 

@@ -5,31 +5,32 @@ import { Arrow } from 'src/arrows/arrow.model';
 import { ArrowsService } from 'src/arrows/arrows.service';
 import { PUB_SUB } from 'src/pub-sub/pub-sub.module';
 import { UsersService } from 'src/users/users.service';
-import { 
-  AddTwigResult,
-  CreateTabResult,
-  DragTwigResult,
-  GroupEntry,
-  LinkTwigsResult,
-  MoveTabResult,
-  MoveTwigResult,
-  OpenTwigResult,
-  RemoveTabResult,
-  RemoveTwigResult,
-  ReplyTwigResult,
-  SelectTwigResult, 
-  SyncTabStateResult, 
-  TabEntry, 
-  Twig,
-  UpdateTabResult,
-  WindowEntry,
-} from './twig.model';
+import { Twig } from './twig.model';
 import { TwigsService } from './twigs.service';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
 import { User } from 'src/users/user.model';
 import { User as UserEntity } from 'src/users/user.entity';
 import { Sheaf } from 'src/sheafs/sheaf.model';
 import { SheafsService } from 'src/sheafs/sheafs.service';
+import { ReplyTwigResult } from './dto/reply-twig-result.dto';
+import { LinkTwigsResult } from './dto/link-twigs-result.dto';
+import { AddTwigResult } from './dto/add-twig-result.dto';
+import { SelectTwigResult } from './dto/select-twig-result.dto';
+import { MoveTwigResult } from './dto/move-twig-result.dto';
+import { OpenTwigResult } from './dto/open-twig-result.dto';
+import { SyncTabStateResult } from './dto/sync-tab-state-result.dto';
+import { WindowEntry } from './dto/window-entry.dto';
+import { GroupEntry } from './dto/group-entry.dto';
+import { TabEntry } from './dto/tab-entry.dto';
+import { CreateTabResult } from './dto/create-tab-result.dto';
+import { UpdateTabResult } from './dto/udpate-tab-result.dto';
+import { MoveTabResult } from './dto/move-tab-result.dto';
+import { RemoveTwigResult } from './dto/remove-twig-result.dto';
+import { RemoveTabResult } from './dto/remove-tab-result.dto';
+import { BookmarkEntry } from './dto/bookmark-entry.dto';
+import { DragTwigResult } from './dto/drag-twig-result.dto';
+import { SyncBookmarksResult } from './dto/sync-bookmarks-result.dto';
+import { RemoveBookmarkResult } from './dto/remove-bookmark-result.dto';
 
 @Resolver(() => Twig)
 export class TwigsResolver {
@@ -70,15 +71,6 @@ export class TwigsResolver {
     return this.arrowsService.getArrowByIdWithPrivacy(user, twig.detailId);
   }
 
-  @ResolveField(() => Sheaf, {name: 'sheaf', nullable: true})
-  async getTwigSheaf(
-    @CurrentUser() user: UserEntity,
-    @Parent() twig: Twig,
-  ) {
-    if (!twig.sheafId) return null;
-    return this.sheafsService.getSheafById(twig.sheafId);
-  }
-  
   @ResolveField(() => Arrow, {name: 'abstract'})
   async getTwigAbstract(
     @Parent() twig: Twig,
@@ -317,7 +309,7 @@ export class TwigsResolver {
   @Mutation(() => CreateTabResult, {name: 'createTab'})
   async createTab(
     @CurrentUser() user: UserEntity,
-    @Args('tabEntry', {type: () => TabEntry, nullable: true}) tabEntry: TabEntry,
+    @Args('tabEntry', {type: () => TabEntry}) tabEntry: TabEntry,
   ) {
     return this.twigsService.createTab(user, tabEntry);
   }
@@ -352,7 +344,7 @@ export class TwigsResolver {
     @CurrentUser() user: UserEntity,
     @Args('tabId', {type: () => Int}) tabId: number,
   ) {
-    return this.twigsService.removeTabTwig(user, tabId);
+    return this.twigsService.removeTab(user, tabId);
   }
 
   @UseGuards(GqlAuthGuard)
@@ -361,7 +353,7 @@ export class TwigsResolver {
     @CurrentUser() user: UserEntity,
     @Args('groupId', {type: () => Int}) groupId: number,
   ) {
-    return this.twigsService.removeGroupTwig(user, groupId);
+    return this.twigsService.removeGroup(user, groupId);
   }
 
   @UseGuards(GqlAuthGuard)
@@ -370,10 +362,36 @@ export class TwigsResolver {
     @CurrentUser() user: UserEntity,
     @Args('windowId', {type: () => Int}) windowId: number,
   ) {
-    return this.twigsService.removeWindowTwig(user, windowId);
+    return this.twigsService.removeWindow(user, windowId);
   }
 
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => SyncBookmarksResult, {name: 'syncBookmarks'})
+  async syncBookmarks(
+    @CurrentUser() user: UserEntity,
+    @Args('twigId') twigId: string,
+    @Args('bookmarks', {type: () => [BookmarkEntry]}) bookmarks: BookmarkEntry[],
+  ) {
+    return this.twigsService.syncBookmarks(user, twigId, bookmarks);
+  }
 
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => CreateTabResult, {name: 'createBookmark'})
+  async createBookmark(
+    @CurrentUser() user: UserEntity,
+    @Args('bookmark', {type: () => BookmarkEntry, nullable: true}) bookmark: BookmarkEntry,
+  ) {
+    return this.twigsService.createBookmark(user, bookmark);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => RemoveBookmarkResult, {name: 'removeBookmark'})
+  async removeBookmark(
+    @CurrentUser() user: UserEntity,
+    @Args('bookmarkId') bookmarkId: string,
+  ) {
+    return this.twigsService.removeBookmark(user, bookmarkId);
+  }
 
 
   @Subscription(() => AddTwigResult, {name: 'addTwig',
