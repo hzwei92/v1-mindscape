@@ -1350,23 +1350,54 @@ export class TwigsService {
     }
 
 
-    let prevSibs = (twig.parent.children || []).filter(prevSib => prevSib.rank > twig.rank)
-      .map(prevSib => {
-        prevSib.rank -= 1;
-        return prevSib;
-      })
-    
-    prevSibs = await this.twigsRepository.save(prevSibs);
+    let prevSibs = [];
+    let sibs = [];
+    let dDegree = 0;
+    if (parentTwig.id === twig.parent.id) {
+      if (rank > twig.rank) {
+        sibs = parentTwig.children.filter(sib => sib.rank > twig.rank && sib.rank <= rank)
+          .map(sib => {
+            sib.rank -= 1;
+            return sib;
+          });
+        sibs = await this.twigsRepository.save(sibs);
+      }
+      else if (rank < twig.rank) {
+        sibs = parentTwig.children.filter(sib => sib.rank < twig.rank && sib.rank >= rank)
+          .map(sib => {
+            sib.rank += 1;
+            return sib;
+          });
+        sibs = await this.twigsRepository.save(sibs);
+      }
+      else {
+        return {
+          twig,
+          prevSibs,
+          sibs,
+          descs: [],
+        }
+      }
+    }
+    else {
+      prevSibs = (twig.parent.children || []).filter(prevSib => prevSib.rank > twig.rank)
+        .map(prevSib => {
+          prevSib.rank -= 1;
+          return prevSib;
+        })
+      
+      prevSibs = await this.twigsRepository.save(prevSibs);
 
-    let sibs = parentTwig.children.filter(sib => sib.rank >= rank)
-      .map(sib => {
-        sib.rank += 1;
-        return sib;
-      });
+      sibs = parentTwig.children.filter(sib => sib.rank >= rank)
+        .map(sib => {
+          sib.rank += 1;
+          return sib;
+        });
 
-    sibs = await this.twigsRepository.save(sibs);
+      sibs = await this.twigsRepository.save(sibs);
 
-    const dDegree = parentTwig.degree - twig.parent.degree;
+      dDegree = parentTwig.degree - twig.parent.degree;
+    }
 
     twig.degree += dDegree;
     twig.rank = rank;
@@ -1387,9 +1418,9 @@ export class TwigsService {
 
     return {
       twig, 
+      prevSibs,
       sibs,
       descs,
-      prevSibs,
     }
   }
 
