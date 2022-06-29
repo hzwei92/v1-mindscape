@@ -1,6 +1,6 @@
 import { BadRequestException, forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { TWIG_HEIGHT, uuidRegexExp } from 'src/constants';
+import { uuidRegexExp } from 'src/constants';
 import { ArrowsService } from 'src/arrows/arrows.service';
 import { RolesService } from 'src/roles/roles.service';
 import { In, IsNull, Repository } from 'typeorm';
@@ -11,7 +11,6 @@ import { User } from 'src/users/user.entity';
 import { VotesService } from 'src/votes/votes.service';
 import { checkPermit } from 'src/utils';
 import { SheafsService } from 'src/sheafs/sheafs.service';
-import { Sheaf } from 'src/sheafs/sheaf.entity';
 import { WindowEntry } from './dto/window-entry.dto';
 import { GroupEntry } from './dto/group-entry.dto';
 import { TabEntry } from './dto/tab-entry.dto';
@@ -1288,7 +1287,10 @@ export class TwigsService {
       sheaf = await this.sheafsService.createSheaf(null, null, entry.url)
     }
 
-    const { arrow }  = await this.arrowsService.createArrow(user, null, null, null, abstract, sheaf, null, entry.title, entry.url)
+    let arrow = await this.arrowsService.getArrowByUserIdAndUrl(user.id, entry.url);
+    if (!arrow) {
+      ({ arrow }  = await this.arrowsService.createArrow(user, null, null, null, abstract, sheaf, null, entry.title, entry.url));
+    }
 
     let twig = new Twig();
     twig.userId = user.id;
@@ -1320,6 +1322,75 @@ export class TwigsService {
       twig,
       sibs,
     };
+  }
+
+  async moveBookmark(user: User, bookmarkId: string, parentBookmarkId: string, rank: number) {
+    let twig = await this.twigsRepository.findOne({
+      where: {
+        userId: user.id,
+        bookmarkId,
+      },
+      relations: ['parent', 'parent.children'],
+    });
+
+    if (!twig) {
+      throw new BadRequestException('This twig does not exist');
+    }
+
+    const parentTwig = await this.twigsRepository.findOne({
+      where: {
+        userId: user.id,
+        bookmarkId: parentBookmarkId,
+      },
+      relations: ['children'],
+    });
+
+    if (!parentTwig) {
+      throw new BadRequestException('This parent twig does not exist');
+    }
+
+
+    let prevSibs = (twig.parent.children || []).filter(prevSib => prevSib.rank > twig.rank)
+      .map(prevSib => {
+        prevSib.rank -= 1;
+        return prevSib;
+      })
+    
+    prevSibs = await this.twigsRepository.save(prevSibs);
+
+    let sibs = parentTwig.children.filter(sib => sib.rank >= rank)
+      .map(sib => {
+        sib.rank += 1;
+        return sib;
+      });
+
+    sibs = await this.twigsRepository.save(sibs);
+
+    const dDegree = parentTwig.degree - twig.parent.degree;
+
+    twig.degree += dDegree;
+    twig.rank = rank;
+    twig.parent = parentTwig;
+
+    twig = await this.twigsRepository.save(twig);
+
+    let descs = await this.twigsRepository.manager.getTreeRepository(Twig)
+      .findDescendants(twig);
+
+    descs = descs.filter(desc => desc.id !== twig.id)
+      .map(desc => {
+        desc.degree += dDegree;
+        return desc;
+      })
+
+    descs = await this.twigsRepository.save(descs);
+
+    return {
+      twig, 
+      sibs,
+      descs,
+      prevSibs,
+    }
   }
 
   async removeBookmark(user: User, bookmarkId: string) {

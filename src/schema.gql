@@ -146,6 +146,7 @@ type Mutation {
   loginGoogleUser(token: String!): User!
   loginUser(email: String!, pass: String!): User!
   logoutUser: User!
+  moveBookmark(bookmarkId: String!, parentBookmarkId: String!, rank: Int!): MoveTabResult!
   moveTab(groupTwigId: String!, parentTwigId: String, twigId: String!): MoveTabResult!
   moveTwig(displayMode: String!, sessionId: String!, twigId: String!, x: Int!, y: Int!): MoveTwigResult!
   openTwig(sessionId: String!, shouldOpen: Boolean!, twigId: String!): OpenTwigResult!

@@ -385,6 +385,18 @@ export class TwigsResolver {
   }
 
   @UseGuards(GqlAuthGuard)
+  @Mutation(() => MoveTabResult, {name: 'moveBookmark'})
+  async moveBookmark(
+    @CurrentUser() user: UserEntity,
+    @Args('bookmarkId') bookmarkId: string,
+    @Args('parentBookmarkId') parentBookmarkId: string,
+    @Args('rank', {type: () => Int}) rank: number,
+  ) {
+    return this.twigsService.moveBookmark(user, bookmarkId, parentBookmarkId, rank);
+  }
+
+
+  @UseGuards(GqlAuthGuard)
   @Mutation(() => RemoveBookmarkResult, {name: 'removeBookmark'})
   async removeBookmark(
     @CurrentUser() user: UserEntity,
