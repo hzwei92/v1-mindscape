@@ -128,6 +128,7 @@ type MoveTwigResult {
 type Mutation {
   addTwig(arrowId: String!, parentTwigId: String!, sessionId: String!): AddTwigResult!
   adjustTwigs(abstractId: String!, twigIds: [String!]!, xs: [Int!]!, ys: [Int!]!): [Twig!]!
+  changeBookmark(bookmarkId: String!, title: String!, url: String): Twig!
   createBookmark(bookmark: BookmarkEntry): CreateTabResult!
   createGroup(groupEntry: GroupEntry!): CreateTabResult!
   createTab(tabEntry: TabEntry!): CreateTabResult!

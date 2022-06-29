@@ -385,6 +385,17 @@ export class TwigsResolver {
   }
 
   @UseGuards(GqlAuthGuard)
+  @Mutation(() => Twig, {name: 'changeBookmark'})
+  async changeBookmark(
+    @CurrentUser() user: UserEntity,
+    @Args('bookmarkId') bookmarkId: string,
+    @Args('title') title: string,
+    @Args('url', {nullable: true}) url: string,
+  ) {
+    return this.twigsService.changeBookmark(user, bookmarkId, title, url);
+  }
+
+  @UseGuards(GqlAuthGuard)
   @Mutation(() => MoveTabResult, {name: 'moveBookmark'})
   async moveBookmark(
     @CurrentUser() user: UserEntity,

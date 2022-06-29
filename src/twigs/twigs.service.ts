@@ -1324,6 +1324,41 @@ export class TwigsService {
     };
   }
 
+  async changeBookmark(user: User, bookmarkId: string, title: string, url: string | null) {
+    const abstract = await this.arrowsService.getArrowById(user.frameId);
+    if (!abstract) {
+      throw new BadRequestException('Missing abstract');
+    }
+    const twig = await this.twigsRepository.findOne({
+      where: {
+        userId: user.id,
+        bookmarkId,
+      },
+      relations: ['detail'],
+    });
+    if (!twig) {
+      throw new BadRequestException('Missing twig');
+    }
+
+    if (url && url !== twig.detail.url) {
+      let arrow = await this.arrowsService.getArrowByUserIdAndUrl(user.id, url);
+      if (!arrow) {
+        let sheaf = await this.sheafsService.getSheafByUrl(url);
+        if (!sheaf) {
+          sheaf = await this.sheafsService.createSheaf(null, null, url);
+        }
+        ({ arrow } = await this.arrowsService.createArrow(user, null, null, null, abstract, sheaf, null, title, url));
+      }
+      twig.detailId = arrow.id;
+    }
+    else if (title !== twig.detail.title) {
+      twig.detail.title = title;
+      await this.arrowsService.saveArrows([twig.detail])
+    }
+
+    return this.twigsRepository.save(twig);
+  }
+  
   async moveBookmark(user: User, bookmarkId: string, parentBookmarkId: string, rank: number) {
     let twig = await this.twigsRepository.findOne({
       where: {

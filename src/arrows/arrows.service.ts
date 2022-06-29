@@ -87,9 +87,10 @@ export class ArrowsService {
     });
   }
 
-  async getArrowsByUrls(urls: string[]) {
+  async getArrowsByUserIdAndUrls(userId: string, urls: string[]) {
     return this.arrowsRepository.find({
       where: {
+        userId,
         url: In(urls),
       },
     });
@@ -139,6 +140,10 @@ export class ArrowsService {
       twig,
       sub,
     };
+  }
+
+  async saveArrows(arrows: Arrow[]) {
+    return this.arrowsRepository.save(arrows);
   }
 
   async linkArrows(user: User, abstract: Arrow, sourceId: string, targetId: string) {
@@ -275,15 +280,23 @@ export class ArrowsService {
       }
     });
 
-    const arrows = await this.getArrowsByUrls(Object.keys(urlToTab));
+    const arrows = await this.getArrowsByUserIdAndUrls(user.id, Object.keys(urlToTab));
     const urlToArrow = arrows.reduce((acc, arrow) => {
       acc[arrow.url] = arrow;
       return acc;
     }, {});
 
+    let sheafs = await this.sheafsService.getSheafsByUrls(Object.keys(urlToTab));
+    const urlToSheaf = sheafs.reduce((acc, sheaf) => {
+      acc[sheaf.url] = sheaf;
+      return acc;
+    }, {});
+
+    console.log('sheafs', sheafs, urlToTab);
+
     const readyArrows = []
     let updateArrows = [];
-    let sheafs = [];
+    let createSheafs = [];
     let createArrows = [];
 
     const urlTabs = Object.keys(urlToTab || {}).map(url => urlToTab[url]);
@@ -300,14 +313,19 @@ export class ArrowsService {
         }
       }
       else {
-        const sheaf = new Sheaf();
-        sheaf.id = v4();
-        sheaf.sourceId = sheaf.id;
-        sheaf.targetId = sheaf.id;
-        sheaf.routeName = sheaf.id;
-        sheaf.url = entry.url;
-        sheafs.push(sheaf);
-
+        let sheaf;
+        if (entry.url && urlToSheaf[entry.url]) {
+          sheaf = urlToSheaf[entry.url];
+        }
+        else {
+          sheaf = new Sheaf();
+          sheaf.id = v4();
+          sheaf.sourceId = sheaf.id;
+          sheaf.targetId = sheaf.id;
+          sheaf.routeName = sheaf.id;
+          sheaf.url = entry.url;
+          createSheafs.push(sheaf);
+        }
         arrow = new Arrow();
         arrow.id = v4();
         arrow.sourceId = arrow.id;
@@ -324,7 +342,7 @@ export class ArrowsService {
     });
 
     updateArrows = await this.arrowsRepository.save(updateArrows);
-    await this.sheafsService.saveSheafs(sheafs);
+    await this.sheafsService.saveSheafs(createSheafs);
     createArrows = await this.arrowsRepository.save(createArrows);
     createArrows = await this.finishArrows(user, createArrows);
     return [...readyArrows, ...updateArrows, ...createArrows];

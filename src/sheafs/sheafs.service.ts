@@ -2,7 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ArrowsService } from 'src/arrows/arrows.service';
 import { findDefaultWeight } from 'src/utils';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Sheaf } from './sheaf.entity';
 import { v4 } from 'uuid';
 
@@ -28,6 +28,14 @@ export class SheafsService {
       where: {
         url,
       }
+    });
+  }
+
+  async getSheafsByUrls(urls: string[]) {
+    return this.sheafsRepository.find({
+      where: {
+        url: In(urls),
+      },
     });
   }
 
