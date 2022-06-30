@@ -444,6 +444,8 @@ export class TwigsService {
       descs = descs.map(desc => {
         if (desc.id === twigId) {
           desc.displayMode = DisplayMode[displayMode]
+          desc.x = x;
+          desc.y = y;
         }
         desc.x += dx;
         desc.y += dy;
