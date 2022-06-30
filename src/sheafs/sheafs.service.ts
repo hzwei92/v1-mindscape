@@ -49,8 +49,8 @@ export class SheafsService {
   }
 
   async createSheaf(sourceId: string | null, targetId: string | null, url: string | null) {
-    await this.arrowsService.incrementOutCount(sourceId, 1);
-    await this.arrowsService.incrementInCount(targetId, 1);
+    await this.incrementOutCount(sourceId, 1);
+    await this.incrementInCount(targetId, 1);
 
     const sheaf = new Sheaf();
     sheaf.id = v4();
@@ -71,5 +71,13 @@ export class SheafsService {
     sheaf.weight = findDefaultWeight(sheaf.clicks, sheaf.tokens);
 
     return this.sheafsRepository.save(sheaf);
+  }
+
+  async incrementInCount(id: string, value: number) {
+    await this.sheafsRepository.increment({ id }, 'inCount', value);
+  }
+
+  async incrementOutCount(id: string, value: number) {
+    await this.sheafsRepository.increment({ id }, 'outCount', value);
   }
 }

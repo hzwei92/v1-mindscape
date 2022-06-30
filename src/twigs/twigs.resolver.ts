@@ -22,7 +22,7 @@ import { SyncTabStateResult } from './dto/sync-tab-state-result.dto';
 import { WindowEntry } from './dto/window-entry.dto';
 import { GroupEntry } from './dto/group-entry.dto';
 import { TabEntry } from './dto/tab-entry.dto';
-import { CreateTabResult } from './dto/create-tab-result.dto';
+import { TabResult } from './dto/tab-result.dto';
 import { UpdateTabResult } from './dto/udpate-tab-result.dto';
 import { MoveTabResult } from './dto/move-tab-result.dto';
 import { RemoveTwigResult } from './dto/remove-twig-result.dto';
@@ -31,6 +31,7 @@ import { BookmarkEntry } from './dto/bookmark-entry.dto';
 import { DragTwigResult } from './dto/drag-twig-result.dto';
 import { SyncBookmarksResult } from './dto/sync-bookmarks-result.dto';
 import { RemoveBookmarkResult } from './dto/remove-bookmark-result.dto';
+import { CreateTabResult } from './dto/create-tab-result.dto';
 
 @Resolver(() => Twig)
 export class TwigsResolver {
@@ -288,7 +289,7 @@ export class TwigsResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => CreateTabResult, {name: 'createWindow'})
+  @Mutation(() => TabResult, {name: 'createWindow'})
   async createWindow(
     @CurrentUser() user: UserEntity,
     @Args('windowEntry', {type: () => WindowEntry}) windowEntry: WindowEntry,
@@ -297,7 +298,7 @@ export class TwigsResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => CreateTabResult, {name: 'createGroup'})
+  @Mutation(() => TabResult, {name: 'createGroup'})
   async createGroup(
     @CurrentUser() user: UserEntity,
     @Args('groupEntry', {type: () => GroupEntry}) groupEntry: GroupEntry,
@@ -348,7 +349,7 @@ export class TwigsResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => CreateTabResult, {name: 'removeGroupTwig'})
+  @Mutation(() => TabResult, {name: 'removeGroupTwig'})
   async removeGroupTwig(
     @CurrentUser() user: UserEntity,
     @Args('groupId', {type: () => Int}) groupId: number,
@@ -357,7 +358,7 @@ export class TwigsResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => CreateTabResult, {name: 'removeWindowTwig'})
+  @Mutation(() => TabResult, {name: 'removeWindowTwig'})
   async removeWindowTwig(
     @CurrentUser() user: UserEntity,
     @Args('windowId', {type: () => Int}) windowId: number,
@@ -376,7 +377,7 @@ export class TwigsResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => CreateTabResult, {name: 'createBookmark'})
+  @Mutation(() => TabResult, {name: 'createBookmark'})
   async createBookmark(
     @CurrentUser() user: UserEntity,
     @Args('bookmark', {type: () => BookmarkEntry, nullable: true}) bookmark: BookmarkEntry,

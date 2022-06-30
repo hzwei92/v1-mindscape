@@ -370,12 +370,12 @@ export class TwigsService {
       throw new BadRequestException('This targetTwig does not exist');
     }
 
-    let sheaf = await this.sheafsService.getSheafBySourceIdAndTargetId(sourceId, targetId);
+    let sheaf = await this.sheafsService.getSheafBySourceIdAndTargetId(source.sheafId, target.sheafId);
     if (sheaf) {
       sheaf = await this.sheafsService.incrementWeight(sheaf, 1, 0);
     }
     else {
-      sheaf = await this.sheafsService.createSheaf(sourceId, targetId, null);
+      sheaf = await this.sheafsService.createSheaf(source.sheafId, target.sheafId, null);
     }
     const { arrow } = await this.arrowsService.createArrow(user, null, sourceId, targetId, abstract, sheaf, null, null, null);
 
@@ -450,12 +450,6 @@ export class TwigsService {
         return desc
       })
       twigs1 = await this.twigsRepository.save(descs);
-    }
-    else {
-      twig.x = x;
-      twig.y = y;
-      twig.displayMode = DisplayMode[displayMode];
-      twigs1 = await this.twigsRepository.save([twig]);
     }
 
     return {
@@ -637,7 +631,7 @@ export class TwigsService {
       twig.windowId = entry.windowId;
       twig.degree = parentTwig.degree + 1;
       twig.rank = entry.rank;
-      twig.displayMode = DisplayMode.VERTICAL;
+      twig.displayMode = DisplayMode.HORIZONTAL;
       return twig;
     });
 
@@ -820,12 +814,19 @@ export class TwigsService {
   }
 
   async createTab(user, tabEntry: TabEntry) {
+    const abstract = await this.arrowsService.getArrowById(user.frameId);
+    if (!abstract) {
+      throw new BadRequestException('Missing abstract');
+    }
     const parent = await this.twigsRepository.findOne({
       where: {
         id: tabEntry.parentTwigId,
       },
       relations: ['children'],
     });
+    if (!parent) {
+      throw new BadRequestException('Missing parent');
+    }
 
     let sibs = parent.children;
     sibs.filter(sib => sib.rank >= tabEntry.rank)
@@ -838,8 +839,35 @@ export class TwigsService {
 
     const [twig] = await this.loadTabs(user, [tabEntry]);
 
+    const twigs = [twig];
+
+    if (parent.tabId) {
+      const { arrow } = await this.arrowsService.linkArrows(user, abstract, parent.detailId, twig.detailId);
+
+      const linkTwig = await this.createTwig(
+        user, 
+        abstract, 
+        arrow, 
+        null, 
+        null, 
+        parent.id, 
+        twig.id, 
+        abstract.twigN + 1, 
+        parent.x, 
+        parent.y, 
+        abstract.twigZ + 1, 
+        false
+      );
+
+      await this.arrowsService.incrementTwigN(abstract.id, 1);
+      await this.arrowsService.incrementTwigZ(abstract.id, 1);
+
+      twigs.push(linkTwig)
+    }
+
+
     return {
-      twig,
+      twigs,
       sibs,
     };
   }
@@ -867,6 +895,8 @@ export class TwigsService {
       };
     }
     else {
+      await this.arrowsService.linkArrows(user, abstract, twig.detailId, arrows[0].id);
+
       twig.detailId = arrows[0].id;
 
       await this.twigsRepository.update({id: twigId}, {
@@ -883,8 +913,6 @@ export class TwigsService {
       });
 
       deleted = await this.twigsRepository.save(deleted);
-
-      await this.arrowsService.linkArrows(user, abstract, twig.detailId, arrows[0].id);
 
       return {
         twig,
@@ -1235,9 +1263,7 @@ export class TwigsService {
         twig.x = parentTwig.x;
         twig.y = parentTwig.y;
         twig.z = abstract.twigZ + i + 1;
-        twig.displayMode = entry.degree === 1
-          ? DisplayMode.HORIZONTAL
-          : DisplayMode.VERTICAL
+        twig.displayMode = DisplayMode.VERTICAL
 
         twigs.push(twig);
         bookmarkIdToTwig[twig.bookmarkId] = twig;

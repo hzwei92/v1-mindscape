@@ -120,6 +120,11 @@ export class ArrowsService {
     arrow0.routeName = arrow0.id;
     arrow0.color = user.color;
     const arrow1 = await this.arrowsRepository.save(arrow0);
+
+    if (sourceId && targetId) {
+      await this.incrementOutCount(sourceId, 1);
+      await this.incrementInCount(targetId, 1);
+    }
     
 
     const [twig] = await this.twigsService.createRootTwigs(user, [arrow1]);
@@ -183,7 +188,7 @@ export class ArrowsService {
         sheaf = await this.sheafsService.incrementWeight(sheaf, 1, 0);
       }
       else {
-        sheaf = await this.sheafsService.createSheaf(sourceId, targetId, null);
+        sheaf = await this.sheafsService.createSheaf(source.sheafId, target.sheafId, null);
       }
       
       arrow.clicks += 1;
@@ -199,7 +204,7 @@ export class ArrowsService {
         sheaf = await this.sheafsService.incrementWeight(sheaf, 1, 0);
       }
       else {
-        sheaf = await this.sheafsService.createSheaf(sourceId, targetId, null);
+        sheaf = await this.sheafsService.createSheaf(source.sheafId, target.sheafId, null);
       }
 
       ({ arrow, vote } = await this.createArrow(user, null, sourceId, targetId, abstract, sheaf, null, null, null));

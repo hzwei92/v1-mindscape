@@ -72,7 +72,7 @@ input BookmarkEntry {
 
 type CreateTabResult {
   sibs: [Twig!]!
-  twig: Twig!
+  twigs: [Twig!]!
 }
 
 """
@@ -129,10 +129,10 @@ type Mutation {
   addTwig(arrowId: String!, parentTwigId: String!, sessionId: String!): AddTwigResult!
   adjustTwigs(abstractId: String!, twigIds: [String!]!, xs: [Int!]!, ys: [Int!]!): [Twig!]!
   changeBookmark(bookmarkId: String!, title: String!, url: String): Twig!
-  createBookmark(bookmark: BookmarkEntry): CreateTabResult!
-  createGroup(groupEntry: GroupEntry!): CreateTabResult!
+  createBookmark(bookmark: BookmarkEntry): TabResult!
+  createGroup(groupEntry: GroupEntry!): TabResult!
   createTab(tabEntry: TabEntry!): CreateTabResult!
-  createWindow(windowEntry: WindowEntry!): CreateTabResult!
+  createWindow(windowEntry: WindowEntry!): TabResult!
   dragTwig(abstractId: String!, dx: Int!, dy: Int!, sessionId: String!, twigId: String!): Twig!
   followUser(userId: String!): Lead!
   getArrowByRouteName(routeName: String!): Arrow
@@ -156,11 +156,11 @@ type Mutation {
   registerGoogleUser(token: String!): User!
   registerUser(email: String!, pass: String!): User!
   removeBookmark(bookmarkId: String!): RemoveBookmarkResult!
-  removeGroupTwig(groupId: Int!): CreateTabResult!
+  removeGroupTwig(groupId: Int!): TabResult!
   removeRole(roleId: String!, sessionId: String!): Role!
   removeTabTwig(tabId: Int!): RemoveTabResult!
   removeTwig(sessionId: String!, twigId: String!): RemoveTwigResult!
-  removeWindowTwig(windowId: Int!): CreateTabResult!
+  removeWindowTwig(windowId: Int!): TabResult!
   replyTwig(draft: String!, parentTwigId: String!, postId: String!, sessionId: String!, twigId: String!, x: Int!, y: Int!): ReplyTwigResult!
   requestRole(arrowId: String!, sessionId: String!): Role!
   resendUserVerification: User!
@@ -303,6 +303,11 @@ input TabEntry {
   twigId: String!
   url: String!
   windowId: Int!
+}
+
+type TabResult {
+  sibs: [Twig!]!
+  twig: Twig!
 }
 
 type Twig {
