@@ -89,9 +89,7 @@ type DragTwigResult {
 input GroupEntry {
   color: String!
   groupId: Int!
-  parentTwigId: String!
   rank: Int!
-  twigId: String!
   windowId: Int!
 }
 
@@ -132,7 +130,7 @@ type Mutation {
   createBookmark(bookmark: BookmarkEntry): TabResult!
   createGroup(groupEntry: GroupEntry!): TabResult!
   createTab(tabEntry: TabEntry!): CreateTabResult!
-  createWindow(windowEntry: WindowEntry!): TabResult!
+  createWindow(twigId: String!, windowEntry: WindowEntry!): TabResult!
   dragTwig(abstractId: String!, dx: Int!, dy: Int!, sessionId: String!, twigId: String!): Twig!
   followUser(userId: String!): Lead!
   getArrowByRouteName(routeName: String!): Arrow
@@ -171,6 +169,7 @@ type Mutation {
   setUserMap(lat: Float!, lng: Float!, zoom: Float!): User!
   setUserName(name: String!, sessionId: String!): User!
   syncBookmarks(bookmarks: [BookmarkEntry!]!, twigId: String!): SyncBookmarksResult!
+  syncBrowserState(bookmarks: [BookmarkEntry!]!, groups: [GroupEntry!]!, tabs: [TabEntry!]!, twigId: String!, windows: [WindowEntry!]!): SyncBrowserStateResult!
   syncTabState(groups: [GroupEntry!]!, tabs: [TabEntry!]!, twigId: String!, windows: [WindowEntry!]!): SyncTabStateResult!
   unfollowUser(userId: String!): Lead!
   updateTab(title: String!, twigId: String!, url: String!): UpdateTabResult!
@@ -285,6 +284,14 @@ type SyncBookmarksResult {
   deleted: [Twig!]!
 }
 
+type SyncBrowserStateResult {
+  bookmarks: [Twig!]!
+  deleted: [Twig!]!
+  groups: [Twig!]!
+  tabs: [Twig!]!
+  windows: [Twig!]!
+}
+
 type SyncTabStateResult {
   deleted: [Twig!]!
   groups: [Twig!]!
@@ -296,11 +303,10 @@ input TabEntry {
   color: String!
   degree: Int!
   groupId: Int!
-  parentTwigId: String!
+  parentTabId: Int
   rank: Int!
   tabId: Int!
   title: String!
-  twigId: String!
   url: String!
   windowId: Int!
 }
@@ -397,8 +403,6 @@ type Vote {
 }
 
 input WindowEntry {
-  parentTwigId: String!
   rank: Int!
-  twigId: String!
   windowId: Int!
 }

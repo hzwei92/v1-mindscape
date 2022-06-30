@@ -29,3 +29,7 @@ export const checkPermit = (permissionLevel: RoleType, roleType: RoleType) => {
       ? roleType === RoleType.ADMIN || roleType === RoleType.MEMBER
       : true;
 }
+
+export type IdToType<T> = {
+  [id: string]: T;
+}

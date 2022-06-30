@@ -32,6 +32,7 @@ import { DragTwigResult } from './dto/drag-twig-result.dto';
 import { SyncBookmarksResult } from './dto/sync-bookmarks-result.dto';
 import { RemoveBookmarkResult } from './dto/remove-bookmark-result.dto';
 import { CreateTabResult } from './dto/create-tab-result.dto';
+import { SyncBrowserStateResult } from './dto/sync-browser-state-result.dto';
 
 @Resolver(() => Twig)
 export class TwigsResolver {
@@ -277,6 +278,20 @@ export class TwigsResolver {
   }
 
   @UseGuards(GqlAuthGuard)
+  @Mutation(() => SyncBrowserStateResult, {name: 'syncBrowserState'})
+  async syncBrowserState(
+    @CurrentUser() user: UserEntity,
+    @Args('twigId') twigId: string,
+    @Args('bookmarks', {type: () => [BookmarkEntry]}) bookmarks: BookmarkEntry[],
+    @Args('windows', {type: () => [WindowEntry]}) windows: WindowEntry[],
+    @Args('groups', {type: () => [GroupEntry]}) groups: GroupEntry[],
+    @Args('tabs', {type: () => [TabEntry]}) tabs: TabEntry[],
+  ) {
+    return this.twigsService.syncBrowserState(user, twigId, bookmarks, windows, groups, tabs);
+  }
+
+
+  @UseGuards(GqlAuthGuard)
   @Mutation(() => SyncTabStateResult, {name: 'syncTabState'})
   async syncTabState(
     @CurrentUser() user: UserEntity,
@@ -292,9 +307,10 @@ export class TwigsResolver {
   @Mutation(() => TabResult, {name: 'createWindow'})
   async createWindow(
     @CurrentUser() user: UserEntity,
+    @Args('twigId') twigId: string,
     @Args('windowEntry', {type: () => WindowEntry}) windowEntry: WindowEntry,
   ) {
-    return this.twigsService.createWindow(user, windowEntry);
+    return this.twigsService.createWindow(user, twigId, windowEntry);
   }
 
   @UseGuards(GqlAuthGuard)
