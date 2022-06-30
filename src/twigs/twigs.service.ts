@@ -447,8 +447,10 @@ export class TwigsService {
           desc.x = x;
           desc.y = y;
         }
-        desc.x += dx;
-        desc.y += dy;
+        else {
+          desc.x += dx;
+          desc.y += dy;
+        }
         return desc
       })
       twigs1 = await this.twigsRepository.save(descs);
