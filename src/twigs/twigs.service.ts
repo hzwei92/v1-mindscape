@@ -116,6 +116,8 @@ export class TwigsService {
     x: number,
     y: number,
     z: number,
+    degree: number,
+    rank: number,
     isOpen: boolean,
   ) {
     const twig0 = new Twig();
@@ -130,6 +132,8 @@ export class TwigsService {
     twig0.x = x
     twig0.y = y
     twig0.z = z;
+    twig0.degree = degree;
+    twig0.rank = rank;
     twig0.isOpen = isOpen;
     return this.twigsRepository.save(twig0);
   }
@@ -146,7 +150,7 @@ export class TwigsService {
       where: {
         id: parentTwigId,
       },
-      relations: ['abstract']
+      relations: ['abstract', 'children']
     });
     if (!parentTwig) {
       throw new BadRequestException('This parent twig does not exist');
@@ -208,6 +212,8 @@ export class TwigsService {
       x,
       y,
       parentTwig.abstract.twigZ + 1,
+      parentTwig.degree + 1,
+      parentTwig.children.length + 1,
       true,
     );
     const linkTwig = await this.createTwig(
@@ -222,6 +228,8 @@ export class TwigsService {
       Math.round((parentTwig.x + x) / 2),
       Math.round((parentTwig.y + y) / 2),
       parentTwig.abstract.twigZ + 2,
+      1,
+      1,
       false,
     );
     await this.arrowsService.incrementTwigN(parentTwig.abstractId, 2);
@@ -384,7 +392,6 @@ export class TwigsService {
     const x = Math.round((sourceTwig.x + targetTwig.x) / 2);
     const y = Math.round((sourceTwig.y + targetTwig.y) / 2);
 
-    console.log('sheaf', sheaf);
     const twig = await this.createTwig(
       user, 
       abstract, 
@@ -397,6 +404,8 @@ export class TwigsService {
       x, 
       y, 
       abstract.twigZ + 1, 
+      1,
+      1,
       true
     );
   
@@ -755,7 +764,7 @@ export class TwigsService {
     const windowIdToTwig = windowTwigs.reduce((acc, twig) => {
       acc[twig.windowId] = twig;
       return acc;
-    }, {})
+    }, {});
 
     const arrows = await this.arrowsService.loadGroupArrows(user, abstract, groupEntries);
     const groupIdToArrow = arrows.reduce((acc, arrow) => {
@@ -765,6 +774,10 @@ export class TwigsService {
 
     let groupTwigs = groupEntries.map((entry, i) => {
       const parentTwig = windowIdToTwig[entry.windowId];
+
+      if (!parentTwig) {
+        throw new Error('Missing parent twig with windowId ' + entry.windowId)
+      }
 
       const twig = new Twig();
       twig.userId = user.id;
@@ -811,7 +824,7 @@ export class TwigsService {
     const tabTwigs = [];
     tabEntries.sort((a, b) => a.degree < b.degree ? -1 : 1);
 
-    let degree = tabEntries[0].degree;
+    let degree = tabEntries[0]?.degree;
     let i = 0;
     while (tabEntries.length) {
       const nextEntries = [];
@@ -842,7 +855,7 @@ export class TwigsService {
           twig.windowId = entry.windowId;
           twig.groupId = entry.groupId;
           twig.tabId = entry.tabId;
-          twig.degree = entry.degree;
+          twig.degree = parentTwig.degree + 1;
           twig.rank = entry.rank;
           twig.displayMode = DisplayMode.VERTICAL;
           twigs.push(twig);
@@ -930,11 +943,14 @@ export class TwigsService {
       where: {
         userId: user.id,
         groupId: tabEntry.groupId,
-        tabId: tabEntry.parentTabId,
+        tabId: tabEntry.parentTabId
+          ? tabEntry.parentTabId
+          : IsNull(),
       },
       relations: ['children'],
     });
     if (!parent) {
+      console.error(tabEntry);
       throw new BadRequestException('Missing parent');
     }
 
@@ -976,6 +992,8 @@ export class TwigsService {
         parent.x, 
         parent.y, 
         abstract.twigZ + 1, 
+        1,
+        1,
         false
       );
 
