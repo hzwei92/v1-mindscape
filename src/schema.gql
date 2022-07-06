@@ -113,7 +113,7 @@ type LinkTwigsResult {
   role: Role
   source: Arrow!
   target: Arrow!
-  twig: Twig!
+  twigs: [Twig!]!
 }
 
 type MoveTabResult {

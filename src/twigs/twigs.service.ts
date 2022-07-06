@@ -69,14 +69,13 @@ export class TwigsService {
     return twigs
   }
 
-  async getTwigByAbstractIdAndDetailId(abstractId: string, detailId: string): Promise<Twig> {
-    const twig = await this.twigsRepository.findOne({
+  async getTwigsByAbstractIdAndDetailId(abstractId: string, detailId: string) {
+    return this.twigsRepository.find({
       where: {
         abstractId,
         detailId,
       },
     });
-    return twig;
   }
 
   async getTwigByChildId(childId: string): Promise<Twig> {
@@ -166,7 +165,7 @@ export class TwigsService {
       where: {
         id: parentTwigId,
       },
-      relations: ['abstract', 'children']
+      relations: ['abstract', 'children', 'detail']
     });
     if (!parentTwig) {
       throw new BadRequestException('This parent twig does not exist');
@@ -224,7 +223,7 @@ export class TwigsService {
       isOpen: true,
     });
 
-    const linkSheaf = await this.sheafsService.createSheaf(parentTwig.detailId, post.id, null);
+    const linkSheaf = await this.sheafsService.createSheaf(parentTwig.detail.sheafId, post.sheafId, null);
 
     const { arrow: link } = await this.arrowsService.createArrow({
       user,
@@ -391,12 +390,12 @@ export class TwigsService {
     if (!target) {
       throw new BadRequestException('This target does not exist');
     }
-    const sourceTwig = await this.getTwigByAbstractIdAndDetailId(abstract.id, source.id);
-    if (!sourceTwig) {
+    const sourceTwigs = await this.getTwigsByAbstractIdAndDetailId(abstract.id, source.id);
+    if (!sourceTwigs.length) {
       throw new BadRequestException('This sourceTwig does not exist');
     }
-    const targetTwig = await this.getTwigByAbstractIdAndDetailId(abstract.id, target.id);
-    if (!targetTwig) {
+    const targetTwigs = await this.getTwigsByAbstractIdAndDetailId(abstract.id, target.id);
+    if (!targetTwigs.length) {
       throw new BadRequestException('This targetTwig does not exist');
     }
 
@@ -422,34 +421,40 @@ export class TwigsService {
     const source1 = await this.arrowsService.getArrowById(source.id);
     const target1 = await this.arrowsService.getArrowById(target.id);
 
-    const x = Math.round((sourceTwig.x + targetTwig.x) / 2);
-    const y = Math.round((sourceTwig.y + targetTwig.y) / 2);
+    let twigs = [];
+    sourceTwigs.forEach(sourceTwig => {
+      targetTwigs.forEach(targetTwig => {
+        const x = Math.round((sourceTwig.x + targetTwig.x) / 2);
+        const y = Math.round((sourceTwig.y + targetTwig.y) / 2);
 
-    const twig = await this.createTwig({
-      user,
-      abstract,
-      detail: arrow,
-      parentTwig: null,
-      twigId: null,
-      sourceId: sourceTwig.id,
-      targetId: targetTwig.id,
-      i: abstract.twigN + 1,
-      x,
-      y,
-      z: abstract.twigZ + 1,
-      degree: 1,
-      rank: 1,
-      isOpen: true
+        const twig = new Twig();
+        twig.sourceId = sourceTwig.id;
+        twig.targetId = targetTwig.id;
+        twig.userId = user.id;
+        twig.abstractId = abstract.id;
+        twig.detailId = arrow.id;
+        twig.i = abstract.twigN + twigs.length + 1;
+        twig.x = x
+        twig.y = y
+        twig.z = abstract.twigZ + twigs.length + 1;
+        twig.degree = 1;
+        twig.rank = 1;
+        twig.isOpen = false;
+      
+        twigs.push(twig);
+      });
     });
-  
-    await this.arrowsService.incrementTwigN(abstract.id, 1);
-    await this.arrowsService.incrementTwigZ(abstract.id, 1);
+
+    twigs = await this.twigsRepository.save(twigs);
+
+    await this.arrowsService.incrementTwigN(abstract.id, twigs.length + 1);
+    await this.arrowsService.incrementTwigZ(abstract.id, twigs.length + 1);
 
     const abstract1 = await this.arrowsService.getArrowById(abstract.id);
 
     return {
       abstract: abstract1,
-      twig,
+      twigs,
       source: source1,
       target: target1,
       role: role1,
@@ -902,7 +907,7 @@ export class TwigsService {
       where: {
         id: tabEntry.parentTwigId,
       },
-      relations: ['children'],
+      relations: ['children', 'detail'],
     });
 
     let sibs = parent.children;
@@ -934,29 +939,31 @@ export class TwigsService {
         throw new BadRequestException('Missing abstract');
       }
       
-      const { arrow } = await this.arrowsService.linkArrows(user, abstract, parent.detailId, twig.detailId);
+      if (parent.detailId !== twig.detailId) {
+        const { arrow } = await this.arrowsService.linkArrows(user, abstract, parent.detailId, twig.detailId);
 
-      const linkTwig = await this.createTwig({
-        user,
-        abstract,
-        detail: arrow,
-        parentTwig: null,
-        twigId: null,
-        sourceId: parent.id,
-        targetId: twig.id,
-        i: abstract.twigN + 1,
-        x: parent.x,
-        y: parent.y,
-        z: abstract.twigZ + 1,
-        degree: 1,
-        rank: 1,
-        isOpen: false,
-      });
+        const linkTwig = await this.createTwig({
+          user,
+          abstract,
+          detail: arrow,
+          parentTwig: null,
+          twigId: null,
+          sourceId: parent.id,
+          targetId: twig.id,
+          i: abstract.twigN + 1,
+          x: parent.x,
+          y: parent.y,
+          z: abstract.twigZ + 1,
+          degree: 1,
+          rank: 1,
+          isOpen: false,
+        });
 
-      await this.arrowsService.incrementTwigN(abstract.id, 1);
-      await this.arrowsService.incrementTwigZ(abstract.id, 1);
+        await this.arrowsService.incrementTwigN(abstract.id, 1);
+        await this.arrowsService.incrementTwigZ(abstract.id, 1);
 
-      twigs.push(linkTwig)
+        twigs.push(linkTwig)
+      }
     }
 
     return {

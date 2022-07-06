@@ -8,8 +8,8 @@ export class LinkTwigsResult {
   @Field(() => Arrow)
   abstract: Arrow;
 
-  @Field(() => Twig)
-  twig: Twig;
+  @Field(() => [Twig])
+  twigs: Twig[];
 
   @Field(() => Arrow)
   source: Arrow;

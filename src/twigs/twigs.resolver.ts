@@ -110,21 +110,7 @@ export class TwigsResolver {
     @Args('sourceId') sourceId: string,
     @Args('targetId') targetId: string,
   ) {
-    const {
-      abstract,
-      twig,
-      source,
-      target,
-      role,
-    } = await this.twigsService.linkTwigs(user, abstractId, sourceId, targetId);
-
-    return {
-      abstract,
-      twig,
-      source,
-      target,
-      role,
-    };
+    return this.twigsService.linkTwigs(user, abstractId, sourceId, targetId);
   }
   @UseGuards(GqlAuthGuard)
   @Mutation(() => AddTwigResult, {name: 'addTwig'})
