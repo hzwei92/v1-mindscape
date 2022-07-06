@@ -85,17 +85,17 @@ export class UsersService {
 
     const postId = v4();
     const sheaf = await this.sheafsService.createSheaf(null, null, null);
-    const { arrow } = await this.arrowsService.createArrow(
-      user1,
-      postId,
-      postId,
-      postId,
-      null,
+    const { arrow } = await this.arrowsService.createArrow({
+      user: user1,
+      id: postId,
+      sourceId: null,
+      targetId: null,
+      abstract: null,
       sheaf,
-      null,
-      null,
-      null,
-    );
+      draft: null,
+      title: null,
+      url: null,
+    });
     user1.frameId = arrow.id;
 
     await this.usersRepository.save(user1);

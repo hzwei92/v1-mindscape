@@ -16,5 +16,5 @@ export class RemoveTabResult {
   sibs: Twig[];
 
   @Field(() => [Twig])
-  sheafs: Twig[];
+  links: Twig[];
 }

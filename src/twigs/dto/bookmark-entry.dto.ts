@@ -3,10 +3,16 @@ import { Field, InputType, Int } from "@nestjs/graphql";
 @InputType()
 export class BookmarkEntry {
   @Field()
-  bookmarkId: string;
+  arrowId: string;
 
-  @Field({ nullable: true })
-  parentBookmarkId: string;
+  @Field()
+  twigId: string;
+
+  @Field()
+  parentTwigId: string;
+
+  @Field()
+  bookmarkId: string;
 
   @Field(() => Int)
   degree: number;

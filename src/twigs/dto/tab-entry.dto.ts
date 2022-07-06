@@ -3,6 +3,15 @@ import { Field, InputType, Int } from "@nestjs/graphql";
 
 @InputType()
 export class TabEntry {
+  @Field()
+  arrowId: string;
+
+  @Field()
+  twigId: string;
+
+  @Field()
+  parentTwigId: string;
+  
   @Field(() => Int)
   windowId: number;
 
@@ -11,9 +20,6 @@ export class TabEntry {
 
   @Field(() => Int)
   tabId: number;
-
-  @Field(() => Int, {nullable: true})
-  parentTabId: number;
 
   @Field(() => Int)
   degree: number;
@@ -29,4 +35,11 @@ export class TabEntry {
 
   @Field()
   color: string;
+}
+
+
+export type Entry = {
+  arrowId: string;
+  title: string;
+  url: string;
 }

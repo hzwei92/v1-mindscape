@@ -63,17 +63,17 @@ export class Arrow {
   user: User;
 
 
-  @Column()
+  @Column({ nullable: true })
   sourceId: string;
 
-  @ManyToOne(() => Arrow)
+  @ManyToOne(() => Arrow, { nullable: true })
   @JoinColumn({ name: 'sourceId', referencedColumnName: 'id' })
   source: Arrow;
 
-  @Column()
+  @Column({ nullable: true })
   targetId: string;
   
-  @ManyToOne(() => Arrow)
+  @ManyToOne(() => Arrow, { nullable: true })
   @JoinColumn({ name: 'targetId', referencedColumnName: 'id' })
   target: Arrow;
 

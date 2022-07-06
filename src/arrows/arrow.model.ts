@@ -38,16 +38,16 @@ export class Arrow {
   user: User;
 
 
-  @Field()
+  @Field({nullable: true})
   sourceId: string;
 
-  @Field(() => Arrow)
+  @Field(() => Arrow, {nullable: true})
   source: Arrow;
 
-  @Field()
+  @Field({nullable: true})
   targetId: string;
   
-  @Field(() => Arrow)
+  @Field(() => Arrow, {nullable: true})
   target: Arrow;
 
 

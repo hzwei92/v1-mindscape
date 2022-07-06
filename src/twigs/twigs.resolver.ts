@@ -1,5 +1,5 @@
 import { Inject, UseGuards } from '@nestjs/common';
-import { Args, Int, Mutation, Parent, Query, ResolveField, Resolver, Subscription } from '@nestjs/graphql';
+import { Args, Int, Mutation, Parent, ResolveField, Resolver, Subscription } from '@nestjs/graphql';
 import { CurrentUser, GqlAuthGuard } from 'src/auth/gql-auth.guard';
 import { Arrow } from 'src/arrows/arrow.model';
 import { ArrowsService } from 'src/arrows/arrows.service';
@@ -10,7 +10,6 @@ import { TwigsService } from './twigs.service';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
 import { User } from 'src/users/user.model';
 import { User as UserEntity } from 'src/users/user.entity';
-import { Sheaf } from 'src/sheafs/sheaf.model';
 import { SheafsService } from 'src/sheafs/sheafs.service';
 import { ReplyTwigResult } from './dto/reply-twig-result.dto';
 import { LinkTwigsResult } from './dto/link-twigs-result.dto';
@@ -32,7 +31,6 @@ import { DragTwigResult } from './dto/drag-twig-result.dto';
 import { SyncBookmarksResult } from './dto/sync-bookmarks-result.dto';
 import { RemoveBookmarkResult } from './dto/remove-bookmark-result.dto';
 import { CreateTabResult } from './dto/create-tab-result.dto';
-import { SyncBrowserStateResult } from './dto/sync-browser-state-result.dto';
 
 @Resolver(() => Twig)
 export class TwigsResolver {
@@ -278,20 +276,6 @@ export class TwigsResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => SyncBrowserStateResult, {name: 'syncBrowserState'})
-  async syncBrowserState(
-    @CurrentUser() user: UserEntity,
-    @Args('twigId') twigId: string,
-    @Args('bookmarks', {type: () => [BookmarkEntry]}) bookmarks: BookmarkEntry[],
-    @Args('windows', {type: () => [WindowEntry]}) windows: WindowEntry[],
-    @Args('groups', {type: () => [GroupEntry]}) groups: GroupEntry[],
-    @Args('tabs', {type: () => [TabEntry]}) tabs: TabEntry[],
-  ) {
-    return this.twigsService.syncBrowserState(user, twigId, bookmarks, windows, groups, tabs);
-  }
-
-
-  @UseGuards(GqlAuthGuard)
   @Mutation(() => SyncTabStateResult, {name: 'syncTabState'})
   async syncTabState(
     @CurrentUser() user: UserEntity,
@@ -307,10 +291,9 @@ export class TwigsResolver {
   @Mutation(() => TabResult, {name: 'createWindow'})
   async createWindow(
     @CurrentUser() user: UserEntity,
-    @Args('twigId') twigId: string,
     @Args('windowEntry', {type: () => WindowEntry}) windowEntry: WindowEntry,
   ) {
-    return this.twigsService.createWindow(user, twigId, windowEntry);
+    return this.twigsService.createWindow(user, windowEntry);
   }
 
   @UseGuards(GqlAuthGuard)
@@ -356,30 +339,30 @@ export class TwigsResolver {
 
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => RemoveTabResult, {name: 'removeTabTwig'})
-  async removeTabTwig(
+  @Mutation(() => RemoveTabResult, {name: 'removeTab'})
+  async removeTab(
     @CurrentUser() user: UserEntity,
-    @Args('tabId', {type: () => Int}) tabId: number,
+    @Args('twigId') twigId: string,
   ) {
-    return this.twigsService.removeTab(user, tabId);
+    return this.twigsService.removeTab(user, twigId);
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => TabResult, {name: 'removeGroupTwig'})
-  async removeGroupTwig(
+  @Mutation(() => TabResult, {name: 'removeGroup'})
+  async removeGroup(
     @CurrentUser() user: UserEntity,
-    @Args('groupId', {type: () => Int}) groupId: number,
+    @Args('twigId') twigId: string,
   ) {
-    return this.twigsService.removeGroup(user, groupId);
+    return this.twigsService.removeGroup(user, twigId);
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => TabResult, {name: 'removeWindowTwig'})
-  async removeWindowTwig(
+  @Mutation(() => TabResult, {name: 'removeWindow'})
+  async removeWindow(
     @CurrentUser() user: UserEntity,
-    @Args('windowId', {type: () => Int}) windowId: number,
+    @Args('twigId') twigId: string,
   ) {
-    return this.twigsService.removeWindow(user, windowId);
+    return this.twigsService.removeWindow(user, twigId);
   }
 
   @UseGuards(GqlAuthGuard)

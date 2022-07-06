@@ -42,11 +42,11 @@ type Arrow {
   sheaf: Sheaf!
   sheafId: String!
   source: Arrow
-  sourceId: String!
+  sourceId: String
   state: String
   subs: [Sub!]!
   target: Arrow
-  targetId: String!
+  targetId: String
   text: String!
   title: String
   tokens: Float!
@@ -62,11 +62,13 @@ type Arrow {
 }
 
 input BookmarkEntry {
+  arrowId: String!
   bookmarkId: String!
   degree: Int!
-  parentBookmarkId: String
+  parentTwigId: String!
   rank: Int!
   title: String!
+  twigId: String!
   url: String
 }
 
@@ -87,9 +89,12 @@ type DragTwigResult {
 }
 
 input GroupEntry {
+  arrowId: String!
   color: String!
   groupId: Int!
+  parentTwigId: String!
   rank: Int!
+  twigId: String!
   windowId: Int!
 }
 
@@ -130,7 +135,7 @@ type Mutation {
   createBookmark(bookmark: BookmarkEntry): TabResult!
   createGroup(groupEntry: GroupEntry!): TabResult!
   createTab(tabEntry: TabEntry!): CreateTabResult!
-  createWindow(twigId: String!, windowEntry: WindowEntry!): TabResult!
+  createWindow(windowEntry: WindowEntry!): TabResult!
   dragTwig(abstractId: String!, dx: Int!, dy: Int!, sessionId: String!, twigId: String!): Twig!
   followUser(userId: String!): Lead!
   getArrowByRouteName(routeName: String!): Arrow
@@ -154,11 +159,11 @@ type Mutation {
   registerGoogleUser(token: String!): User!
   registerUser(email: String!, pass: String!): User!
   removeBookmark(bookmarkId: String!): RemoveBookmarkResult!
-  removeGroupTwig(groupId: Int!): TabResult!
+  removeGroup(twigId: String!): TabResult!
   removeRole(roleId: String!, sessionId: String!): Role!
-  removeTabTwig(tabId: Int!): RemoveTabResult!
+  removeTab(twigId: String!): RemoveTabResult!
   removeTwig(sessionId: String!, twigId: String!): RemoveTwigResult!
-  removeWindowTwig(windowId: Int!): TabResult!
+  removeWindow(twigId: String!): TabResult!
   replyTwig(draft: String!, parentTwigId: String!, postId: String!, sessionId: String!, twigId: String!, x: Int!, y: Int!): ReplyTwigResult!
   requestRole(arrowId: String!, sessionId: String!): Role!
   resendUserVerification: User!
@@ -169,7 +174,6 @@ type Mutation {
   setUserMap(lat: Float!, lng: Float!, zoom: Float!): User!
   setUserName(name: String!, sessionId: String!): User!
   syncBookmarks(bookmarks: [BookmarkEntry!]!, twigId: String!): SyncBookmarksResult!
-  syncBrowserState(bookmarks: [BookmarkEntry!]!, groups: [GroupEntry!]!, tabs: [TabEntry!]!, twigId: String!, windows: [WindowEntry!]!): SyncBrowserStateResult!
   syncTabState(groups: [GroupEntry!]!, tabs: [TabEntry!]!, twigId: String!, windows: [WindowEntry!]!): SyncTabStateResult!
   unfollowUser(userId: String!): Lead!
   updateTab(title: String!, twigId: String!, url: String!): UpdateTabResult!
@@ -194,7 +198,7 @@ type RemoveBookmarkResult {
 type RemoveTabResult {
   children: [Twig!]!
   descs: [Twig!]!
-  sheafs: [Twig!]!
+  links: [Twig!]!
   sibs: [Twig!]!
   twig: Twig!
 }
@@ -244,10 +248,10 @@ type Sheaf {
   outCount: Float!
   outs: [Sheaf!]!
   routeName: String!
-  source: Sheaf!
-  sourceId: String!
-  target: Sheaf!
-  targetId: String!
+  source: Sheaf
+  sourceId: String
+  target: Sheaf
+  targetId: String
   tokens: Float!
   updateDate: DateTime!
   url: String
@@ -284,14 +288,6 @@ type SyncBookmarksResult {
   deleted: [Twig!]!
 }
 
-type SyncBrowserStateResult {
-  bookmarks: [Twig!]!
-  deleted: [Twig!]!
-  groups: [Twig!]!
-  tabs: [Twig!]!
-  windows: [Twig!]!
-}
-
 type SyncTabStateResult {
   deleted: [Twig!]!
   groups: [Twig!]!
@@ -300,13 +296,15 @@ type SyncTabStateResult {
 }
 
 input TabEntry {
+  arrowId: String!
   color: String!
   degree: Int!
   groupId: Int!
-  parentTabId: Int
+  parentTwigId: String!
   rank: Int!
   tabId: Int!
   title: String!
+  twigId: String!
   url: String!
   windowId: Int!
 }
@@ -403,6 +401,9 @@ type Vote {
 }
 
 input WindowEntry {
+  arrowId: String!
+  parentTwigId: String!
   rank: Int!
+  twigId: String!
   windowId: Int!
 }

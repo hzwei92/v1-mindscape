@@ -14,7 +14,6 @@ import { WindowEntry } from './dto/window-entry.dto';
 import { GroupEntry } from './dto/group-entry.dto';
 import { TabEntry } from './dto/tab-entry.dto';
 import { BookmarkEntry } from './dto/bookmark-entry.dto';
-import e from 'express';
 
 @Injectable()
 export class TwigsService {
@@ -104,7 +103,7 @@ export class TwigsService {
     return this.twigsRepository.save(twigs0);
   }
 
-  async createTwig(
+  async createTwig(params: {
     user: User,
     abstract: Arrow, 
     detail: Arrow | null,
@@ -119,7 +118,24 @@ export class TwigsService {
     degree: number,
     rank: number,
     isOpen: boolean,
-  ) {
+  }) {
+    const {
+      user,
+      abstract,
+      detail,
+      parentTwig, 
+      twigId, 
+      sourceId,
+      targetId,
+      i,
+      x,
+      y,
+      z,
+      degree,
+      rank,
+      isOpen,
+    } = params;
+
     const twig0 = new Twig();
     twig0.id = twigId || undefined;
     twig0.sourceId = sourceId;
@@ -177,61 +193,68 @@ export class TwigsService {
       throw new BadRequestException('This Post ID is already in use')
     }
 
-    const { arrow: post } = await this.arrowsService.createArrow(
-      user, 
-      postId, 
-      postId, 
-      postId, 
-      parentTwig.abstract,
-      null,
-      draft,
-      null,
-      null,
-    );
-    const sheaf = await this.sheafsService.createSheaf(parentTwig.detailId, post.id, null);
-    const { arrow } = await this.arrowsService.createArrow(
-      user, 
-      null, 
-      parentTwig.detailId, 
-      post.id, 
-      parentTwig.abstract, 
-      sheaf,
-      null,
-      null,
-      null,
-    )
-    const postTwig = await this.createTwig(
+    const postSheaf = await this.sheafsService.createSheaf(null, null, null);
+
+    const { arrow: post } = await this.arrowsService.createArrow({
       user,
-      parentTwig.abstract,
-      post,
+      id: postId,
+      sourceId: null,
+      targetId: null,
+      abstract: parentTwig.abstract,
+      sheaf: postSheaf,
+      draft: null,
+      title: null,
+      url: null,
+    });
+
+    const postTwig = await this.createTwig({
+      user,
+      abstract: parentTwig.abstract,
+      detail: post,
       parentTwig,
       twigId,
-      null, 
-      null,
-      parentTwig.abstract.twigN + 1,
+      sourceId: null, 
+      targetId: null,
+      i: parentTwig.abstract.twigN + 1,
       x,
       y,
-      parentTwig.abstract.twigZ + 1,
-      parentTwig.degree + 1,
-      parentTwig.children.length + 1,
-      true,
-    );
-    const linkTwig = await this.createTwig(
+      z: parentTwig.abstract.twigZ + 1,
+      degree: parentTwig.degree + 1,
+      rank: parentTwig.children.length + 1,
+      isOpen: true,
+    });
+
+    const linkSheaf = await this.sheafsService.createSheaf(parentTwig.detailId, post.id, null);
+
+    const { arrow: link } = await this.arrowsService.createArrow({
       user,
-      parentTwig.abstract,
-      arrow,
-      null,
-      null,
-      parentTwig.id,
-      postTwig.id,
-      parentTwig.abstract.twigN + 2,
-      Math.round((parentTwig.x + x) / 2),
-      Math.round((parentTwig.y + y) / 2),
-      parentTwig.abstract.twigZ + 2,
-      1,
-      1,
-      false,
-    );
+      id: null,
+      sourceId: parentTwig.detailId,
+      targetId: post.id,
+      abstract: parentTwig.abstract,
+      sheaf: linkSheaf,
+      draft: null,
+      title: null,
+      url: null,
+    });
+
+    const linkTwig = await this.createTwig({
+      user,
+      abstract: parentTwig.abstract,
+      detail: link,
+      parentTwig: null,
+      twigId: null,
+      sourceId: parentTwig.id,
+      targetId: postTwig.id,
+      i: parentTwig.abstract.twigN + 2,
+      x: Math.round((parentTwig.x + x) / 2),
+      y: Math.round((parentTwig.y + y) / 2),
+      z: parentTwig.abstract.twigZ + 2,
+      degree: 1,
+      rank: 1,
+      isOpen: false,
+    });
+
     await this.arrowsService.incrementTwigN(parentTwig.abstractId, 2);
     await this.arrowsService.incrementTwigZ(parentTwig.abstractId, 2);
     const abstract = await this.arrowsService.getArrowById(parentTwig.abstractId);
@@ -384,7 +407,17 @@ export class TwigsService {
     else {
       sheaf = await this.sheafsService.createSheaf(source.sheafId, target.sheafId, null);
     }
-    const { arrow } = await this.arrowsService.createArrow(user, null, sourceId, targetId, abstract, sheaf, null, null, null);
+    const { arrow } = await this.arrowsService.createArrow({
+      user, 
+      id: null, 
+      sourceId, 
+      targetId, 
+      abstract, 
+      sheaf, 
+      draft: null, 
+      title: null, 
+      url: null,
+    });
 
     const source1 = await this.arrowsService.getArrowById(source.id);
     const target1 = await this.arrowsService.getArrowById(target.id);
@@ -392,22 +425,22 @@ export class TwigsService {
     const x = Math.round((sourceTwig.x + targetTwig.x) / 2);
     const y = Math.round((sourceTwig.y + targetTwig.y) / 2);
 
-    const twig = await this.createTwig(
-      user, 
-      abstract, 
-      arrow,
-      null, 
-      null, 
-      sourceTwig.id,
-      targetTwig.id,
-      abstract.twigN + 1, 
-      x, 
-      y, 
-      abstract.twigZ + 1, 
-      1,
-      1,
-      true
-    );
+    const twig = await this.createTwig({
+      user,
+      abstract,
+      detail: arrow,
+      parentTwig: null,
+      twigId: null,
+      sourceId: sourceTwig.id,
+      targetId: targetTwig.id,
+      i: abstract.twigN + 1,
+      x,
+      y,
+      z: abstract.twigZ + 1,
+      degree: 1,
+      rank: 1,
+      isOpen: true
+    });
   
     await this.arrowsService.incrementTwigN(abstract.id, 1);
     await this.arrowsService.incrementTwigZ(abstract.id, 1);
@@ -582,169 +615,84 @@ export class TwigsService {
     }
   }
 
-
-  async syncBrowserState(
-    user: User,
-    twigId: string,
-    bookmarkEntries: BookmarkEntry[],
-    windowEntries: WindowEntry[], 
-    groupEntries: GroupEntry[], 
-    tabEntries: TabEntry[] 
-  ) {
-    const {
-      windows,
-      groups,
-      tabs,
-      deleted
-    } = await this.syncTabState(user, twigId, windowEntries, groupEntries, tabEntries);
-
-    const {
-      bookmarks,
-      deleted: deleted1
-    } = await this.syncBookmarks(user, twigId, bookmarkEntries);
-
-    return {
-      bookmarks,
-      windows,
-      groups,
-      tabs,
-      deleted: [...deleted, ...deleted1],
-    };
-  }
-
   async syncTabState(user: User, twigId: string, windowEntries: WindowEntry[], groupEntries: GroupEntry[], tabEntries: TabEntry[]) {
     const rootTwig = await this.getTwigById(twigId);
 
-    let descs = await this.twigsRepository.manager.getTreeRepository(Twig)
+    const descs = await this.twigsRepository.manager.getTreeRepository(Twig)
       .createDescendantsQueryBuilder('twig', 'twigClosure', rootTwig)
-      .leftJoinAndSelect('twig.detail', 'detail')
       .getMany();
     
-    const tabIdToTwig = {};
-    const deleteTabIdToTwig = {};
-    const groupIdToTwig = {};
-    const deleteGroupIdToTwig = {};
-    const windowIdToTwig = {};
-    const deleteWindowIdToTwig = {};
-    descs.forEach(desc => {
-      if (desc.tabId) {
-        tabIdToTwig[desc.tabId] = desc;
-        deleteTabIdToTwig[desc.tabId] = desc;
-      }
-      else if (desc.groupId) {
-        groupIdToTwig[desc.groupId] = desc;
-        deleteGroupIdToTwig[desc.groupId] = desc;
-      }
-      if (desc.windowId) {
-        windowIdToTwig[desc.windowId] = desc;
-        deleteWindowIdToTwig[desc.windowId] = desc;
-      }
-    });
+    const windowTwigs = await this.loadWindows(user, windowEntries);
+    const groupTwigs = await this.loadGroups(user, groupEntries);
+    const tabTwigs = await this.loadTabs(user, tabEntries);
 
-    const readyWindowTwigs = [];
-    const createWindowEntries = [];
-    windowEntries.forEach(entry => {
-      const twig = windowIdToTwig[entry.windowId]
-      if (twig) {
-        delete deleteWindowIdToTwig[entry.windowId];
-        readyWindowTwigs.push(twig);
-      }
-      else {
-        createWindowEntries.push(entry);
-      }
-    });
-
-    const windowTwigs = await this.loadWindows(user, createWindowEntries, rootTwig);
-
-
-    const readyGroupTwigs = [];
-    const createGroupEntries = [];
-    groupEntries.forEach(entry => {
-      const twig = groupIdToTwig[entry.groupId];
-      if (twig) {
-        delete deleteGroupIdToTwig[entry.groupId];
-        readyGroupTwigs.push(twig);
-      }
-      else {
-        createGroupEntries.push(entry);
-      }
-    });
-
-    const groupTwigs = await this.loadGroups(user, createGroupEntries, [
-      ...readyWindowTwigs,
-      ...windowTwigs,
-    ]);
-
-
-    const tabIdToTwig1 = {};
-    const readyTabTwigs = [];
-    const updateTabEntries = [];
-    const createTabEntries = [];
-    tabEntries.forEach(entry => {
-      const twig = tabIdToTwig[entry.tabId];
-      if (twig) {
-        delete deleteTabIdToTwig[entry.tabId];
-        if (twig.detail.title === entry.title && twig.detail.url === entry.url) {
-          readyTabTwigs.push(twig);
-          tabIdToTwig1[twig.tabId] = twig;
-        }
-        else {
-          updateTabEntries.push(entry);
-          tabIdToTwig1[twig.tabId] = twig;
-        }
-      }
-      else {
-        createTabEntries.push(entry);
-      }
-    })
-
-    const tabTwigs = await this.loadTabs(user, [...createTabEntries, ...updateTabEntries], tabIdToTwig1, [
-      ...readyGroupTwigs,
-      ...groupTwigs,
-    ]);
+    const idToTwig: IdToType<Twig> = [...windowTwigs, ...groupTwigs, ...tabTwigs].reduce((acc, twig) => {
+      acc[twig.id] = twig;
+      return acc;
+    }, {})
 
     const date = new Date();
-
-    let deleted = [
-      ...Object.keys(deleteWindowIdToTwig || {}).map(id => deleteWindowIdToTwig[id]),
-      ...Object.keys(deleteGroupIdToTwig || {}).map(id => deleteGroupIdToTwig[id]),
-      ...Object.keys(deleteTabIdToTwig || {}).map(id => deleteTabIdToTwig[id]),
-    ].map(twig => {
-      twig.deleteDate = date;
-      return twig;
-    })
-
-    deleted = await this.twigsRepository.save(deleted);
+    let deleted: Twig[] = descs.reduce((acc, desc) => {
+      if (desc.windowId && !idToTwig[desc.id]) {
+        desc.deleteDate = date;
+        acc.push(desc);
+      }
+      return acc;
+    }, [])
+    deleted = await this.twigsRepository.save(descs);
 
     return {
-      windows: [...readyWindowTwigs, ...windowTwigs],
-      groups: [...readyGroupTwigs, ...groupTwigs], 
-      tabs: [...readyTabTwigs, ...tabTwigs],
+      windows: windowTwigs,
+      groups: groupTwigs,
+      tabs: tabTwigs,
       deleted,
-    };
+    }
   }
 
-  async loadWindows(user: User, windowEntries: WindowEntry[], parentTwig: Twig) {
+  async loadWindows(user: User, windowEntries: WindowEntry[]) {
     const abstract = await this.arrowsService.getArrowById(user.frameId);
 
-    const arrows = await this.arrowsService.loadWindowArrows(user, abstract, windowEntries);
-    const windowIdToArrow = arrows.reduce((acc, arrow) => {
-      acc[arrow.title.split(' ')[1]] = arrow;
+    const parentTwigIdToTrue = windowEntries.reduce((acc, entry) => {
+      acc[entry.parentTwigId] = true;
+      return acc
+    }, {});
+
+    const twigs = await this.getTwigsByIds([
+      ...Object.keys(parentTwigIdToTrue),
+      ...windowEntries.map(entry => entry.twigId),
+    ]);
+
+    const idToTwig: IdToType<Twig> = twigs.reduce((acc, twig) => {
+      acc[twig.id] = twig;
       return acc;
     }, {});
 
-    let windowTwigs = windowEntries.map((entry, i) => {
+    await this.arrowsService.loadWindowArrows(user, abstract, windowEntries);
+
+    let i = 0;
+    let windowTwigs = windowEntries.map((entry, j) => {
+      const parent = idToTwig[entry.parentTwigId];
+
+      let twigI;
+      if (idToTwig[entry.twigId]) {
+        twigI = idToTwig[entry.twigId].i
+      }
+      else {
+        twigI = abstract.twigN + i + 1;
+        i++;
+      }
       const twig = new Twig();
+      twig.id = entry.twigId
       twig.userId = user.id;
       twig.abstractId = abstract.id;
-      twig.detailId = windowIdToArrow[entry.windowId].id;
-      twig.parent = parentTwig;
-      twig.i = abstract.twigN + i + 1;
-      twig.x = parentTwig.x;
-      twig.y = parentTwig.y;
-      twig.z = abstract.twigZ + i + 1;
+      twig.detailId = entry.arrowId;
+      twig.parent = parent;
+      twig.i = twigI;
+      twig.x = parent.x;
+      twig.y = parent.y;
+      twig.z = abstract.twigZ + j + 1;
       twig.windowId = entry.windowId;
-      twig.degree = parentTwig.degree + 1;
+      twig.degree = parent.degree + 1;
       twig.rank = entry.rank;
       twig.displayMode = DisplayMode.HORIZONTAL;
       return twig;
@@ -752,45 +700,58 @@ export class TwigsService {
 
     windowTwigs = await this.twigsRepository.save(windowTwigs);
 
-    await this.arrowsService.incrementTwigN(abstract.id, windowTwigs.length);
+    await this.arrowsService.incrementTwigN(abstract.id, i + 1);
     await this.arrowsService.incrementTwigZ(abstract.id, windowTwigs.length);
 
     return windowTwigs;
   }
   
-  async loadGroups(user: User, groupEntries: GroupEntry[], windowTwigs: Twig[]) {
+  async loadGroups(user: User, groupEntries: GroupEntry[]) {
     const abstract = await this.arrowsService.getArrowById(user.frameId);
 
-    const windowIdToTwig = windowTwigs.reduce((acc, twig) => {
-      acc[twig.windowId] = twig;
+    const parentTwigIdToTrue = groupEntries.reduce((acc, entry) => {
+      acc[entry.parentTwigId] = true;
+      return acc
+    }, {});
+
+    const twigs = await this.getTwigsByIds([
+      ...Object.keys(parentTwigIdToTrue),
+      ...groupEntries.map(entry => entry.twigId),
+    ]);
+
+    const idToTwig: IdToType<Twig> = twigs.reduce((acc, twig) => {
+      acc[twig.id] = twig;
       return acc;
     }, {});
 
-    const arrows = await this.arrowsService.loadGroupArrows(user, abstract, groupEntries);
-    const groupIdToArrow = arrows.reduce((acc, arrow) => {
-      acc[arrow.title.split(' ')[1]] = arrow;
-      return acc;
-    }, {});
+    await this.arrowsService.loadGroupArrows(user, abstract, groupEntries);
 
+    let i = 0;
     let groupTwigs = groupEntries.map((entry, i) => {
-      const parentTwig = windowIdToTwig[entry.windowId];
+      const parent = idToTwig[entry.parentTwigId];
 
-      if (!parentTwig) {
-        throw new Error('Missing parent twig with windowId ' + entry.windowId)
+      let twigI;
+      if (idToTwig[entry.twigId]) {
+        twigI = idToTwig[entry.twigId].i;
+      }
+      else {
+        twigI = abstract.twigN + i + 1;
+        i++;
       }
 
       const twig = new Twig();
+      twig.id = entry.twigId;
       twig.userId = user.id;
       twig.abstractId = abstract.id;
-      twig.detailId = groupIdToArrow[entry.groupId].id;
-      twig.parent = parentTwig;
-      twig.i = abstract.twigN + i + 1;
-      twig.x = parentTwig.x;
-      twig.y = parentTwig.y;
+      twig.detailId = entry.arrowId;
+      twig.parent = parent;
+      twig.i = twigI;
+      twig.x = parent.x;
+      twig.y = parent.y;
       twig.z = abstract.twigZ + i + 1;
       twig.windowId = entry.windowId;
       twig.groupId = entry.groupId;
-      twig.degree = parentTwig.degree + 1;
+      twig.degree = parent.degree + 1;
       twig.rank = entry.rank;
       twig.color = entry.color;
       twig.displayMode = DisplayMode.HORIZONTAL;
@@ -799,67 +760,72 @@ export class TwigsService {
 
     groupTwigs = await this.twigsRepository.save(groupTwigs);
 
-    await this.arrowsService.incrementTwigN(abstract.id, groupTwigs.length);
+    await this.arrowsService.incrementTwigN(abstract.id, i + 1);
     await this.arrowsService.incrementTwigZ(abstract.id, groupTwigs.length);
 
     return groupTwigs;
   }
 
-  async loadTabs(user: User, tabEntries: TabEntry[], tabIdToTwig: IdToType<Twig>, groupTwigs: Twig[]) {
+  async loadTabs(user: User, tabEntries: TabEntry[]) {
     const abstract = await this.arrowsService.getArrowById(user.frameId);
 
-    const groupIdToTwig = groupTwigs.reduce((acc, twig) => {
-      acc[twig.groupId] = twig;
-      return acc;
+    const parentTwigIdToTrue = tabEntries.reduce((acc, entry) => {
+      acc[entry.parentTwigId] = true;
+      return acc
     }, {});
 
-    const arrows = await this.arrowsService.loadTabArrows(user, abstract, tabEntries);
+    const twigs = await this.getTwigsByIds([
+      ...Object.keys(parentTwigIdToTrue),
+      ...tabEntries.map(entry => entry.twigId)
+    ]);
 
-    const urlToArrow = arrows.reduce((acc, arrow) => {
-      acc[arrow.url] = arrow;
+    const idToTwig: IdToType<Twig> = twigs.reduce((acc, twig) => {
+      acc[twig.id] = twig;
       return acc;
     }, {});
-
 
     const tabTwigs = [];
-    tabEntries.sort((a, b) => a.degree < b.degree ? -1 : 1);
 
-    let degree = tabEntries[0]?.degree;
+    let tabEntries1 = await this.arrowsService.loadTabArrows(user, abstract, tabEntries) as TabEntry[];
+    tabEntries1.sort((a, b) => a.degree < b.degree ? -1 : 1);
+
+    let degree = tabEntries1[0]?.degree;
     let i = 0;
-    while (tabEntries.length) {
+    let j = 0;
+    while (tabEntries1.length) {
       const nextEntries = [];
       let twigs = [];
-      tabEntries.forEach(entry => {
+      tabEntries1.forEach(entry => {
         if (entry.degree === degree) {
-
-          const parentTwig = entry.parentTabId
-            ? tabIdToTwig[entry.parentTabId]
-            : groupIdToTwig[entry.groupId];
+          const parent = idToTwig[entry.parentTwigId];
           
-          if (!parentTwig) {
-            throw new Error('Missing parent twig for entry with tabId ' + entry.tabId)
+          let twigI;
+          if (idToTwig[entry.twigId]) {
+            twigI = idToTwig[entry.twigId].i;
           }
-
-          const twig = tabIdToTwig[entry.tabId]
-            ? tabIdToTwig[entry.tabId]
-            : new Twig();
+          else {
+            twigI = abstract.twigN + i + 1;
+            i++;
+          }
+          const twig = new Twig();
+          twig.id = entry.twigId;
           twig.userId = user.id;
           twig.abstractId = abstract.id;
-          twig.detailId = urlToArrow[entry.url].id;
-          twig.parent = parentTwig;
-          twig.i = abstract.twigN + i + 1;
-          twig.x = parentTwig.x;
-          twig.y = parentTwig.y;
-          twig.z = abstract.twigZ + i + 1;
+          twig.detailId = entry.arrowId;
+          twig.parent = parent;
+          twig.i = twigI;
+          twig.x = parent.x;
+          twig.y = parent.y;
+          twig.z = abstract.twigZ + j+ 1;
           twig.color = entry.color;
           twig.windowId = entry.windowId;
           twig.groupId = entry.groupId;
           twig.tabId = entry.tabId;
-          twig.degree = parentTwig.degree + 1;
+          twig.degree = parent.degree + 1;
           twig.rank = entry.rank;
           twig.displayMode = DisplayMode.VERTICAL;
           twigs.push(twig);
-          i++;
+          j++;
         }
         else {
           nextEntries.push(entry);
@@ -869,22 +835,22 @@ export class TwigsService {
       twigs = await this.twigsRepository.save(twigs);
       twigs.forEach(twig => {
         tabTwigs.push(twig);
-        tabIdToTwig[twig.tabId] = twig;
+        idToTwig[twig.id] = twig;
       });
-      tabEntries = nextEntries;
+      tabEntries1 = nextEntries;
       degree++;
     }
 
-    await this.arrowsService.incrementTwigN(abstract.id, tabTwigs.length);
+    await this.arrowsService.incrementTwigN(abstract.id, i + 1);
     await this.arrowsService.incrementTwigZ(abstract.id, tabTwigs.length);
 
     return tabTwigs;
   }
 
-  async createWindow(user, twigId: string, windowEntry: WindowEntry) {
+  async createWindow(user, windowEntry: WindowEntry) {
     const parent = await this.twigsRepository.findOne({
       where: {
-        id: twigId,
+        id: windowEntry.parentTwigId,
       },
       relations: ['children'],
     });
@@ -898,7 +864,7 @@ export class TwigsService {
 
     sibs = await this.twigsRepository.save(sibs);
 
-    const [twig] = await this.loadWindows(user, [windowEntry], parent);
+    const [twig] = await this.loadWindows(user, [windowEntry]);
 
     return {
       twig,
@@ -909,10 +875,7 @@ export class TwigsService {
   async createGroup(user, groupEntry: GroupEntry) {
     const parent = await this.twigsRepository.findOne({
       where: {
-        userId: user.id,
-        windowId: groupEntry.windowId,
-        groupId: IsNull(),
-        tabId: IsNull(),
+        id: groupEntry.parentTwigId,
       },
       relations: ['children'],
     });
@@ -926,7 +889,7 @@ export class TwigsService {
 
     sibs = await this.twigsRepository.save(sibs);
 
-    const [twig] = await this.loadGroups(user, [groupEntry], [parent]);
+    const [twig] = await this.loadGroups(user, [groupEntry]);
 
     return {
       twig,
@@ -935,24 +898,12 @@ export class TwigsService {
   }
 
   async createTab(user, tabEntry: TabEntry) {
-    const abstract = await this.arrowsService.getArrowById(user.frameId);
-    if (!abstract) {
-      throw new BadRequestException('Missing abstract');
-    }
     const parent = await this.twigsRepository.findOne({
       where: {
-        userId: user.id,
-        groupId: tabEntry.groupId,
-        tabId: tabEntry.parentTabId
-          ? tabEntry.parentTabId
-          : IsNull(),
+        id: tabEntry.parentTwigId,
       },
       relations: ['children'],
     });
-    if (!parent) {
-      console.error(tabEntry);
-      throw new BadRequestException('Missing parent');
-    }
 
     let sibs = parent.children;
     sibs.filter(sib => sib.rank >= tabEntry.rank)
@@ -973,29 +924,34 @@ export class TwigsService {
       groupTwigs.push(parent);
     }
 
-    const [twig] = await this.loadTabs(user, [tabEntry], tabIdToTwig, groupTwigs);
+    const [twig] = await this.loadTabs(user, [tabEntry]);
 
     const twigs = [twig];
 
     if (parent.tabId) {
+      const abstract = await this.arrowsService.getArrowById(user.frameId);
+      if (!abstract) {
+        throw new BadRequestException('Missing abstract');
+      }
+      
       const { arrow } = await this.arrowsService.linkArrows(user, abstract, parent.detailId, twig.detailId);
 
-      const linkTwig = await this.createTwig(
-        user, 
-        abstract, 
-        arrow, 
-        null, 
-        null, 
-        parent.id, 
-        twig.id, 
-        abstract.twigN + 1, 
-        parent.x, 
-        parent.y, 
-        abstract.twigZ + 1, 
-        1,
-        1,
-        false
-      );
+      const linkTwig = await this.createTwig({
+        user,
+        abstract,
+        detail: arrow,
+        parentTwig: null,
+        twigId: null,
+        sourceId: parent.id,
+        targetId: twig.id,
+        i: abstract.twigN + 1,
+        x: parent.x,
+        y: parent.y,
+        z: abstract.twigZ + 1,
+        degree: 1,
+        rank: 1,
+        isOpen: false,
+      });
 
       await this.arrowsService.incrementTwigN(abstract.id, 1);
       await this.arrowsService.incrementTwigZ(abstract.id, 1);
@@ -1020,24 +976,25 @@ export class TwigsService {
       throw new BadRequestException('This twig does not exist');
     }
     const abstract = await this.arrowsService.getArrowById(user.frameId);
-    const arrows = await this.arrowsService.loadTabArrows(user, abstract, [{
+    const entries = await this.arrowsService.loadTabArrows(user, abstract, [{
+      arrowId: twig.detailId,
       url,
       title,
     }]);
 
-    if (twig.detailId === arrows[0].id) {
+    if (twig.detailId === entries[0].arrowId) {
       return {
         twig,
         deleted: [],
       };
     }
     else {
-      await this.arrowsService.linkArrows(user, abstract, twig.detailId, arrows[0].id);
+      await this.arrowsService.linkArrows(user, abstract, twig.detailId, entries[0].arrowId);
 
-      twig.detailId = arrows[0].id;
+      twig.detailId = entries[0].arrowId;
 
       await this.twigsRepository.update({id: twigId}, {
-        detailId: arrows[0].id,
+        detailId: entries[0].arrowId,
       });
 
       const date = new Date();
@@ -1146,11 +1103,10 @@ export class TwigsService {
     }
   }
 
-  async removeTab(user: User, tabId: number) {
+  async removeTab(user: User, twigId: string) {
     let twig = await this.twigsRepository.findOne({
       where: {
-        userId: user.id,
-        tabId,
+        id: twigId,
       },
       relations: ['parent', 'parent.children', 'children', 'ins', 'outs'],
     });
@@ -1195,7 +1151,7 @@ export class TwigsService {
 
     sibs = await this.twigsRepository.save(sibs);
 
-    let sheafs = [];
+    let links = [];
     await [...twig.ins, ...twig.outs].reduce(async (acc, sheaf) => {
       await acc;
 
@@ -1204,27 +1160,25 @@ export class TwigsService {
 
       descs.forEach(desc => {
         desc.deleteDate = date;
-        sheafs.push(desc);
+        links.push(desc);
       })
     }, Promise.resolve());
 
-    sheafs = await this.twigsRepository.save(sheafs);
+    links = await this.twigsRepository.save(links);
     
     return {
       twig,
       children,
       descs,
       sibs,
-      sheafs,
+      links,
     }
   }
 
-  async removeGroup(user: User, groupId: number) {
+  async removeGroup(user: User, twigId: string) {
     const twig = await this.twigsRepository.findOne({
       where: {
-        userId: user.id,
-        groupId,
-        tabId: IsNull(),
+        id: twigId,
       },
       relations: ['parent', 'parent.children']
     });
@@ -1247,13 +1201,10 @@ export class TwigsService {
     };
   }
 
-  async removeWindow(user: User, windowId: number) {
+  async removeWindow(user: User, twigId: string) {
     const twig = await this.twigsRepository.findOne({
       where: {
-        userId: user.id,
-        windowId,
-        groupId: IsNull(),
-        tabId: IsNull(),
+        id: twigId,
       },
       relations: ['parent', 'parent.children'],
     });
@@ -1277,153 +1228,115 @@ export class TwigsService {
   }
 
   async syncBookmarks(user: User, twigId: string, bookmarkEntries: BookmarkEntry[]) {
-    const abstract = await this.arrowsService.getArrowById(user.frameId);
-
     const rootTwig = await this.getTwigById(twigId);
+
     const descs = await this.twigsRepository.manager.getTreeRepository(Twig)
       .createDescendantsQueryBuilder('twig', 'twigClosure', rootTwig)
-      .leftJoinAndSelect('twig.detail', 'detail')
       .getMany();
     
-    const bookmarkIdToTwig = {};
-    const deleteBookmarkIdToTwig = {};
-    descs.forEach(desc => {
-      if (desc.bookmarkId) {
-        bookmarkIdToTwig[desc.bookmarkId] = desc;
-        deleteBookmarkIdToTwig[desc.bookmarkId] = desc;
-      }
-    });
+    const bookmarkTwigs = await this.loadBookmarks(user, bookmarkEntries);
 
-    const readyBookmarkIdToEntry = {};
-    const updateBookmarkIdToEntry = {};
-    const createBookmarkEntries = [];
-    bookmarkEntries.forEach(entry => {
-      const twig = bookmarkIdToTwig[entry.bookmarkId]
-      if (twig) {
-        delete deleteBookmarkIdToTwig[entry.bookmarkId];
+    const idToTwig: IdToType<Twig> = bookmarkTwigs.reduce((acc, twig) => {
+      acc[twig.id] = twig;
+      return acc;
+    }, {})
 
-        if (twig.detail.title === entry.title && twig.detail.url === entry.url) {
-          readyBookmarkIdToEntry[entry.bookmarkId] = entry;
-        }
-        else {
-          updateBookmarkIdToEntry[entry.bookmarkId] = entry;
-        }
-      }
-      else {
-        createBookmarkEntries.push(entry);
-      }
-    })
-
-    const arrows = await this.arrowsService.loadTabArrows(user, abstract, [
-      ...Object.keys(updateBookmarkIdToEntry || {}).map(id => updateBookmarkIdToEntry[id]), 
-      ...createBookmarkEntries,
-    ]);
-    
-    const urlToArrow = {}
-    const titleToArrows = {};
-    arrows.forEach(arrow => {
-      if (arrow.url) {
-        urlToArrow[arrow.url] = arrow;
-      }
-      else {
-        if (titleToArrows[arrow.title]) {
-          titleToArrows[arrow.title].push(arrow);
-        }
-        else {
-          titleToArrows[arrow.title] = [arrow];
-        }
-      }
-    });
-
-    
-    console.log(bookmarkIdToTwig);
-    const entryLists = [
-      ...Object.keys(readyBookmarkIdToEntry || {}).map(id => readyBookmarkIdToEntry[id]),
-      ...Object.keys(updateBookmarkIdToEntry || {}).map(id => updateBookmarkIdToEntry[id]),
-      ...createBookmarkEntries
-    ].reduce((acc, entry) => {
-      if (acc[entry.degree - 1]) {
-        acc[entry.degree - 1].push(entry);
-      }
-      else {
-        acc[entry.degree - 1] = [entry];
+    const date = new Date();
+    let deleted: Twig[] = descs.reduce((acc, desc) => {
+      if (desc.bookmarkId && !idToTwig[desc.id]) {
+        desc.deleteDate = date;
+        acc.push(desc);
       }
       return acc;
     }, [])
-
-    const bookmarks = [];
-    let i = 1;
-    await entryLists.reduce(async (acc, entries) => {
-      await acc;
-
-      let twigs = [];
-      entries.forEach(entry => {
-        const parentTwig = entry.degree === 1
-          ? rootTwig
-          : bookmarkIdToTwig[entry.parentBookmarkId];
-
-        let twig;
-        let detail;
-
-        if (readyBookmarkIdToEntry[entry.bookmarkId]) {
-          twig = bookmarkIdToTwig[entry.bookmarkId];
-          detail = twig.detail;
-        }
-        else if (updateBookmarkIdToEntry[entry.bookmarkId]) {
-          twig = bookmarkIdToTwig[entry.bookmarkId];
-          if (entry.url) {
-            detail = urlToArrow[entry.url];
-          }
-          else {
-            detail = titleToArrows[entry.title].shift();
-          }  
-        }
-        else {
-          twig = new Twig();
-          if (entry.url) {
-            detail = urlToArrow[entry.url];
-          }
-          else {
-            detail = titleToArrows[entry.title].shift();
-          }  
-        }
-
-        twig.userId = user.id;
-        twig.abstractId = abstract.id;
-        twig.detailId = detail.id;
-        twig.parent = parentTwig;
-        twig.bookmarkId = entry.bookmarkId;
-        twig.degree = rootTwig.degree + entry.degree;
-        twig.rank = entry.rank;
-        twig.i = abstract.twigN + i + 1;
-        twig.x = parentTwig.x;
-        twig.y = parentTwig.y;
-        twig.z = abstract.twigZ + i + 1;
-        twig.displayMode = DisplayMode.VERTICAL
-
-        twigs.push(twig);
-        bookmarkIdToTwig[twig.bookmarkId] = twig;
-        i++;
-      });
-
-      twigs = await this.twigsRepository.save(twigs);
-
-      bookmarks.push(...twigs);
-    }, Promise.resolve());
-
-    const date = new Date();
-    let deleted = Object.keys(deleteBookmarkIdToTwig || {}).map(id => {
-      const twig = deleteBookmarkIdToTwig[id];
-      twig.deleteDate = date;
-      return twig;
-    });
-
-    deleted = await this.twigsRepository.save(deleted);
+    deleted = await this.twigsRepository.save(descs);
 
     return {
-      bookmarks,
+      bookmarks: bookmarkTwigs,
       deleted,
     }
+  }
+
+  async loadBookmarks(user, entries: BookmarkEntry[]) {
+    const abstract = await this.arrowsService.getArrowById(user.frameId);
+
+    const parentTwigIdToTrue = entries.reduce((acc, entry) => {
+      acc[entry.parentTwigId] = true;
+      return acc
+    }, {});
+
+    const twigs = await this.getTwigsByIds([
+      ...Object.keys(parentTwigIdToTrue),
+      ...entries.map(entry => entry.twigId)
+    ]);
+
+    const idToTwig: IdToType<Twig> = twigs.reduce((acc, twig) => {
+      acc[twig.id] = twig;
+      return acc;
+    }, {});
+
+    const bookmarkTwigs = [];
+
+    let entries1 = await this.arrowsService.loadBookmarkArrows(user, abstract, entries);
+    entries1.sort((a, b) => a.degree < b.degree ? -1 : 1);
+
+    let degree = entries1[0]?.degree;
+    let i = 0;
+    let j = 0;
+    while (entries1.length) {
+      const nextEntries = [];
+      let twigs = [];
+      entries1.forEach(entry => {
+        if (entry.degree === degree) {
+          const parent = idToTwig[entry.parentTwigId];
+          
+          let twigI;
+          if (idToTwig[entry.twigId]) {
+            twigI = idToTwig[entry.twigId].i;
+          }
+          else {
+            twigI = abstract.twigN + i + 1;
+            i++;
+          }
+          const twig = new Twig();
+          twig.id = entry.twigId;
+          twig.userId = user.id;
+          twig.abstractId = abstract.id;
+          twig.detailId = entry.arrowId;
+          twig.parent = parent;
+          twig.i = twigI;
+          twig.x = parent.x;
+          twig.y = parent.y;
+          twig.z = abstract.twigZ + j+ 1;
+          twig.color = null;
+          twig.windowId = null;
+          twig.groupId = null;
+          twig.tabId = null;
+          twig.degree = parent.degree + 1;
+          twig.rank = entry.rank;
+          twig.displayMode = DisplayMode.VERTICAL;
+
+          twigs.push(twig);
+          j++;
+        }
+        else {
+          nextEntries.push(entry);
+        }
+      });
+  
+      twigs = await this.twigsRepository.save(twigs);
+      twigs.forEach(twig => {
+        bookmarkTwigs.push(twig);
+        idToTwig[twig.id] = twig;
+      });
+      entries1 = nextEntries;
+      degree++;
+    }
+
+    await this.arrowsService.incrementTwigN(abstract.id, i + 1);
+    await this.arrowsService.incrementTwigZ(abstract.id, bookmarkTwigs.length);
+
+    return bookmarkTwigs;
   }
 
   async createBookmark(user: User, entry: BookmarkEntry) {
@@ -1433,8 +1346,7 @@ export class TwigsService {
     }
     const parentTwig = await this.twigsRepository.findOne({
       where: {
-        userId: user.id,
-        bookmarkId: entry.parentBookmarkId,
+        id: entry.parentTwigId,
       },
       relations: ['children'],
     });
@@ -1451,10 +1363,21 @@ export class TwigsService {
 
     let arrow = await this.arrowsService.getArrowByUserIdAndUrl(user.id, entry.url);
     if (!arrow) {
-      ({ arrow }  = await this.arrowsService.createArrow(user, null, null, null, abstract, sheaf, null, entry.title, entry.url));
+      ({ arrow }  = await this.arrowsService.createArrow({
+        user, 
+        id: entry.arrowId, 
+        sourceId: null, 
+        targetId: null, 
+        abstract, 
+        sheaf, 
+        draft: null,
+        title: entry.title, 
+        url: entry.url,
+      }));
     }
 
     let twig = new Twig();
+    twig.id = entry.twigId;
     twig.userId = user.id;
     twig.abstractId = abstract.id;
     twig.detailId = arrow.id;
@@ -1509,7 +1432,17 @@ export class TwigsService {
         if (!sheaf) {
           sheaf = await this.sheafsService.createSheaf(null, null, url);
         }
-        ({ arrow } = await this.arrowsService.createArrow(user, null, null, null, abstract, sheaf, null, title, url));
+        ({ arrow } = await this.arrowsService.createArrow({
+          user, 
+          id: null, 
+          sourceId: null,
+          targetId: null, 
+          abstract, 
+          sheaf, 
+          draft: null, 
+          title, 
+          url
+        }));
       }
       twig.detailId = arrow.id;
     }

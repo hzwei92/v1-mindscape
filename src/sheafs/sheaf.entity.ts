@@ -25,17 +25,17 @@ export class Sheaf {
   @Column({ nullable: true })
   url: string;
 
-  @Column()
+  @Column({ nullable: true })
   sourceId: string;
 
-  @ManyToOne(() => Sheaf)
+  @ManyToOne(() => Sheaf, { nullable: true })
   @JoinColumn({ name: 'sourceId', referencedColumnName: 'id' })
   source: Sheaf;
 
-  @Column()
+  @Column({ nullable: true })
   targetId: string;
   
-  @ManyToOne(() => Sheaf)
+  @ManyToOne(() => Sheaf, { nullable: true })
   @JoinColumn({ name: 'targetId', referencedColumnName: 'id' })
   target: Sheaf;
 

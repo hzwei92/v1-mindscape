@@ -13,16 +13,16 @@ export class Sheaf {
   url: string;
   
 
-  @Field()
+  @Field({nullable: true})
   sourceId: string;
 
-  @Field(() => Sheaf)
+  @Field(() => Sheaf, {nullable: true})
   source: Sheaf;
 
-  @Field()
+  @Field({nullable: true})
   targetId: string;
   
-  @Field(() => Sheaf)
+  @Field(() => Sheaf, {nullable: true})
   target: Sheaf;
 
 
