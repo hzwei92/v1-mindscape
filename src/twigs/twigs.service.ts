@@ -35,6 +35,14 @@ export class TwigsService {
     });
   }
 
+  async getTwigsBySourceIdsAndTargetIds(sourceIds: string[], targetIds: string[]) {
+    return this.twigsRepository.find({
+      where: {
+        sourceId: In(sourceIds),
+        targetId: In(targetIds),
+      },
+    });
+  }
   async getTwigWithSiblingsById(id: string): Promise<Twig> {
     return this.twigsRepository.findOne({ 
       where: {
@@ -425,9 +433,31 @@ export class TwigsService {
     const source1 = await this.arrowsService.getArrowById(source.id);
     const target1 = await this.arrowsService.getArrowById(target.id);
 
+    const existingTwigs = await this.getTwigsBySourceIdsAndTargetIds(
+      sourceTwigs.map(twig => twig.id), 
+      targetTwigs.map(twig => twig.id),
+    );
+    
+    const sourceIdToTargetIdToTwig = existingTwigs.reduce((acc, twig) => {
+      if (acc[twig.sourceId]) {
+        acc[twig.sourceId][twig.targetId] = twig;
+      }
+      else {
+        acc[twig.sourceId] = {
+          [twig.targetId]: twig,
+        }
+      }
+      return acc;
+    }, {});
+
     let twigs = [];
     sourceTwigs.forEach(sourceTwig => {
       targetTwigs.forEach(targetTwig => {
+        if (
+          sourceIdToTargetIdToTwig[sourceTwig.id] && 
+          sourceIdToTargetIdToTwig[sourceTwig.id][targetTwig.id]
+        ) return;
+
         const x = Math.round((sourceTwig.x + targetTwig.x) / 2);
         const y = Math.round((sourceTwig.y + targetTwig.y) / 2);
 
@@ -949,9 +979,31 @@ export class TwigsService {
         const sourceTwigs = await this.getTwigsByAbstractIdAndDetailId(abstract.id, parent.detailId);
         const targetTwigs = await this.getTwigsByAbstractIdAndDetailId(abstract.id, twig.detailId);
 
+        const existingTwigs = await this.getTwigsBySourceIdsAndTargetIds(
+          sourceTwigs.map(twig => twig.id), 
+          targetTwigs.map(twig => twig.id),
+        );
+        
+        const sourceIdToTargetIdToTwig = existingTwigs.reduce((acc, twig) => {
+          if (acc[twig.sourceId]) {
+            acc[twig.sourceId][twig.targetId] = twig;
+          }
+          else {
+            acc[twig.sourceId] = {
+              [twig.targetId]: twig,
+            }
+          }
+          return acc;
+        }, {});
+
         let linkTwigs = [];
         sourceTwigs.forEach(sourceTwig => {
           targetTwigs.forEach(targetTwig => {
+            if (
+              sourceIdToTargetIdToTwig[sourceTwig.id] && 
+              sourceIdToTargetIdToTwig[sourceTwig.id][targetTwig.id]
+            ) return;
+    
             const x = Math.round((sourceTwig.x + targetTwig.x) / 2);
             const y = Math.round((sourceTwig.y + targetTwig.y) / 2);
     
@@ -1024,9 +1076,31 @@ export class TwigsService {
       const sourceTwigs = await this.getTwigsByAbstractIdAndDetailId(abstract.id, arrow.sourceId);
       const targetTwigs = await this.getTwigsByAbstractIdAndDetailId(abstract.id, arrow.targetId);
 
+      const existingTwigs = await this.getTwigsBySourceIdsAndTargetIds(
+        sourceTwigs.map(twig => twig.id), 
+        targetTwigs.map(twig => twig.id),
+      );
+      
+      const sourceIdToTargetIdToTwig = existingTwigs.reduce((acc, twig) => {
+        if (acc[twig.sourceId]) {
+          acc[twig.sourceId][twig.targetId] = twig;
+        }
+        else {
+          acc[twig.sourceId] = {
+            [twig.targetId]: twig,
+          }
+        }
+        return acc;
+      }, {});
+
       let twigs = [];
       sourceTwigs.forEach(sourceTwig => {
         targetTwigs.forEach(targetTwig => {
+          if (
+            sourceIdToTargetIdToTwig[sourceTwig.id] && 
+            sourceIdToTargetIdToTwig[sourceTwig.id][targetTwig.id]
+          ) return;
+  
           const x = Math.round((sourceTwig.x + targetTwig.x) / 2);
           const y = Math.round((sourceTwig.y + targetTwig.y) / 2);
   
