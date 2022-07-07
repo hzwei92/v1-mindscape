@@ -352,7 +352,7 @@ type Twig {
 
 type UpdateTabResult {
   deleted: [Twig!]!
-  twig: Twig!
+  twigs: [Twig!]!
 }
 
 type User {

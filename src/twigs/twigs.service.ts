@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { uuidRegexExp } from 'src/constants';
 import { ArrowsService } from 'src/arrows/arrows.service';
 import { RolesService } from 'src/roles/roles.service';
-import { In, IsNull, Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Twig } from './twig.entity';
 import { DisplayMode, RoleType } from '../enums';
 import { Arrow } from 'src/arrows/arrow.entity';
@@ -14,6 +14,7 @@ import { WindowEntry } from './dto/window-entry.dto';
 import { GroupEntry } from './dto/group-entry.dto';
 import { TabEntry } from './dto/tab-entry.dto';
 import { BookmarkEntry } from './dto/bookmark-entry.dto';
+import { v4 } from 'uuid';
 
 @Injectable()
 export class TwigsService {
@@ -999,7 +1000,7 @@ export class TwigsService {
     }
     const abstract = await this.arrowsService.getArrowById(user.frameId);
     const entries = await this.arrowsService.loadTabArrows(user, abstract, [{
-      arrowId: twig.detailId,
+      arrowId: v4(),
       url,
       title,
       faviconUrl,
@@ -1007,12 +1008,12 @@ export class TwigsService {
 
     if (twig.detailId === entries[0].arrowId) {
       return {
-        twig,
+        twigs: [twig],
         deleted: [],
       };
     }
     else {
-      await this.arrowsService.linkArrows(user, abstract, twig.detailId, entries[0].arrowId);
+      const { arrow } = await this.arrowsService.linkArrows(user, abstract, twig.detailId, entries[0].arrowId);
 
       twig.detailId = entries[0].arrowId;
 
@@ -1020,11 +1021,38 @@ export class TwigsService {
         detailId: entries[0].arrowId,
       });
 
+      const sourceTwigs = await this.getTwigsByAbstractIdAndDetailId(abstract.id, arrow.sourceId);
+      const targetTwigs = await this.getTwigsByAbstractIdAndDetailId(abstract.id, arrow.targetId);
+
+      let twigs = [];
+      sourceTwigs.forEach(sourceTwig => {
+        targetTwigs.forEach(targetTwig => {
+          const x = Math.round((sourceTwig.x + targetTwig.x) / 2);
+          const y = Math.round((sourceTwig.y + targetTwig.y) / 2);
+  
+          const twig = new Twig();
+          twig.sourceId = sourceTwig.id;
+          twig.targetId = targetTwig.id;
+          twig.userId = user.id;
+          twig.abstractId = abstract.id;
+          twig.detailId = arrow.id;
+          twig.i = abstract.twigN + twigs.length + 1;
+          twig.x = x
+          twig.y = y
+          twig.z = abstract.twigZ + twigs.length + 1;
+          twig.degree = 1;
+          twig.rank = 1;
+          twig.isOpen = false;
+        
+          twigs.push(twig);
+        });
+      });
+
+      twigs = await this.twigsRepository.save(twigs);
+
       const date = new Date();
 
-      let deleted = [...twig.ins, ...twig.outs];
-
-      deleted = deleted.map(linkTwig => {
+      let deleted = [...twig.ins, ...twig.outs].map(linkTwig => {
         linkTwig.deleteDate = date;
         return linkTwig;
       });
@@ -1032,7 +1060,7 @@ export class TwigsService {
       deleted = await this.twigsRepository.save(deleted);
 
       return {
-        twig,
+        twigs: [twig, ...twigs],
         deleted,
       }
     }

@@ -291,16 +291,16 @@ export class ArrowsService {
     await this.finishArrows(user, arrows);
   }
 
-  async loadTabArrows(user: User, abstract: Arrow, tabs: (TabEntry | Entry | BookmarkEntry)[]) {
-    const existingArrows = await this.getArrowsByUserIdAndUrls(user.id, tabs.map(tab => tab.url));
+  async loadTabArrows(user: User, abstract: Arrow, entries: (TabEntry | Entry | BookmarkEntry)[]) {
+    const existingArrows = await this.getArrowsByUserIdAndUrls(user.id, entries.map(entry => entry.url));
     
     const urlToArrow: IdToType<Arrow> = existingArrows.reduce((acc, arrow) => {
       acc[arrow.url] = arrow;
       return acc;
     }, {})
 
-    const urlToEntry: IdToType<TabEntry | Entry | BookmarkEntry> = tabs.reduce((acc, tab) => {
-      acc[tab.url] = tab;
+    const urlToEntry: IdToType<TabEntry | Entry | BookmarkEntry> = entries.reduce((acc, entry) => {
+      acc[entry.url] = entry;
       return acc;
     }, {});
 
@@ -340,7 +340,7 @@ export class ArrowsService {
     arrows = await this.arrowsRepository.save(arrows);
     await this.finishArrows(user, arrows);
 
-    return tabs;
+    return entries;
   }
 
   async loadBookmarkArrows(user: User, abstract: Arrow, entries: BookmarkEntry[]) {
