@@ -33,6 +33,9 @@ export class TabEntry {
   @Field()
   url: string;
 
+  @Field({ nullable: true })
+  faviconUrl: string;
+
   @Field()
   color: string;
 }
@@ -42,4 +45,5 @@ export type Entry = {
   arrowId: string;
   title: string;
   url: string;
+  faviconUrl: string | null;
 }

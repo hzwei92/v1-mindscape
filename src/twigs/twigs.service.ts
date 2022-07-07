@@ -204,6 +204,7 @@ export class TwigsService {
       draft: null,
       title: null,
       url: null,
+      faviconUrl: null,
     });
 
     const postTwig = await this.createTwig({
@@ -235,6 +236,7 @@ export class TwigsService {
       draft: null,
       title: null,
       url: null,
+      faviconUrl: null,
     });
 
     const linkTwig = await this.createTwig({
@@ -416,6 +418,7 @@ export class TwigsService {
       draft: null, 
       title: null, 
       url: null,
+      faviconUrl: null,
     });
 
     const source1 = await this.arrowsService.getArrowById(source.id);
@@ -942,27 +945,39 @@ export class TwigsService {
       if (parent.detailId !== twig.detailId) {
         const { arrow } = await this.arrowsService.linkArrows(user, abstract, parent.detailId, twig.detailId);
 
-        const linkTwig = await this.createTwig({
-          user,
-          abstract,
-          detail: arrow,
-          parentTwig: null,
-          twigId: null,
-          sourceId: parent.id,
-          targetId: twig.id,
-          i: abstract.twigN + 1,
-          x: parent.x,
-          y: parent.y,
-          z: abstract.twigZ + 1,
-          degree: 1,
-          rank: 1,
-          isOpen: false,
-        });
+        const sourceTwigs = await this.getTwigsByAbstractIdAndDetailId(abstract.id, parent.detailId);
+        const targetTwigs = await this.getTwigsByAbstractIdAndDetailId(abstract.id, twig.detailId);
 
-        await this.arrowsService.incrementTwigN(abstract.id, 1);
-        await this.arrowsService.incrementTwigZ(abstract.id, 1);
+        let linkTwigs = [];
+        sourceTwigs.forEach(sourceTwig => {
+          targetTwigs.forEach(targetTwig => {
+            const x = Math.round((sourceTwig.x + targetTwig.x) / 2);
+            const y = Math.round((sourceTwig.y + targetTwig.y) / 2);
+    
+            const twig = new Twig();
+            twig.sourceId = sourceTwig.id;
+            twig.targetId = targetTwig.id;
+            twig.userId = user.id;
+            twig.abstractId = abstract.id;
+            twig.detailId = arrow.id;
+            twig.i = abstract.twigN + linkTwigs.length + 1;
+            twig.x = x
+            twig.y = y
+            twig.z = abstract.twigZ + linkTwigs.length + 1;
+            twig.degree = 1;
+            twig.rank = 1;
+            twig.isOpen = false;
+          
+            linkTwigs.push(twig);
+          })
+        })
 
-        twigs.push(linkTwig)
+        await this.arrowsService.incrementTwigN(abstract.id, linkTwigs.length + 1);
+        await this.arrowsService.incrementTwigZ(abstract.id, linkTwigs.length + 1);
+
+        linkTwigs = await this.twigsRepository.save(linkTwigs);
+
+        twigs.push(...linkTwigs);
       }
     }
 
@@ -972,7 +987,7 @@ export class TwigsService {
     };
   }
 
-  async updateTab(user: User, twigId: string, title: string, url: string) {
+  async updateTab(user: User, twigId: string, title: string, url: string, faviconUrl: string | null) {
     let twig = await this.twigsRepository.findOne({
       where: {
         id: twigId,
@@ -987,6 +1002,7 @@ export class TwigsService {
       arrowId: twig.detailId,
       url,
       title,
+      faviconUrl,
     }]);
 
     if (twig.detailId === entries[0].arrowId) {
@@ -1380,6 +1396,7 @@ export class TwigsService {
         draft: null,
         title: entry.title, 
         url: entry.url,
+        faviconUrl: null,
       }));
     }
 
@@ -1448,7 +1465,8 @@ export class TwigsService {
           sheaf, 
           draft: null, 
           title, 
-          url
+          url,
+          faviconUrl: null,
         }));
       }
       twig.detailId = arrow.id;

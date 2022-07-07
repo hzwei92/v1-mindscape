@@ -23,6 +23,9 @@ export class BookmarkEntry {
   @Field()
   title: string;
 
-  @Field({ nullable: true})
+  @Field({ nullable: true })
   url: string;
+
+  @Field({ nullable: true })
+  faviconUrl: string;
 }

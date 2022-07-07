@@ -108,6 +108,7 @@ export class ArrowsService {
     draft: string | null,
     title: string | null,
     url: string | null,
+    faviconUrl: string | null,
   }) {
     const {
       user,
@@ -119,6 +120,7 @@ export class ArrowsService {
       draft,
       title,
       url,
+      faviconUrl,
     } = params;
     const arrow0 = new Arrow();
     arrow0.id = id || v4();
@@ -130,6 +132,7 @@ export class ArrowsService {
     arrow0.draft = draft || getEmptyDraft();
     arrow0.title = title;
     arrow0.url = url;
+    arrow0.faviconUrl = faviconUrl;
     arrow0.routeName = arrow0.id;
     arrow0.color = user.color;
     const arrow1 = await this.arrowsRepository.save(arrow0);
@@ -138,7 +141,6 @@ export class ArrowsService {
       await this.incrementOutCount(sourceId, 1);
       await this.incrementInCount(targetId, 1);
     }
-    
 
     const [twig] = await this.twigsService.createRootTwigs(user, [arrow1]);
 
@@ -229,7 +231,8 @@ export class ArrowsService {
         sheaf, 
         draft: null, 
         title: null, 
-        url: null
+        url: null,
+        faviconUrl: null,
       }));
     }
     return {
@@ -324,6 +327,7 @@ export class ArrowsService {
         arrow.abstractId = abstract.id;
         arrow.title = entry.title;
         arrow.url = entry.url;
+        arrow.faviconUrl = entry.faviconUrl
         arrow.routeName = arrow.id;
         arrow.color = user.color;
         arrows.push(arrow);

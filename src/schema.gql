@@ -26,6 +26,7 @@ type Arrow {
   deleteDate: DateTime
   details: [Arrow!]!
   draft: String
+  faviconUrl: String
   id: String!
   inCount: Float!
   ins: [Arrow!]!
@@ -65,6 +66,7 @@ input BookmarkEntry {
   arrowId: String!
   bookmarkId: String!
   degree: Int!
+  faviconUrl: String
   parentTwigId: String!
   rank: Int!
   title: String!
@@ -176,7 +178,7 @@ type Mutation {
   syncBookmarks(bookmarks: [BookmarkEntry!]!, twigId: String!): SyncBookmarksResult!
   syncTabState(groups: [GroupEntry!]!, tabs: [TabEntry!]!, twigId: String!, windows: [WindowEntry!]!): SyncTabStateResult!
   unfollowUser(userId: String!): Lead!
-  updateTab(title: String!, twigId: String!, url: String!): UpdateTabResult!
+  updateTab(faviconUrl: String, title: String!, twigId: String!, url: String!): UpdateTabResult!
   verifyUser(code: String!): User!
 }
 
@@ -299,6 +301,7 @@ input TabEntry {
   arrowId: String!
   color: String!
   degree: Int!
+  faviconUrl: String
   groupId: Int!
   parentTwigId: String!
   rank: Int!

@@ -22,11 +22,14 @@ export class Arrow {
   text: string;
 
   @Field({ nullable: true })
+  title: string;
+
+  @Field({ nullable: true })
   url: string;
 
   @Field({ nullable: true })
-  title: string;
-
+  faviconUrl: string;
+  
   @Field()
   color: string;
 

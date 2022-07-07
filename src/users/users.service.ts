@@ -95,6 +95,7 @@ export class UsersService {
       draft: null,
       title: null,
       url: null,
+      faviconUrl: null,
     });
     user1.frameId = arrow.id;
 

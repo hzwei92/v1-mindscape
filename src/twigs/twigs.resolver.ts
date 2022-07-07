@@ -307,8 +307,9 @@ export class TwigsResolver {
     @Args('twigId') twigId: string,
     @Args('title') title: string,
     @Args('url') url: string,
+    @Args('faviconUrl', {nullable: true}) faviconUrl: string,
   ) {
-    return this.twigsService.updateTab(user, twigId, title, url);
+    return this.twigsService.updateTab(user, twigId, title, url, faviconUrl);
   }
 
   @UseGuards(GqlAuthGuard)

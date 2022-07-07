@@ -34,12 +34,15 @@ export class Arrow {
   @Column({ default: '' })
   text: string;
 
+  @Column({ nullable: true })
+  title: string;
+
   @Index()
   @Column({ nullable: true })
   url: string;
 
   @Column({ nullable: true })
-  title: string;
+  faviconUrl: string;
 
   @Column()
   color: string;
