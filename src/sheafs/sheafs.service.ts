@@ -54,8 +54,8 @@ export class SheafsService {
 
     const sheaf = new Sheaf();
     sheaf.id = v4();
-    sheaf.sourceId = sourceId || sheaf.id;
-    sheaf.targetId = targetId || sheaf.id;
+    sheaf.sourceId = sourceId;
+    sheaf.targetId = targetId;
     sheaf.routeName = sheaf.id;
     sheaf.url = url
     return this.sheafsRepository.save(sheaf);

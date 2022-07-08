@@ -84,6 +84,7 @@ export class TwigsService {
         abstractId,
         detailId,
       },
+      
     });
   }
 
@@ -482,6 +483,13 @@ export class TwigsService {
     });
 
     twigs = await this.twigsRepository.save(twigs);
+
+    if (sourceTwigs.length) {
+      twigs.push(sourceTwigs[0]);
+    }
+    if (targetTwigs.length) {
+      twigs.push(targetTwigs[0]);
+    }
 
     await this.arrowsService.incrementTwigN(abstract.id, twigs.length + 1);
     await this.arrowsService.incrementTwigZ(abstract.id, twigs.length + 1);
@@ -1108,6 +1116,13 @@ export class TwigsService {
         linkTwigs = await this.twigsRepository.save(linkTwigs);
 
         twigs.push(...linkTwigs);
+
+        if (sourceTwigs.length) {
+          twigs.push(sourceTwigs[0]);
+        }
+        if (targetTwigs.length) {
+          twigs.push(targetTwigs[0]);
+        }
       }
     }
 
@@ -1142,7 +1157,7 @@ export class TwigsService {
       };
     }
     else {
-      const { arrow } = await this.arrowsService.linkArrows(user, abstract, twig.detailId, entries[0].arrowId);
+      const { arrow, } = await this.arrowsService.linkArrows(user, abstract, twig.detailId, entries[0].arrowId);
 
       twig.detailId = entries[0].arrowId;
 
@@ -1200,6 +1215,13 @@ export class TwigsService {
       });
 
       twigs = await this.twigsRepository.save(twigs);
+
+      if (sourceTwigs.length) {
+        twigs.push(sourceTwigs[0]);
+      }
+      if (targetTwigs.length) {
+        twigs.push(targetTwigs[0]);
+      }
 
       const date = new Date();
 
