@@ -129,20 +129,9 @@ export class TwigsResolver {
     @CurrentUser() user: UserEntity,
     @Args('sessionId') sessionId: string,
     @Args('twigId') twigId: string,
+    @Args('shouldRemoveDescs') shouldRemoveDescs: boolean,
   ) {
-    const { 
-      //abstract,
-      parentTwig,
-      twigs,
-      role,
-    } = await this.twigsService.removeTwig(user, twigId);
-
-    return {
-      //abstract,
-      parentTwig,
-      twigs,
-      role,
-    };
+    return this.twigsService.removeTwig(user, twigId, shouldRemoveDescs);
   }
 
   @UseGuards(GqlAuthGuard)

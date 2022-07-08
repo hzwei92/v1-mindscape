@@ -275,7 +275,7 @@ export class TwigsService {
     };
   }
 
-  async removeTwig(user: User, twigId: string) {
+  async removeTwig(user: User, twigId: string, shouldRemoveDescs: boolean) {
     const twig = await this.twigsRepository.findOne({
       where: {
         id: twigId
@@ -301,22 +301,24 @@ export class TwigsService {
     }
 
     const date = new Date();
-    const descendants = await this.twigsRepository.manager.getTreeRepository(Twig).findDescendants(twig);
-    const twigs0 = descendants.map(twig => {
-      const twig0 = new Twig();
-      twig0.id = twig.id;
-      twig0.abstractId = twig.abstractId;
-      twig0.detailId = twig.detailId;
-      twig0.deleteDate = date;
-      return twig0;
-    })
-    const twigs1 = await this.twigsRepository.save(twigs0);
+
+    let twigs = [twig];
+    if (shouldRemoveDescs) {
+      twigs = await this.twigsRepository.manager.getTreeRepository(Twig)
+        .findDescendants(twig);
+    }
+
+    twigs = twigs.map(twig => {
+      twig.deleteDate = date;
+      return twig;
+    });
+    twigs = await this.twigsRepository.save(twigs);
     //const abstract1 = await this.arrowsService.updateArrow(abstract.id);
 
     return {
       //abstract: abstract1,
       parentTwig: twig.parent,
-      twigs: twigs1,
+      twigs,
       role: role1,
     };
   }

@@ -293,11 +293,16 @@ export class ArrowsService {
 
   async loadTabArrows(user: User, abstract: Arrow, entries: (TabEntry | Entry | BookmarkEntry)[]) {
     const existingArrows = await this.getArrowsByUserIdAndUrls(user.id, entries.map(entry => entry.url));
-    
     const urlToArrow: IdToType<Arrow> = existingArrows.reduce((acc, arrow) => {
       acc[arrow.url] = arrow;
       return acc;
     }, {})
+
+    const existingSheafs = await this.sheafsService.getSheafsByUrls(entries.map(entry => entry.url));
+    const urlToSheaf: IdToType<Sheaf> = existingSheafs.reduce((acc, sheaf) => {
+      acc[sheaf.url] = sheaf;
+      return acc;
+    }, {});
 
     const urlToEntry: IdToType<TabEntry | Entry | BookmarkEntry> = entries.reduce((acc, entry) => {
       acc[entry.url] = entry;
@@ -315,10 +320,15 @@ export class ArrowsService {
         entry.arrowId = arrow.id;
       }
       else {
-        const sheaf = new Sheaf();
-        sheaf.id = v4();
-        sheaf.routeName = sheaf.id;
-        sheafs.push(sheaf);
+        let sheaf = urlToSheaf[url];
+        
+        if (!sheaf) {
+          sheaf = new Sheaf();
+          sheaf.id = v4();
+          sheaf.routeName = sheaf.id;
+          sheaf.url = entry.url;
+          sheafs.push(sheaf);
+        }
   
         arrow = new Arrow();
         arrow.id = entry.arrowId;

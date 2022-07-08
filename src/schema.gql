@@ -164,7 +164,7 @@ type Mutation {
   removeGroup(twigId: String!): TabResult!
   removeRole(roleId: String!, sessionId: String!): Role!
   removeTab(twigId: String!): RemoveTabResult!
-  removeTwig(sessionId: String!, twigId: String!): RemoveTwigResult!
+  removeTwig(sessionId: String!, shouldRemoveDescs: Boolean!, twigId: String!): RemoveTwigResult!
   removeWindow(twigId: String!): TabResult!
   replyTwig(draft: String!, parentTwigId: String!, postId: String!, sessionId: String!, twigId: String!, x: Int!, y: Int!): ReplyTwigResult!
   requestRole(arrowId: String!, sessionId: String!): Role!
