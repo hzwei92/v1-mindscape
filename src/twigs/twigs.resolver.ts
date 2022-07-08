@@ -31,6 +31,7 @@ import { DragTwigResult } from './dto/drag-twig-result.dto';
 import { SyncBookmarksResult } from './dto/sync-bookmarks-result.dto';
 import { RemoveBookmarkResult } from './dto/remove-bookmark-result.dto';
 import { CreateTabResult } from './dto/create-tab-result.dto';
+import { GraftTwigResult } from './dto/graft-twig-result.dto';
 
 @Resolver(() => Twig)
 export class TwigsResolver {
@@ -199,24 +200,16 @@ export class TwigsResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => OpenTwigResult, {name: 'graftTwig'})
+  @Mutation(() => GraftTwigResult, {name: 'graftTwig'})
   async graftTwig(
     @CurrentUser() user: UserEntity,
     @Args('sessionId') sessionId: string,
+    @Args('parentTwigId') parentTwigId: string,
     @Args('twigId') twigId: string,
-    @Args('targetTwigId') targetTwigId: string,
-    @Args('x', {type: () => Int}) x: number,
-    @Args('y', {type: () => Int}) y: number,
+    @Args('rank', {type: () => Int}) rank: number,
+    @Args('displayMode') displayMode: string,
   ) {
-    const { 
-      twig,
-      role
-    } = await this.twigsService.graftTwig(user, twigId, targetTwigId, x, y);
-
-    return {
-      twig,
-      role,
-    };
+    return this.twigsService.graftTwig(user, twigId, parentTwigId, rank, displayMode);
   }
 
   @UseGuards(GqlAuthGuard)

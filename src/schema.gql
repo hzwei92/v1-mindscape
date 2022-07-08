@@ -90,6 +90,14 @@ type DragTwigResult {
   twigId: String!
 }
 
+type GraftTwigResult {
+  descs: [Twig!]!
+  prevSibs: [Twig!]!
+  role: Role
+  sibs: [Twig!]!
+  twig: Twig!
+}
+
 input GroupEntry {
   arrowId: String!
   color: String!
@@ -145,7 +153,7 @@ type Mutation {
   getCurrentUserLeads: [Lead!]!
   getTwigs(abstractId: String!): [Twig!]!
   getUser(userId: String!): User!
-  graftTwig(sessionId: String!, targetTwigId: String!, twigId: String!, x: Int!, y: Int!): OpenTwigResult!
+  graftTwig(displayMode: String!, parentTwigId: String!, rank: Int!, sessionId: String!, twigId: String!): GraftTwigResult!
   initUser(token: String): User!
   inviteRole(arrowId: String!, sessionId: String!, userName: String!): Role!
   linkTwigs(abstractId: String!, sessionId: String!, sourceId: String!, targetId: String!): LinkTwigsResult!
