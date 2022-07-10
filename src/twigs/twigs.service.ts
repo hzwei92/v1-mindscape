@@ -1505,7 +1505,7 @@ export class TwigsService {
       }
       return acc;
     }, [])
-    deleted = await this.twigsRepository.save(descs);
+    deleted = await this.twigsRepository.save(deleted);
 
     return {
       bookmarks: bookmarkTwigs,
@@ -1568,6 +1568,7 @@ export class TwigsService {
           twig.windowId = null;
           twig.groupId = null;
           twig.tabId = null;
+          twig.bookmarkId = entry.bookmarkId;
           twig.degree = parent.degree + 1;
           twig.rank = entry.rank;
           twig.displayMode = DisplayMode.VERTICAL;
