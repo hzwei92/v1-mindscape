@@ -281,7 +281,7 @@ export class TwigsService {
       where: {
         id: twigId
       },
-      relations: ['parent']
+      relations: ['parent', 'children']
     });
 
     if (!twig) {
@@ -303,25 +303,53 @@ export class TwigsService {
 
     const date = new Date();
 
-    let twigs = [twig];
     if (shouldRemoveDescs) {
-      twigs = await this.twigsRepository.manager.getTreeRepository(Twig)
+      let twigs = await this.twigsRepository.manager.getTreeRepository(Twig)
         .findDescendants(twig);
+
+      twigs = twigs.map(twig => {
+        twig.deleteDate = date;
+        return twig;
+      });
+      twigs = await this.twigsRepository.save(twigs);
+
+      return {
+        //abstract: abstract1,
+        parentTwig: twig.parent,
+        twigs,
+        role: role1,
+      };
+    }
+    else {
+      let children = (twig.children || []).map(child => {
+        child.parent = twig.parent;
+        child.degree -= 1;
+        return child;
+      });
+
+      let descs = await this.twigsRepository.manager.getTreeRepository(Twig)
+        .findDescendants(twig);
+     
+      descs = descs.reduce((acc, desc) => {
+        if (desc.id !== twig.id && !children.some(child => child.id === desc.id)) {
+          desc.degree -= 1;
+          acc.push(desc);
+        }
+        return acc;
+      }, []);
+    
+      twig.deleteDate = date;
+
+      const twigs = await this.twigsRepository.save([twig, ...children, ...descs]);
+
+      return {
+        parentTwig: twig.parent,
+        twigs,
+        role: role1,
+      }
     }
 
-    twigs = twigs.map(twig => {
-      twig.deleteDate = date;
-      return twig;
-    });
-    twigs = await this.twigsRepository.save(twigs);
-    //const abstract1 = await this.arrowsService.updateArrow(abstract.id);
 
-    return {
-      //abstract: abstract1,
-      parentTwig: twig.parent,
-      twigs,
-      role: role1,
-    };
   }
 
   async selectTwig(user: User, twigId: string) {
@@ -922,6 +950,10 @@ export class TwigsService {
       tabEntries1.forEach(entry => {
         if (entry.degree === degree) {
           const parent = idToTwig[entry.parentTwigId];
+
+          if (!parent) {
+            console.error('Missing parent for entry', entry, idToTwig);
+          }
           
           let twigI;
           if (idToTwig[entry.twigId]) {
