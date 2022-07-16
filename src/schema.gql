@@ -142,6 +142,7 @@ type Mutation {
   addTwig(arrowId: String!, parentTwigId: String!, sessionId: String!): AddTwigResult!
   adjustTwigs(abstractId: String!, twigIds: [String!]!, xs: [Int!]!, ys: [Int!]!): [Twig!]!
   changeBookmark(bookmarkId: String!, title: String!, url: String): Twig!
+  copyTwig(displayMode: String!, parentTwigId: String!, rank: Int!, sessionId: String!, twigId: String!): GraftTwigResult!
   createBookmark(bookmark: BookmarkEntry): TabResult!
   createGroup(groupEntry: GroupEntry!): TabResult!
   createTab(tabEntry: TabEntry!): CreateTabResult!

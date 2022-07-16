@@ -681,11 +681,18 @@ export class TwigsService {
     }
     descs = await this.twigsRepository.save(descs);
     
+
     twig.id = twigId;
     twig.parent = parentTwig;
     twig.degree = parentTwig.degree + 1;
     twig.rank = rank;
     twig.displayMode = DisplayMode[displayMode];
+
+    if (twig.tabId && parentTwig.groupId) {
+      twig.color = parentTwig.color;
+      twig.groupId = parentTwig.groupId;
+    }
+    
     twig = await this.twigsRepository.save(twig);
 
     return {
@@ -693,6 +700,111 @@ export class TwigsService {
       prevSibs,
       sibs,
       descs,
+      role: role1,
+    }
+  }
+
+  async copyTwig(user: User, twigId: string, parentTwigId: string, rank: number, displayMode: string) {
+    let twig = await this.twigsRepository.findOne({
+      where: {
+        id: twigId
+      },
+      relations: ['parent', 'parent.children']
+    });
+    if (!twig) {
+      throw new BadRequestException('This twig does not exist');
+    }
+
+    const parentTwig = await this.twigsRepository.findOne({
+      where: {
+        id: parentTwigId
+      },
+      relations: ['children'],
+    });
+    if (!parentTwig) {
+      throw new BadRequestException('This parent twig does not exist');
+    }
+
+    if (twig.abstractId !== parentTwig.abstractId) {
+      throw new BadRequestException('Cannot copy twig into new abstract')
+    }
+
+    const abstract = await this.arrowsService.getArrowById(twig.abstractId);
+    if (!abstract) {
+      throw new BadRequestException('This abstract does not exist');
+    }
+
+    let role = await this.rolesService.getRoleByUserIdAndArrowId(user.id, abstract.id);
+    let role1 = null;
+    if (checkPermit(abstract.canEdit, role?.type)) {
+      if (!role) {
+        role = await this.rolesService.createRole(user, abstract, RoleType.OTHER);
+        role1 = role;
+      }
+    }
+    else {
+      throw new BadRequestException('Insufficient privileges');
+    }
+
+    let sibs = [];
+    sibs = (parentTwig.children || []).reduce((acc, sib) => {
+      if (sib.rank >= rank) {
+        sib.rank += 1
+        acc.push(sib);
+      }
+      return acc;
+    }, []);
+
+    sibs = await this.twigsRepository.save(sibs);
+
+    const dDegree = parentTwig.degree + 1 - twig.degree;
+
+    const descsTree = await this.twigsRepository.manager.getTreeRepository(Twig)
+      .findDescendantsTree(twig);
+
+
+    const twigs0 = [];
+
+    const queue = [{
+      newParent: parentTwig,
+      subTree: descsTree,
+    }];
+
+    while (queue.length > 0) {
+      const {
+        newParent,
+        subTree,
+      } = queue.shift();
+
+      const twig0 = new Twig();
+      twig0.id = v4();
+      twig0.userId = user.id;
+      twig0.abstractId = abstract.id;
+      twig0.detailId = subTree.detail.id;
+      twig0.parent = newParent;
+      twig0.i = subTree.i;
+      twig0.x = subTree.x
+      twig0.y = subTree.y
+      twig0.z = subTree.z;
+      twig0.degree = subTree.degree + dDegree;
+      twig0.rank = subTree.rank;
+      twig0.isOpen = subTree.isOpen;
+
+      twigs0.push(twig0);
+
+      subTree.children.forEach(child => {
+        queue.push({
+          newParent: twig0,
+          subTree: child,
+        });
+      });
+    }
+
+    const twigs1 = await this.twigsRepository.save(twigs0);
+
+    return {
+      twigs: twigs1,
+      sibs,
       role: role1,
     }
   }
