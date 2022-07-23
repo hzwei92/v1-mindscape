@@ -762,7 +762,6 @@ export class TwigsService {
     const descsTree = await this.twigsRepository.manager.getTreeRepository(Twig)
       .findDescendantsTree(twig);
 
-
     const twigs0 = [];
 
     const queue = [{
@@ -1173,6 +1172,8 @@ export class TwigsService {
       relations: ['children', 'detail'],
     });
 
+    console.log('parent', parent)
+
     let sibs = parent.children;
     sibs.filter(sib => sib.rank >= tabEntry.rank)
       .map(sib => {
@@ -1181,16 +1182,6 @@ export class TwigsService {
       });
 
     sibs = await this.twigsRepository.save(sibs);
-
-    const tabIdToTwig = {};
-    const groupTwigs = [];
-
-    if (parent.tabId) {
-      tabIdToTwig[parent.tabId] = parent;
-    }
-    else {
-      groupTwigs.push(parent);
-    }
 
     const [twig] = await this.loadTabs(user, [tabEntry]);
 
