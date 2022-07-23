@@ -1744,7 +1744,7 @@ export class TwigsService {
     twig.detailId = arrow.id;
     twig.parent = parentTwig;
     twig.bookmarkId = entry.bookmarkId;
-    twig.degree = parentTwig.degree + entry.degree;
+    twig.degree = entry.degree;
     twig.rank = entry.rank;
     twig.i = abstract.twigN + 1;
     twig.x = parentTwig.x;
