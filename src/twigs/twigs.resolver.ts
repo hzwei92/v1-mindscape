@@ -32,6 +32,7 @@ import { SyncBookmarksResult } from './dto/sync-bookmarks-result.dto';
 import { RemoveBookmarkResult } from './dto/remove-bookmark-result.dto';
 import { CreateTabResult } from './dto/create-tab-result.dto';
 import { GraftTwigResult } from './dto/graft-twig-result.dto';
+import { CopyTwigResult } from './dto/copy-twig-result.dto';
 
 @Resolver(() => Twig)
 export class TwigsResolver {
@@ -211,11 +212,11 @@ export class TwigsResolver {
   ) {
     return this.twigsService.graftTwig(user, twigId, parentTwigId, rank, displayMode);
   }
+
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => GraftTwigResult, {name: 'copyTwig'})
+  @Mutation(() => CopyTwigResult, {name: 'copyTwig'})
   async copyTwig(
     @CurrentUser() user: UserEntity,
-    @Args('sessionId') sessionId: string,
     @Args('parentTwigId') parentTwigId: string,
     @Args('twigId') twigId: string,
     @Args('rank', {type: () => Int}) rank: number,
@@ -223,6 +224,7 @@ export class TwigsResolver {
   ) {
     return this.twigsService.copyTwig(user, twigId, parentTwigId, rank, displayMode);
   }
+
 
   @UseGuards(GqlAuthGuard)
   @Mutation(() => [Twig], {name: 'adjustTwigs'})
@@ -292,6 +294,16 @@ export class TwigsResolver {
     @Args('tabEntry', {type: () => TabEntry}) tabEntry: TabEntry,
   ) {
     return this.twigsService.createTab(user, tabEntry);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => [Twig], {name: 'copyToTab'})
+  async copyToTab(
+    @CurrentUser() user: UserEntity,
+    @Args('entries', {type: () => [TabEntry]}) entries: TabEntry[],
+    @Args('groupEntry', {type: () => GroupEntry, nullable: true}) groupEntry: GroupEntry,
+  ) {
+    return this.twigsService.copyToTab(user, entries, groupEntry);
   }
   
   @UseGuards(GqlAuthGuard)
@@ -387,6 +399,14 @@ export class TwigsResolver {
     return this.twigsService.moveBookmark(user, bookmarkId, parentBookmarkId, rank);
   }
 
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => [Twig], {name: 'copyToBookmark'})
+  async copyToBookmark(
+    @CurrentUser() user: UserEntity,
+    @Args('entries', {type: () => [BookmarkEntry]}) entries: BookmarkEntry[],
+  ) {
+    return this.twigsService.copyToBookmark(user, entries);
+  }
 
   @UseGuards(GqlAuthGuard)
   @Mutation(() => RemoveBookmarkResult, {name: 'removeBookmark'})

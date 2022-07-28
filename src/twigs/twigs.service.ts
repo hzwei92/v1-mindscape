@@ -779,15 +779,21 @@ export class TwigsService {
       twig0.id = v4();
       twig0.userId = user.id;
       twig0.abstractId = abstract.id;
-      twig0.detailId = subTree.detail.id;
+      twig0.detailId = subTree.detailId;
       twig0.parent = newParent;
       twig0.i = subTree.i;
       twig0.x = subTree.x
       twig0.y = subTree.y
       twig0.z = subTree.z;
       twig0.degree = subTree.degree + dDegree;
-      twig0.rank = subTree.rank;
+      twig0.rank = subTree.id === twigId
+        ? rank
+        : subTree.rank;
+      twig0.color = user.color;
       twig0.isOpen = subTree.isOpen;
+      twig0.displayMode = subTree.id === twigId
+        ? DisplayMode[displayMode]
+        : subTree.displayMode;
 
       twigs0.push(twig0);
 
@@ -1462,6 +1468,21 @@ export class TwigsService {
     }
   }
 
+  async copyToTab(user: User, tabEntries: TabEntry[], groupEntry: GroupEntry | null) {
+    let groupTwig;
+    if (groupEntry) {
+      [groupTwig] = await this.loadGroups(user, [groupEntry]);
+    }
+
+    const tabTwigs = await this.loadTabs(user, tabEntries);
+    if (groupTwig) {
+      tabTwigs.push(groupTwig);
+    }
+
+    return tabTwigs;
+  }
+
+
   async removeTab(user: User, twigId: string) {
     let twig = await this.twigsRepository.findOne({
       where: {
@@ -1666,7 +1687,7 @@ export class TwigsService {
           twig.i = twigI;
           twig.x = parent.x;
           twig.y = parent.y;
-          twig.z = abstract.twigZ + j+ 1;
+          twig.z = abstract.twigZ + j + 1;
           twig.color = null;
           twig.windowId = null;
           twig.groupId = null;
@@ -1723,7 +1744,7 @@ export class TwigsService {
 
     let arrow = await this.arrowsService.getArrowByUserIdAndUrl(user.id, entry.url);
     if (!arrow) {
-      ({ arrow }  = await this.arrowsService.createArrow({
+      ({ arrow } = await this.arrowsService.createArrow({
         user, 
         id: entry.arrowId, 
         sourceId: null, 
@@ -1914,6 +1935,10 @@ export class TwigsService {
       sibs,
       descs,
     }
+  }
+
+  async copyToBookmark(user: User, bookmarkEntries: BookmarkEntry[]) {
+    return this.loadBookmarks(user, bookmarkEntries);
   }
 
   async removeBookmark(user: User, bookmarkId: string) {

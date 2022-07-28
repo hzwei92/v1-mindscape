@@ -74,6 +74,12 @@ input BookmarkEntry {
   url: String
 }
 
+type CopyTwigResult {
+  role: Role
+  sibs: [Twig!]!
+  twigs: [Twig!]!
+}
+
 type CreateTabResult {
   sibs: [Twig!]!
   twigs: [Twig!]!
@@ -142,7 +148,9 @@ type Mutation {
   addTwig(arrowId: String!, parentTwigId: String!, sessionId: String!): AddTwigResult!
   adjustTwigs(abstractId: String!, twigIds: [String!]!, xs: [Int!]!, ys: [Int!]!): [Twig!]!
   changeBookmark(bookmarkId: String!, title: String!, url: String): Twig!
-  copyTwig(displayMode: String!, parentTwigId: String!, rank: Int!, sessionId: String!, twigId: String!): GraftTwigResult!
+  copyToBookmark(entries: [BookmarkEntry!]!): [Twig!]!
+  copyToTab(entries: [TabEntry!]!, groupEntry: GroupEntry): [Twig!]!
+  copyTwig(displayMode: String!, parentTwigId: String!, rank: Int!, twigId: String!): CopyTwigResult!
   createBookmark(bookmark: BookmarkEntry): TabResult!
   createGroup(groupEntry: GroupEntry!): TabResult!
   createTab(tabEntry: TabEntry!): CreateTabResult!
