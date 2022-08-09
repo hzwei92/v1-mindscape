@@ -8,10 +8,8 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
   JoinColumn,
-  OneToOne,
 } from 'typeorm';
 
-import { Point } from 'geojson';
 import { Exclude } from 'class-transformer';
 import { Arrow } from 'src/arrows/arrow.entity';
 

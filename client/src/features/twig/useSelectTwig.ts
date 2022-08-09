@@ -1,20 +1,18 @@
 
-import { gql, useApolloClient, useMutation, useReactiveVar } from '@apollo/client';
-import { useCallback } from 'react';
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { sessionVar } from '../../cache';
-import { TWIG_FIELDS, TWIG_WITH_Z } from './twigFragments';
-import { SpaceType } from '../space/space';
-import { setSpace, setTwigId } from '../space/spaceSlice';
-import { Twig } from './twig';
-import useTwigTree from './useTwigTree';
+import { gql, useMutation } from '@apollo/client';
+import { Dispatch, useCallback, useContext } from 'react';
 import { useSnackbar } from 'notistack';
+import { mergeTwigs, selectIdToDescIdToTrue, selectIdToTwig } from './twigSlice';
+import type { Arrow } from '../arrow/arrow';
+import { v4 } from 'uuid';
+import type { Twig } from './twig';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { selectSessionId } from '../auth/authSlice';
+import { mergeArrows } from '../arrow/arrowSlice';
+import { SpaceType } from '../space/space';
 import { useNavigate } from 'react-router-dom';
-import { setFocusIsSynced } from '../focus/focusSlice';
-import { FULL_ROLE_FIELDS } from '../role/roleFragments';
-import { selectIdToDescIdToTrue } from './twigSlice';
-import { Arrow } from '../arrow/arrow';
-import { setSelectArrowId } from '../arrow/arrowSlice';
+import { AppContext } from '../../App';
+import { setSelectedSpace, setSelectedTwigId } from '../space/spaceSlice';
 
 const SELECT_TWIG = gql`
   mutation Select_Twig($sessionId: String!, $twigId: String!) {
@@ -28,23 +26,19 @@ const SELECT_TWIG = gql`
         twigZ
         updateDate
       }
-      role {
-        ...FullRoleFields
-      }
     }
   }
-  ${FULL_ROLE_FIELDS}
 `;
 
 export default function useSelectTwig(space: SpaceType, canEdit: boolean) {
-  const navigate = useNavigate();
-  const client = useApolloClient();
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
-  const sessionDetail = useReactiveVar(sessionVar);
+  const sessionId = useAppSelector(selectSessionId);
 
+  const idToTwig = useAppSelector(selectIdToTwig(space));
   const idToDescIdToTrue = useAppSelector(selectIdToDescIdToTrue(space));
-
+  
   const { enqueueSnackbar } = useSnackbar();
 
   const [select] = useMutation(SELECT_TWIG, {
@@ -57,73 +51,65 @@ export default function useSelectTwig(space: SpaceType, canEdit: boolean) {
     },
   });
 
-  const selectTwig = useCallback((abstract: Arrow, twig: Twig, shouldNav: boolean) => {
+  const selectTwig = (abstract: Arrow, twig: Twig, dontNav?: boolean) => {
+    if (!twig) return;
+    
     if (canEdit) {
       select({
         variables: {
-          sessionId: sessionDetail.id,
+          sessionId,
           twigId: twig.id,
         },
       });
     }
     else if (space === 'FOCUS') {
-      dispatch(setFocusIsSynced(false));
+      //dispatch(setFocusIsSynced(false));
     }
     else {
-      throw new Error('Cannot edit frame')
+      throw new Error('Unable to edit frame')
     }
 
-    dispatch(setSelectArrowId({
+    dispatch(setSelectedSpace(space));
+    
+    dispatch(setSelectedTwigId({
       space,
-      arrowId: twig.detailId
+      selectedTwigId: twig.id,
     }));
 
-    dispatch(setSpace(space));
-
-    const idToCoords: any = {};
+    const twigs = [];
     Object.keys(idToDescIdToTrue[twig.id] || {})
-      .map(descId => {
-        return client.cache.readFragment({
-          id: client.cache.identify({
-            id: descId,
-            __typename: 'Twig',
-          }),
-          fragment: TWIG_WITH_Z
-        }) as Twig;
-      })
+      .map(descId => idToTwig[descId])
       .sort((a, b) => a.z < b.z ? -1 : 1)
       .forEach((t, i) => {
-        client.cache.modify({
-          id: client.cache.identify({
-            id: t.id,
-            __typename: 'Twig',
-          }),
-          fields: {
-            z: () => abstract.twigZ + i,
-          }
-        })
+        const t1 = Object.assign({}, t, {
+          z: abstract.twigZ + i
+        });
+        twigs.push(t1);
       });
 
-    client.cache.modify({
-      id: client.cache.identify(twig),
-      fields: {
-        z: () => abstract.twigZ + Object.keys(idToDescIdToTrue[twig.id] || {}).length + 1,
-      }
+    const twig1 = Object.assign({}, twig, {
+      z: abstract.twigZ + Object.keys(idToDescIdToTrue[twig.id] || {}).length + 1,
     });
+
+    twigs.push(twig1);
+
+    dispatch(mergeTwigs({
+      id: v4(),
+      space,
+      twigs,
+    }));
     
-    client.cache.modify({
-      id: client.cache.identify(abstract),
-      fields: {
-        twigZ: cachedVal => cachedVal + Object.keys(idToDescIdToTrue[twig.id] || {}).length + 1,
-      },
-    })
-    
-    if (shouldNav) {
-      const route =`/m/${abstract.routeName}/${twig.i}`;
+    const abstract1 = Object.assign({}, abstract, {
+      twigZ: abstract.twigZ + Object.keys(idToDescIdToTrue[twig.id] || {}).length + 1
+    });
+
+    dispatch(mergeArrows([abstract1]));
+
+    if (!dontNav) {
+      const route = `/m/${abstract.routeName}/${twig.i}`;
       navigate(route);
     }
-
-  }, [space, canEdit, select])
+  };
 
   return { selectTwig };
 }

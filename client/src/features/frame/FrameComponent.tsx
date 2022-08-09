@@ -1,70 +1,61 @@
-import { Box, Card, createTheme, IconButton, Link, Theme, ThemeProvider } from '@mui/material';
-import React, { useEffect, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { MAX_Z_INDEX, MOBILE_WIDTH, SPACE_BAR_HEIGHT } from '../../constants';
-import { useNavigate } from 'react-router-dom';
-import { selectMode, selectWidth } from '../window/windowSlice';
-import { selectFrameIsResizing, selectFrameWidth, setFrameIsResizing, setFrameWidth } from './frameSlice';
-import { User } from '../user/user';
-import { selectIsOpen, selectSpace } from '../space/spaceSlice';
-import { selectMenuIsResizing, selectMenuMode, selectMenuWidth } from '../menu/menuSlice';
+import { Box, Card, createTheme, IconButton, Link, ThemeProvider } from '@mui/material';
+import React, { useContext, useEffect, useState } from 'react';
+import { FOCUS_WIDTH, MAX_Z_INDEX, SPACE_BAR_HEIGHT } from '../../constants';
 import SpaceComponent from '../space/SpaceComponent';
 import CloseIcon from '@mui/icons-material/Close';
-import { getAppbarWidth } from '../../utils';
+import { AppContext } from '../../App';
+import { SpaceType } from '../space/space';
 
-interface FrameComponentProps {
-  user: User;
-}
+export default function FrameComponent() {
+  const { 
+    user,
+    width,
+    height,
+    palette,
+    dimColor: color,
+    appBarWidth,
+    menuWidth,
+    menuIsResizing,
+    focusWidth,
+  } = useContext(AppContext);
 
-export default function FrameComponent(props: FrameComponentProps) {
-  const navigate = useNavigate();
-  const dispatch = useAppDispatch();
+  const spaceIsResizing = false;
+  const frameWidth = width - appBarWidth - menuWidth - focusWidth;
 
-  const mode = useAppSelector(selectMode);
-  const width = useAppSelector(selectWidth);
+  const [theme, setTheme] = useState(createTheme({
+    palette: {
+      primary: {
+        main: palette === 'dark'
+          ? '#000000'
+          : '#ffffff',
+      },
+      mode: palette,
+    },
+    zIndex: {
+      modal: MAX_Z_INDEX + 1000,
+      snackbar: MAX_Z_INDEX + 10000
+    },
+  }));
 
-  const menuMode = useAppSelector(selectMenuMode);
-  const menuIsResizing = useAppSelector(selectMenuIsResizing);
-  const menuWidth = useAppSelector(selectMenuWidth);
-  const menuWidth1 = menuMode 
-    ? menuWidth
-    : 0;
-
-  const frameIsResizing = useAppSelector(selectFrameIsResizing);
-  const frameWidth = useAppSelector(selectFrameWidth);
-  const space = useAppSelector(selectSpace);
-
-  const focusIsOpen = useAppSelector(selectIsOpen('FOCUS'));
-
-  const [theme, setTheme] = useState(null as Theme | null);
   const [showResizer, setShowResizer] = useState(false);
 
   useEffect(() => {
-    if (!props.user?.frameId) return;
+    if (!user?.frameId) return;
     setTheme(createTheme({
       palette: {
         primary: {
-          main: props.user.frame?.color || '',
+          main: user.frame?.color || '',
         },
-        mode,
+        mode: palette,
       },
       zIndex: {
         modal: MAX_Z_INDEX + 1000,
         snackbar: MAX_Z_INDEX + 10000
       },
     }));
-  }, [props.user?.frame?.color, mode]);
+  }, [user?.frame?.color, palette]);
 
-  useEffect(() => {
-    if (focusIsOpen) return;
-    dispatch(setFrameWidth(width - getAppbarWidth(width) - menuWidth1));
-  }, [focusIsOpen, width, menuWidth1])
-
-  if (!theme || !props.user) return null;
-
-  const handleClick = () => {
-    console.log('frame');
-  }
+  if (!theme || !user) return null;
 
   const handleResizeMouseEnter = (event: React.MouseEvent) => {
     setShowResizer(true);
@@ -75,7 +66,7 @@ export default function FrameComponent(props: FrameComponentProps) {
   };
 
   const handleResizeMouseDown = (event: React.MouseEvent) => {
-    dispatch(setFrameIsResizing(true));
+
   };
 
   const handleCloseClick = (event: React.MouseEvent) => {
@@ -84,13 +75,11 @@ export default function FrameComponent(props: FrameComponentProps) {
 
   return (
     <ThemeProvider theme={theme}>
-      <Box onClick={handleClick} sx={{
+      <Box sx={{
         position: 'relative',
-        width: width < MOBILE_WIDTH && (space === 'FOCUS' || menuMode)
-          ? 0
-          : frameWidth - 1,
+        width: frameWidth - 1,
         height: '100%',
-        transition: menuIsResizing || frameIsResizing
+        transition: menuIsResizing || spaceIsResizing
           ? 'none'
           : 'width 0.5s',
         display: 'flex',
@@ -111,7 +100,7 @@ export default function FrameComponent(props: FrameComponentProps) {
             borderTopRightRadius: 0,
             width: frameWidth,
             height: `${SPACE_BAR_HEIGHT - 2}px`,
-            transition: menuIsResizing || frameIsResizing
+            transition: menuIsResizing || spaceIsResizing
               ? 'none'
               : 'width 0.5s',
           }}>
@@ -131,7 +120,7 @@ export default function FrameComponent(props: FrameComponentProps) {
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  u/{props.user?.name}
+                  u/{user?.name}
                 </Link>
               </Box>
             </Box>
@@ -140,7 +129,7 @@ export default function FrameComponent(props: FrameComponentProps) {
               flexDirection: 'column',
               justifyContent: 'center',
               margin: 1,
-              display: focusIsOpen
+              display: focusWidth > 0
                 ? 'flex'
                 : 'none',
             }}>
@@ -152,7 +141,7 @@ export default function FrameComponent(props: FrameComponentProps) {
             </Box>
           </Card>
         </Box>
-        <SpaceComponent user={props.user} space={'FRAME'}/>
+        <SpaceComponent space={SpaceType.FRAME}/>
         <Box 
           onMouseDown={handleResizeMouseDown}
           onMouseEnter={handleResizeMouseEnter}
@@ -162,11 +151,9 @@ export default function FrameComponent(props: FrameComponentProps) {
             width: 4,
             backgroundColor: showResizer
               ? 'primary.main'
-              : mode === 'dark'
-                ? 'dimgrey'
-                : 'lavender',
+              : color,
             cursor: 'col-resize',
-            display: focusIsOpen
+            display: focusWidth > 0
               ? 'block'
               : 'none'
           }}

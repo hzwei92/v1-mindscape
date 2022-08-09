@@ -1,15 +1,14 @@
-import { gql, useLazyQuery, useMutation, useReactiveVar } from '@apollo/client';
-import { Box, Button, Card, FormControl, IconButton, InputAdornment, InputLabel, Link, OutlinedInput, TextField, Typography } from '@mui/material';
-import React, { useState } from 'react';
-import { EMAIL_REGEX } from '../../constants';
+import { gql, useLazyQuery, useMutation } from '@apollo/client';
+import { Box, Button, Card, FormControl, IconButton, InputAdornment, InputLabel, OutlinedInput, TextField, Typography } from '@mui/material';
+import React, { useContext, useState } from 'react';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import GoogleButton from './GoogleButton';
-import { FULL_USER_FIELDS } from '../user/userFragments';
-import useToken from './useToken';
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { selectAuthState } from './authSlice';
-import { setUserId } from '../user/userSlice';
+import { USER_FIELDS } from '../user/userFragments';
+import { useAppDispatch } from '../../app/hooks';
+import { AppContext } from '../../App';
+import { setCurrentUser } from '../user/userSlice';
+import { EMAIL_REGEX } from '../../constants';
 
 const GET_USER_BY_EMAIL = gql`
   query GetUserByEmail($email: String!) {
@@ -22,19 +21,16 @@ const GET_USER_BY_EMAIL = gql`
 const REGISTER_USER = gql`
   mutation RegisterUser($email: String!, $pass: String!) {
     registerUser(email: $email, pass: $pass) {
-      ...FullUserFields
+      ...UserFields
     }
   }
-  ${FULL_USER_FIELDS}
+  ${USER_FIELDS}
 `;
 
-interface RegisterProps {
-}
-export default function Register(props: RegisterProps) {
-  const auth = useAppSelector(selectAuthState);
+export default function Register() {
   const dispatch = useAppDispatch();
 
-  const { refreshTokenInterval } = useToken();
+  const { user } = useContext(AppContext);
 
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -57,13 +53,8 @@ export default function Register(props: RegisterProps) {
       setMessage(error.message);
     },
     onCompleted: data => {
-      if (data.registerUser) {
-        if (auth.interval) {
-          clearInterval(auth.interval);
-        }
-        refreshTokenInterval();
-        dispatch(setUserId(data.registerUser.id));
-      }
+      console.log(data);
+      dispatch(setCurrentUser(Object.assign({}, user, data.registerUser)));
     }
   })
 

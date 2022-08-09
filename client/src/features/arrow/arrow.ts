@@ -1,24 +1,29 @@
-import { Role } from "../role/role";
-import { Sub } from "../sub/sub";
-import { User } from "../user/user";
-import { Vote } from "../vote/vote";
+import { Role } from '../role/role';
+import { Sheaf } from '../sheaf/sheaf';
+import type { User } from '../user/user';
+// import type { Vote } from '../vote/vote';
+// import type { Sub } from '../sub/sub';
 
 export type Arrow = {
   id: string;
   routeName: string;
   draft: string | null;
-  text: string;
+  text: string ;
   title: string | null;
   url: string | null;
+  faviconUrl: string | null;
   color: string;
 
   userId: string;
   user: User;
 
-  sourceId: string;
-  source: Arrow;
-  targetId: string;
-  target: Arrow;
+  sourceId: string | null;
+  source: Arrow | null;
+  targetId: string | null;
+  target: Arrow | null;
+
+  sheafId: string | null;
+  sheaf: Sheaf | null;
 
   ins: Arrow[];
   outs: Arrow[];
@@ -27,9 +32,11 @@ export type Arrow = {
 
   abstractId: string;
   abstract: Arrow;
+
   twigs: Arrow[];
   twigN: number;
   twigZ: number;
+  rootTwigId: string | null;
 
   canEdit: string;
   canPost: string;
@@ -37,9 +44,9 @@ export type Arrow = {
   canHear: string;
   canView: string;
 
-  subs: Sub[];
   roles: Role[];
-  votes: Vote[];
+  // subs: Sub[];
+  // votes: Vote[];
 
   lng: number | null;
   lat: number | null;
@@ -53,27 +60,17 @@ export type Arrow = {
 
   isOpaque: boolean;
 
-  activeDate: Date | null;
-  saveDate: Date | null;
-  commitDate: Date | null;
-  removeDate: Date | null;
-  createDate: Date | null;
-  updateDate: Date | null;
-  deleteDate: Date | null;
+  activeDate: string | null;
+  saveDate: string | null;
+  commitDate: string | null;
+  removeDate: string | null;
+  createDate: string | null;
+  updateDate: string | null;
+  deleteDate: string | null;
+
   __typename: string;
 }
 
-export type IdToTrueType = {
-  [id: string]: true;
-};
-
-export type IdToParentIdType = {
-  [id: string]: string;
-};
-
-export type IdToChildIdToTrueType = {
-  [id: string]: IdToTrueType;
-}
 export type IdToHeightType = {
   [id: string]: number;
 };
@@ -83,31 +80,52 @@ export type CreateLinkType = {
   targetId: string;
 };
 
-export const createArrow = (
-  user: User,
+export const createArrow = (params: {
   id: string,
-  draft: string,
+  user: User,
+  draft: string | null,
+  title: string | null,
+  url: string | null,
+  faviconUrl: string | null,
   abstract: Arrow,
+  sheaf: Sheaf | null,
   source: Arrow | null,
   target: Arrow | null,
-) => {
-  const date = new Date();
-  const arrow = {
+}) => {
+  const {
+    id,
+    user,
+    draft,
+    title,
+    url,
+    faviconUrl,
+    abstract,
+    sheaf,
+    source,
+    target,
+  } = params;
+
+  const date = new Date().toISOString();
+  const arrow: Arrow = {
     id,
     routeName: id,
     draft,
     text: '',
-    title: null,
-    url: null,
+    title,
+    url,
+    faviconUrl,
     color: user.color,
 
     userId: user.id,
     user,
 
     sourceId: source?.id || null,
-    source,
+    source: source,
     targetId: target?.id || null,
-    target,
+    target: target,
+
+    sheafId: sheaf?.id || null,
+    sheaf,
 
     ins: [],
     outs: [],
@@ -119,6 +137,7 @@ export const createArrow = (
     twigs: [],
     twigN: 0,
     twigZ: 0,
+    rootTwigId: null,
 
     canEdit: 'OTHER',
     canPost: 'OTHER',
@@ -126,9 +145,9 @@ export const createArrow = (
     canHear: 'OTHER',
     canView: 'OTHER',
 
-    subs: [],
     roles: [],
-    votes: [],
+    // subs: [],
+    // votes: [],
 
     lng: null,
     lat: null,
@@ -149,7 +168,8 @@ export const createArrow = (
     createDate: date,
     updateDate: date,
     deleteDate: null,
+
     __typename: 'Arrow'
-  } as Arrow;
+  };
   return arrow
 }

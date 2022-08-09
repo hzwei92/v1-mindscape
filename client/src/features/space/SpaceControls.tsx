@@ -1,43 +1,37 @@
 import { Box, Button, Card, Fab } from '@mui/material';
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { MAX_Z_INDEX, MOBILE_WIDTH, NOT_FOUND } from '../../constants';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import SettingsIcon from '@mui/icons-material/Settings';
 import PeopleIcon from '@mui/icons-material/People';
 import SyncIcon from '@mui/icons-material/Sync';
-import { Dispatch, SetStateAction } from 'react';
 import { scaleDown, scaleUp } from '../../utils';
-import { SpaceType } from './space';
+import { Dispatch, SetStateAction, useContext } from 'react';
+import { SpaceContext } from './SpaceComponent';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { AppContext } from '../../App';
+import { selectScale, setScale } from './spaceSlice';
 import { useReactiveVar } from '@apollo/client';
+import { SpaceType } from './space';
 import { focusSpaceElVar, frameSpaceElVar } from '../../cache';
-import { selectIsOpen, selectScale, selectSpace, setScale } from './spaceSlice';
-import { selectWidth } from '../window/windowSlice';
-import { selectMenuMode } from '../menu/menuSlice';
-import { selectFocusIsSynced, setFocusIsSynced, setFocusShouldSync } from '../focus/focusSlice';
 
 interface SpaceControlsProps {
-  space: SpaceType;
   setShowSettings: Dispatch<SetStateAction<boolean>>;
   setShowRoles: Dispatch<SetStateAction<boolean>>;
 }
 export default function SpaceControls(props: SpaceControlsProps) {
   const dispatch = useAppDispatch();
 
-  const width = useAppSelector(selectWidth);
-  const menuMode = useAppSelector(selectMenuMode);
+  const { width } = useContext(AppContext);
+  const { space } = useContext(SpaceContext);
 
-  const space = useAppSelector(selectSpace);
-  const scale = useAppSelector(selectScale(props.space));
-
-  const frameIsOpen = useAppSelector(selectIsOpen('FRAME'));
-  const focusIsOpen = useAppSelector(selectIsOpen('FOCUS'));
-  const isSynced = useAppSelector(selectFocusIsSynced);
-
-  const spaceEl = useReactiveVar(props.space === 'FRAME'
+  const spaceEl = useReactiveVar(space === SpaceType.FRAME
     ? frameSpaceElVar
-    : focusSpaceElVar
-  );
+    : focusSpaceElVar);
+    
+  const scale = useAppSelector(selectScale(space));
+
+  const isSynced = true;
 
   const handleScaleDownClick = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -51,8 +45,8 @@ export default function SpaceControls(props: SpaceControlsProps) {
     const scale1 = scaleDown(scale);
 
     dispatch(setScale({
-      space: props.space,
-      scale: scale1
+      space,
+      scale: scale1,
     }));
 
     const left = (center.x * scale1) - (spaceEl.current.clientWidth / 2);
@@ -76,7 +70,7 @@ export default function SpaceControls(props: SpaceControlsProps) {
     const scale1 = scaleUp(scale);
 
     dispatch(setScale({
-      space: props.space,
+      space,
       scale: scale1
     }));
 
@@ -99,22 +93,9 @@ export default function SpaceControls(props: SpaceControlsProps) {
   }
 
   const handleSyncClick = () => {
-    dispatch(setFocusIsSynced(true));
-    dispatch(setFocusShouldSync(true));
+    // dispatch(setFocusIsSynced(true));
+    // dispatch(setFocusShouldSync(true));
   };
-
-  if (
-    props.space === 'FOCUS' && 
-    (!focusIsOpen ||
-    (width < MOBILE_WIDTH && (space === 'FRAME' || menuMode)))
-  ) return null;
-
-
-  if (
-    props.space === 'FRAME' &&
-    (!frameIsOpen ||
-    (width < MOBILE_WIDTH && (space === 'FOCUS' || menuMode)))
-  ) return null;
 
   return (
     <Box sx={{
@@ -182,7 +163,7 @@ export default function SpaceControls(props: SpaceControlsProps) {
             <PeopleIcon fontSize='inherit'/>
           </Fab> 
           <Box sx={{
-            display: isSynced || props.space === 'FRAME'
+            display: isSynced || space === 'FRAME'
               ? 'none'
               : 'block'
           }}>

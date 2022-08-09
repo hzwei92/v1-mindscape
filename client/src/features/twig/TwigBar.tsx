@@ -1,50 +1,62 @@
 import { Box, IconButton, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import React, { Dispatch, SetStateAction } from 'react';
-import useTwigTree from './useTwigTree';
-import { Twig } from './twig';
-import { SpaceType } from '../space/space';
+import React, { useContext } from 'react';
+import type { Twig } from './twig';
+// import AdjustIcon from '@mui/icons-material/Adjust';
+// import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
+import { mergeTwigs } from './twigSlice';
+import { v4 } from 'uuid';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { Arrow } from '../arrow/arrow';
-import { selectMode } from '../window/windowSlice';
+import { AppContext } from '../../App';
+import { SpaceContext } from '../space/SpaceComponent';
+import { DisplayMode } from '../../constants';
+import { getTwigColor } from '../../utils';
 import { selectDrag, setDrag } from '../space/spaceSlice';
-//import useSelectTwig from './useSelectTwig';
-import { selectCreateLink } from '../arrow/arrowSlice';
-import AdjustIcon from '@mui/icons-material/Adjust';
-import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
-import useSelectTwig from './useSelectTwig';
 
 interface TwigBarProps {
-  space: SpaceType;
-  abstract: Arrow;
   twig: Twig;
-  canEdit: boolean;
   isSelected: boolean;
-  isPost: boolean;
-  setTouches: Dispatch<SetStateAction<React.TouchList | null>>;
 }
 
 function TwigBar(props: TwigBarProps) {
   const dispatch = useAppDispatch();
 
-  const mode = useAppSelector(selectMode);
-  const color = mode === 'dark'
+  const { palette } = useContext(AppContext);
+  const {
+    space, 
+    abstract, 
+    pendingLink,
+    canEdit,
+    setRemovalTwigId,
+  } = useContext(SpaceContext);
+  
+  const drag = useAppSelector(selectDrag(space));
+
+  const color = palette === 'dark'
     ? 'black'
     : 'white';
-  const createLink = useAppSelector(selectCreateLink);
-  const drag = useAppSelector(selectDrag(props.space));
-
-  const { selectTwig } = useSelectTwig(props.space, props.canEdit);
 
   const beginDrag = () => {
     if (!props.twig.parent) return;
+    if (props.twig.displayMode !== DisplayMode.SCATTERED) {
+
+      const twig = Object.assign({}, props.twig, {
+        displayMode: DisplayMode.SCATTERED,
+      });
+
+      dispatch(mergeTwigs({
+        id: v4(),
+        space: space,
+        twigs: [twig]
+      }));
+    }
+
     dispatch(setDrag({
-      space: props.space,
+      space,
       drag: {
+        ...drag,
         isScreen: false,
         twigId: props.twig.id,
-        dx: 0,
-        dy: 0,
         targetTwigId: '',
       }
     }));
@@ -56,39 +68,30 @@ function TwigBar(props: TwigBarProps) {
 
   const handleRemoveClick = (event: React.MouseEvent) => {
     event.stopPropagation();
-    /*
-    dispatch(setRemove({
-      twig: props.twig,
-      showDialog: true,
-    }));*/
+    setRemovalTwigId(props.twig.id);
   }
 
   const handleMouseDown = (event: React.MouseEvent) => {
     event.stopPropagation();
-    if (!props.isSelected) {
-      selectTwig(props.abstract, props.twig, true);
-    }
-    beginDrag();
-  }
-
-  const handleTouchStart = (event: React.TouchEvent) => {
-    event.stopPropagation();
-    props.setTouches(event.touches);
     beginDrag();
   }
 
   return (
     <Box
+      title={props.twig.id}
       onMouseDown={handleMouseDown}
-      onTouchStart={handleTouchStart}
       sx={{
-        backgroundColor: props.twig.color || props.twig.user.color,
+        backgroundColor: props.twig.bookmarkId 
+          ? palette === 'dark'
+            ? 'white'
+            : 'black'
+          : getTwigColor(props.twig.color) || props.twig.user.color,
         textAlign: 'left',
-        cursor: props.abstract.id === props.twig.detailId
-          ? createLink.sourceId
+        cursor: abstract.id === props.twig.detailId
+          ? pendingLink.sourceId
             ? 'crosshair'
             : 'default'
-          : createLink.sourceId
+          : pendingLink.sourceId
             ? 'crosshair'
             : drag.twigId
               ? 'grabbing'
@@ -127,19 +130,30 @@ function TwigBar(props: TwigBarProps) {
             fontSize: 12,
             color,
           }}>
-            {props.twig.i}
+            {props.twig.id}
+            <br/>
+            {props.twig.i}...
+            {props.twig.degree}:{props.twig.rank}...
+            {props.twig.tabId || props.twig.groupId || props.twig.windowId || props.twig.bookmarkId}
           </Typography>
         </Box>
         </Box>
         <Box>
           <IconButton
-            disabled={props.abstract.id === props.twig.detailId || !props.canEdit || !!createLink.sourceId} 
+            disabled={
+              abstract.id === props.twig.detailId || 
+              !canEdit || 
+              !!pendingLink.sourceId ||
+              props.twig.bookmarkId === "1" ||
+              props.twig.bookmarkId === "2"
+            } 
             size='small'
             color='inherit'
             onMouseDown={dontDrag}
             onClick={handleRemoveClick}
             sx={{
-              fontSize: 10,
+              fontSize: 12,
+              color,
             }}
           >
             <CloseIcon fontSize='inherit'/>

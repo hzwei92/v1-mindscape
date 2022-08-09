@@ -4,17 +4,24 @@ import { FULL_ARROW_FIELDS } from '../arrow/arrowFragments';
 export const TWIG_FIELDS = gql`
   fragment TwigFields on Twig {
     id
+    sourceId
+    targetId
     userId
     abstractId
     detailId
-    color
-    windowId
-    groupId
-    tabId
     i
     x
     y
     z
+    isRoot
+    degree
+    rank
+    displayMode
+    color
+    windowId
+    groupId
+    tabId
+    bookmarkId
     isOpen
     createDate
     updateDate
@@ -37,53 +44,11 @@ export const FULL_TWIG_FIELDS = gql`
     }
     parent {
       id
-      detailId
     }
     children {
       id
-      detailId
     }
   }
   ${TWIG_FIELDS}
   ${FULL_ARROW_FIELDS}
 `;
-
-
-export const TWIG_WITH_XY = gql`
-  fragment TwigWithCoords on Twig {
-    id
-    x
-    y
-  }
-`;
-
-export const TWIG_WITH_PARENT = gql`
-  fragment TwigWithParent on Twig {
-    id
-    parent {
-      id
-    }
-  }
-`;
-
-export const TWIG_WITH_POS = gql`
-  fragment TwigWithPositioning on Twig {
-    id
-    detailId
-    x
-    y
-    deleteDate
-    parent {
-      id
-      x
-      y
-    }
-  }
-`;
-
-export const TWIG_WITH_Z = gql`
-  fragment TwigWithZ on Twig {
-    id
-    z
-  }
-`

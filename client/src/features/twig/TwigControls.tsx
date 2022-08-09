@@ -1,5 +1,5 @@
 import { Box, Button, IconButton, Menu, MenuItem } from '@mui/material';
-import React, { Dispatch, SetStateAction, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import LinkIcon from '@mui/icons-material/Link';
 import NotificationsTwoToneIcon from '@mui/icons-material/NotificationsTwoTone';
@@ -9,40 +9,38 @@ import CropDinIcon from '@mui/icons-material/CropDin';
 import CropFreeIcon from '@mui/icons-material/CropFree';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
-import { Twig } from './twig';
-import { SpaceType } from '../space/space';
-import { Role } from '../role/role';
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { getColor } from '../../utils';
+import type { Twig } from './twig';
 import { useSnackbar } from 'notistack';
-import { useNavigate } from 'react-router-dom';
-import { Arrow } from '../arrow/arrow';
-import { selectMode } from '../window/windowSlice';
-import { User } from '../user/user';
 import UserTag from '../user/UserTag';
+import { AppContext } from '../../App';
+import { SpaceContext } from '../space/SpaceComponent';
+import { useAppSelector } from '../../app/hooks';
+import { selectArrow } from '../arrow/arrowSlice';
+import { selectSheaf } from '../sheaf/sheafSlice';
 import useReplyTwig from './useReplyTwig';
-import { selectCreateLink, setCommitArrowId, setCreateLink, setRemoveArrowId } from '../arrow/arrowSlice';
+//import useCenterTwig from './useCenterTwig';
 
 interface TwigControlsProps {
-  user: User | null;
-  space: SpaceType;
   twig: Twig;
-  abstract: Arrow;
-  role: Role | null;
-  canPost: boolean;
-  canView: boolean;
   isPost: boolean;
-  isLoading: boolean;
-  setIsLoading: Dispatch<SetStateAction<boolean>>;
 }
 function TwigControls(props: TwigControlsProps) {
-  const navigate = useNavigate();
-  const dispatch = useAppDispatch();
-
-  const mode = useAppSelector(selectMode);
-  const color = getColor(mode, true);
-
-  const createLink = useAppSelector(selectCreateLink);
+  const {
+    user,
+    brightColor: color,
+  } = useContext(AppContext);
+  
+  const {
+    space,
+    abstract,
+    pendingLink,
+    setPendingLink,
+    canEdit,
+    canPost,
+    canView
+  } = useContext(SpaceContext)
+  const arrow = useAppSelector(state => selectArrow(state, props.twig.detailId));
+  const sheaf = useAppSelector(state => selectSheaf(state, arrow?.sheafId));
 
   const frameTwig = null;
   const focusTwig = null;
@@ -50,26 +48,23 @@ function TwigControls(props: TwigControlsProps) {
   const [menuAnchorEl, setMenuAnchorEl] = useState(null as Element | null);
   const [isEditingRoute, setIsEditingRoute] = useState(false);
 
-
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
+  const { replyTwig } = useReplyTwig();
   
-  const { replyTwig } = useReplyTwig(props.user, props.space, props.abstract);
+  // const { detail } = useSubArrow(props.twig.post, () => {
+  //   props.setIsLoading(false);
+  // });
+  // const { undetail } = useUndetail(props.twig.post, () => {
+  //   props.setIsLoading(false);
+  // });
 
-  /*
-  const { detail } = useSubArrow(props.twig.post, () => {
-    props.setIsLoading(false);
-  });
-  const { undetail } = useUndetail(props.twig.post, () => {
-    props.setIsLoading(false);
-  });
+  // const { addTwig: addFrameTwig } = useAddTwig('FRAME');
+  // const { addTwig: addFocusTwig } = useAddTwig('FOCUS');
 
-  const { addTwig: addFrameTwig } = useAddTwig('FRAME');
-  const { addTwig: addFocusTwig } = useAddTwig('FOCUS');
+  //const { centerTwig: centerFrameTwig } = useCenterTwig(user, 'FRAME');
+  //const { centerTwig: centerFocusTwig } = useCenterTwig(user, 'FOCUS');
 
-  const { centerTwig: centerFrameTwig } = useCenterTwig('FRAME');
-  const { centerTwig: centerFocusTwig } = useCenterTwig('FOCUS');
-  */
 
   const handleMouseDown = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -82,17 +77,17 @@ function TwigControls(props: TwigControlsProps) {
 
   const handleLinkClick = (event: React.MouseEvent) => {
     event.stopPropagation();
-    if (createLink.sourceId === props.twig.detailId) {
-      dispatch(setCreateLink({
+    if (pendingLink.sourceId === props.twig.detailId) {
+      setPendingLink({
         sourceId: '',
         targetId: '',
-      }));
+      });
     }
     else {
-      dispatch(setCreateLink({
+      setPendingLink({
         sourceId: props.twig.detailId,
         targetId: '',
-      }));
+      });
     }
   }
 
@@ -110,7 +105,7 @@ function TwigControls(props: TwigControlsProps) {
 
   const handleCopyClick = (event: React.MouseEvent) => {
     event.stopPropagation();
-    navigator.clipboard.writeText(`https://mindscape.pub/m/${props.twig.detail.routeName}`);
+    navigator.clipboard.writeText(`https://mindscape.pub/m/${arrow?.routeName}`);
     const handleDismissClick = (event: React.MouseEvent) => {
       closeSnackbar(props.twig.id);
     }
@@ -135,7 +130,7 @@ function TwigControls(props: TwigControlsProps) {
 
   const handleCopyRelativeClick = (event: React.MouseEvent) => {
     event.stopPropagation();
-    navigator.clipboard.writeText(`https://mindscape.pub/m/${props.abstract.routeName}/${props.twig.i}`);
+    navigator.clipboard.writeText(`https://mindscape.pub/m/${abstract.routeName}/${props.twig.i}`);
     const handleDismissClick = (event: React.MouseEvent) => {
       closeSnackbar(props.twig.id + 'context');
     }
@@ -161,14 +156,12 @@ function TwigControls(props: TwigControlsProps) {
   const handleSubClick = (event: React.MouseEvent) => {
     event.stopPropagation();
     //detail();
-    props.setIsLoading(true);
     handleMenuClose();
   }
   
   const handleUnsubClick = (event: React.MouseEvent) => {
     event.stopPropagation();
     //undetail();
-    props.setIsLoading(true);
     handleMenuClose();
   }
 
@@ -180,7 +173,6 @@ function TwigControls(props: TwigControlsProps) {
         centerFrameTwig(frameTwig, true, 0);
       }
       else {
-        navigate(`/u/${user?.frame?.routeName}/${frameTwig.jamI}`);
       }
     }
     else {
@@ -196,7 +188,6 @@ function TwigControls(props: TwigControlsProps) {
         centerFocusTwig(focusTwig, true, 0);
       }
       else {
-        navigate(`/${user?.focus?.userId ? 'u' : 'j'}/${user?.focus?.routeName}/${focusTwig.jamI}`);
       }
     }
     else {
@@ -206,13 +197,13 @@ function TwigControls(props: TwigControlsProps) {
 
   const handleCommitClick = (event: React.MouseEvent) => {
     event.stopPropagation();
-    dispatch(setCommitArrowId(props.twig.detailId))
+    //dispatch(setCommitArrowId(props.twig.detailId))
     handleMenuClose();
   }
 
   const handleRemoveClick =  (event: React.MouseEvent) => {
     event.stopPropagation();
-    dispatch(setRemoveArrowId(props.twig.detailId));
+    //dispatch(setRemoveArrowId(props.twig.detailId));
     handleMenuClose();
   }
 
@@ -232,7 +223,7 @@ function TwigControls(props: TwigControlsProps) {
       marginLeft: 0,
     }}>
       <Button
-        disabled={!props.canPost}
+        disabled={!canPost}
         onMouseDown={handleMouseDown} 
         onClick={handleReplyClick}
         sx={{
@@ -243,7 +234,7 @@ function TwigControls(props: TwigControlsProps) {
         Reply
       </Button>
 
-      <Button disabled={!props.canView} onMouseDown={handleMouseDown} onClick={handleLinkClick} sx={{
+      <Button disabled={!canView} onMouseDown={handleMouseDown} onClick={handleLinkClick} sx={{
         color,
         fontSize: 12,
       }}>
@@ -265,18 +256,18 @@ function TwigControls(props: TwigControlsProps) {
         }}
       >
         {
-          props.twig.user.id !== props.twig.detail.user.id
+          props.twig.user.id !== arrow?.user.id
             ? <Box sx={{
                 fontSize: 12,
                 padding: 1,
               }}>
                 reposted by&nbsp;
-                <UserTag user={props.user} tagUser={props.twig.user} />
+                <UserTag user={props.twig.user} />
               </Box>
             : null
         }
         {
-          props.twig.detail.userId === props.user?.id
+          arrow?.userId === user?.id
             ? <MenuItem onClick={handleRouteClick} sx={{
                 fontSize: 14,
               }}>
@@ -316,7 +307,7 @@ function TwigControls(props: TwigControlsProps) {
           &nbsp; Copy hyperlink (with context)
         </MenuItem>
         {
-          props.twig.detail.userId === props.user?.id && !props.twig.detail.commitDate && !props.twig.detail.removeDate
+          arrow?.userId === user?.id && !arrow?.commitDate && !arrow?.removeDate
             ? <MenuItem onClick={handleCommitClick} sx={{
                 fontSize: 14,
               }}>
@@ -332,7 +323,7 @@ function TwigControls(props: TwigControlsProps) {
             : null
         }
         {
-          props.twig.detail.userId === props.user?.id && !props.twig.detail.removeDate
+          arrow?.userId === user?.id && !arrow?.removeDate
             ? <MenuItem onClick={handleRemoveClick} sx={{
                 fontSize: 14,
               }}>
@@ -348,7 +339,7 @@ function TwigControls(props: TwigControlsProps) {
             : null
         }
         {
-          false // TOOD post subs
+          false
             ? <MenuItem onClick={handleUnsubClick} sx={{
                 fontSize: 14,
               }}>
@@ -356,7 +347,7 @@ function TwigControls(props: TwigControlsProps) {
                   marginLeft: '-5px',
                   marginBottom: '-5px',
                   fontSize: 14,
-                  color: props.user?.color, 
+                  color: user?.color, 
                 }}>
                   <NotificationsTwoToneIcon fontSize='inherit'/>
                 </Box>
@@ -376,7 +367,7 @@ function TwigControls(props: TwigControlsProps) {
               </MenuItem>
           }
           {
-            props.space === 'FOCUS'
+            space === 'FOCUS'
               ? <MenuItem onClick={handleFrameClick} sx={{
                   fontSize: 14,
                 }}>
@@ -384,13 +375,13 @@ function TwigControls(props: TwigControlsProps) {
                     marginLeft: '-5px',
                     marginBottom: '-5px',
                     fontSize: 14,
-                    color: frameTwig ? props.user?.frame?.color : null
+                    color: frameTwig ? user?.frame?.color : null
                   }}>
                     <CropDinIcon fontSize='inherit'/>
                   </Box>
                   &nbsp; { frameTwig ? 'View in frame' : 'Add to frame' }
                 </MenuItem>
-              : props.user?.focusId
+              : user?.focusId
                 ? <MenuItem onClick={handleFocusClick} sx={{
                     fontSize: 14,
                   }}>
@@ -398,7 +389,7 @@ function TwigControls(props: TwigControlsProps) {
                       marginLeft: '-5px',
                       marginBottom: '-5px',
                       fontSize: 14,
-                      color: focusTwig ? props.user?.focus?.color : null
+                      color: focusTwig ? user?.focus?.color : null
                     }}>
                       <CropFreeIcon fontSize='inherit'/>
                     </Box>
@@ -411,13 +402,13 @@ function TwigControls(props: TwigControlsProps) {
         color,
         fontSize: 12,
       }}>
-        {props.twig.detail.inCount} IN
+        {sheaf?.inCount} IN
       </Button>
       <Button onMouseDown={handleMouseDown} onClick={handleNextClick} sx={{
         color,
         fontSize: 12,
       }}>
-        {props.twig.detail.outCount} OUT
+        {sheaf?.outCount} OUT
       </Button>
     </Box>
   )

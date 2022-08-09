@@ -16,11 +16,9 @@ import GoogleButton from './GoogleButton';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { FULL_USER_FIELDS } from '../user/userFragments';
-import { gql, useMutation } from '@apollo/client';
-import useToken from './useToken';
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { selectAuthState } from './authSlice';
-import { setUserId } from '../user/userSlice';
+import { gql, useApolloClient, useMutation } from '@apollo/client';
+import { setLogin } from './authSlice';
+import { useAppDispatch } from '../../app/hooks';
 
 const LOGIN_USER = gql`
   mutation LoginUser($email: String!, $pass: String!) {
@@ -35,12 +33,10 @@ interface LoginProps {
   setIsLogin: Dispatch<SetStateAction<boolean>>;
 }
 export default function Login(props: LoginProps) {
-  const auth = useAppSelector(selectAuthState);
+  const client = useApolloClient();
   const dispatch = useAppDispatch();
 
   const [message, setMessage] = useState('');
-  
-  const { refreshTokenInterval } = useToken();
 
   const [loginUser] = useMutation(LOGIN_USER, {
     onError: error => {
@@ -50,11 +46,18 @@ export default function Login(props: LoginProps) {
     onCompleted: data => {
       console.log(data);
 
-      if (auth.interval) {
-        clearInterval(auth.interval);
-      }
-      refreshTokenInterval();
-      dispatch(setUserId(data.loginUser.id));
+      client.clearStore();
+      client.writeQuery({
+        query: gql`
+          query LoginQuery {
+            ...FullUserFields
+          }
+        `,
+        data: data.loginUser,
+      });
+
+      dispatch(setLogin(data.loginUser));
+
       props.setIsLogin(false);
     }
   });

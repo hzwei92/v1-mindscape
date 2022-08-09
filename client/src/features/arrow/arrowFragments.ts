@@ -1,7 +1,6 @@
 import { gql } from '@apollo/client';
 import { FULL_ROLE_FIELDS } from '../role/roleFragments';
-import { VOTE_FIELDS } from '../vote/voteFragments';
-
+import { SHEAF_FIELDS } from '../sheaf/sheafFragments';
 
 export const ARROW_FIELDS = gql`
   fragment ArrowFields on Arrow {
@@ -18,8 +17,10 @@ export const ARROW_FIELDS = gql`
     abstractId
     sourceId
     targetId
+    sheafId
     twigN
     twigZ
+    rootTwigId
     canEdit
     canPost
     canTalk
@@ -46,6 +47,9 @@ export const ARROW_FIELDS = gql`
 export const FULL_ARROW_FIELDS = gql`
   fragment FullArrowFields on Arrow {
     ...ArrowFields
+    sheaf {
+      ...SheafFields
+    }
     user {
       id
       name
@@ -53,12 +57,9 @@ export const FULL_ARROW_FIELDS = gql`
       verifyEmailDate
       color
     }
-    votes {
-      ...VoteFields
-    }
   }
   ${ARROW_FIELDS}
-  ${VOTE_FIELDS}
+  ${SHEAF_FIELDS}
 `;
 
 

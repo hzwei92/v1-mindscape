@@ -1,9 +1,10 @@
 import { gql, useApolloClient, useMutation, useReactiveVar } from '@apollo/client';
 import { useSnackbar } from 'notistack';
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { useAppDispatch } from '../../app/hooks';
 import { sessionVar } from '../../cache';
 import { ABSTRACT_ARROW_FIELDS } from '../arrow/arrowFragments';
-import { resetArrows } from '../arrow/arrowSlice';
+import { SpaceType } from '../space/space';
+import { resetTwigs } from '../twig/twigSlice';
 import { User } from './user';
 import { resetUsers } from './userSlice';
 
@@ -21,8 +22,8 @@ const SET_USER_FOCUS_BY_ID = gql`
 `;
 
 const SET_USER_FOCUS_BY_ROUTE_NAME = gql`
-  mutation RefocusUserByRouteName($sessionId: String!, $postRouteName: String!) {
-    setUserFocusByRouteName(sessionId: $sessionId, postRouteName: $postRouteName) {
+  mutation RefocusUserByRouteName($sessionId: String!, $arrowRouteName: String!) {
+    setUserFocusByRouteName(sessionId: $sessionId, arrowRouteName: $arrowRouteName) {
       id
       focusId
       focus {
@@ -72,20 +73,20 @@ export default function useSetUserFocus(user: User | null) {
       },
     });
 
-    dispatch(resetArrows('FOCUS'));
-    dispatch(resetUsers('FOCUS'));
+    dispatch(resetTwigs(SpaceType.FOCUS));
+    dispatch(resetUsers(SpaceType.FOCUS));
   };
 
-  const setUserFocusByRouteName = (postRouteName: string) => {
+  const setUserFocusByRouteName = (arrowRouteName: string) => {
     setFocusByRouteName({
       variables: {
         sessionId: sessionDetail.id,
-        postRouteName,
+        arrowRouteName,
       }
     });
 
-    dispatch(resetArrows('FOCUS'));
-    dispatch(resetUsers('FOCUS'));
+    dispatch(resetTwigs(SpaceType.FOCUS));
+    dispatch(resetUsers(SpaceType.FOCUS));
   }
 
   return { setUserFocusById, setUserFocusByRouteName };

@@ -96,4 +96,16 @@ export class ArrowsResolver {
   ) {
     return this.arrowsService.getArrowByRouteName(routeName);
   }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => Arrow, {name: 'saveArrow'})
+  async saveArrow(
+    @CurrentUser() user: UserEntity,
+    @Args('sessionId') sessionId: string,
+    @Args('arrowId') arrowId: string,
+    @Args('draft') draft: string,
+  ) {
+    const arrow = await this.arrowsService.saveArrow(user, arrowId, draft);
+    return arrow;
+  }
 }

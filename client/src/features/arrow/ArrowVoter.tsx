@@ -1,38 +1,29 @@
 import { Box, Button, IconButton } from '@mui/material';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
-import { Twig } from './twig';
-import { SpaceType } from '../space/space';
-import { useAppSelector } from '../../app/hooks';
+import type { Arrow } from './arrow';
 import { Vote } from '../vote/vote';
-import { getColor } from '../../utils';
-import { User } from '../user/user';
-import { Arrow } from '../arrow/arrow';
-import { selectMode } from '../window/windowSlice';
-import twigSlice from './twigSlice';
+import { AppContext } from '../../App';
 
-interface TwigVoterProps {
-  user: User;
-  space: SpaceType;
-  twig: Twig;
+interface ArrowVoterProps {
+  arrow: Arrow;
 }
-export default function TwigVoter(props: TwigVoterProps) {
-  const mode = useAppSelector(selectMode);
-  const color = getColor(mode, true);
+export default function ArrowVoter(props: ArrowVoterProps) {
+  const { user, dimColor } = useContext(AppContext);
 
   const [isVoting, setIsVoting] = useState(false);
 
   let userVote = null as Vote | null;
-  props.twig.detail.votes.some(vote => {
-    if (vote.userId === props.user.id) {
-      userVote = vote;
-      return true;
-    }
-    return false;
-  });
+  // (props.arrow.votes || []).some(vote => {
+  //   if (vote.userId === props.user?.id) {
+  //     userVote = vote;
+  //     return true;
+  //   }
+  //   return false;
+  // });
 
 
   const handleVoteClick = (clicks: number) => (event: React.MouseEvent) => {
@@ -62,8 +53,8 @@ export default function TwigVoter(props: TwigVoterProps) {
         )}
         sx={{
           color: (userVote?.weight || 0) > 0
-            ? props.user?.color
-            : color,
+            ? user?.color
+            : dimColor,
         }}
       >
         { 
@@ -79,11 +70,11 @@ export default function TwigVoter(props: TwigVoterProps) {
         size='small'
         sx={{
           minWidth: 0,
-          color,
+          color: dimColor,
           fontSize: 14,
         }}
       >
-        &nbsp;{ props.twig.detail?.weight || 0 }&nbsp;
+        &nbsp;{ props.arrow?.weight || 0 }&nbsp;
       </Button>
       <IconButton
         onMouseDown={handleButtonMouseDown}
@@ -96,8 +87,8 @@ export default function TwigVoter(props: TwigVoterProps) {
         )}
         sx={{
           color: (userVote?.weight || 0) < 0
-            ? props.user?.color
-            : color,
+            ? user?.color
+            : dimColor,
         }}
       >
         {

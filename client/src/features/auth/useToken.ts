@@ -1,10 +1,8 @@
-import { gql, useApolloClient, useMutation } from '@apollo/client';
+import { gql, useMutation } from '@apollo/client';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { REFRESH_ACCESS_TOKEN_TIME } from '../../constants';
-import { FULL_USER_FIELDS } from '../user/userFragments';
-import { User } from '../user/user';
-import { selectUserId } from '../user/userSlice';
-import { selectAuthState, setAuthState } from './authSlice';
+import { selectCurrentUser } from '../user/userSlice';
+import { setAuthIsInit, setAuthIsValid, setTokenInterval } from './authSlice';
 
 const REFRESH_TOKEN = gql`
   mutation RefreshToken {
@@ -15,18 +13,9 @@ const REFRESH_TOKEN = gql`
 `;
 
 export default function useToken() {
-  const client = useApolloClient();
-  const auth = useAppSelector(selectAuthState);
-  const userId = useAppSelector(selectUserId);
-  const user = client.cache.readFragment({
-    id: client.cache.identify({
-      id: userId,
-      __typename: 'User',
-    }),
-    fragment: FULL_USER_FIELDS,
-    fragmentName: 'FullUserFields',
-  }) as User;
   const dispatch = useAppDispatch();
+  
+  const user = useAppSelector(selectCurrentUser);
 
   const [refresh] = useMutation(REFRESH_TOKEN, {
     onError: error => {
@@ -35,28 +24,22 @@ export default function useToken() {
         if (user?.id) {
           //logoutUser(); TODO
         }
-        dispatch(setAuthState({
-          isInit: true,
-          isValid: false,
-          interval: null,
-        }));
+
+        dispatch(setAuthIsInit(true));
+        dispatch(setAuthIsValid(false));
+        dispatch(setTokenInterval(null));
       }
     },
     onCompleted: data => {
       console.log(data);
+      dispatch(setAuthIsInit(true));
+
       if (data.refreshToken.id) {
-        dispatch(setAuthState({
-          isInit: true,
-          isValid: true,
-          interval: auth.interval,
-        }));
+        dispatch(setAuthIsValid(true));
       }
       else {
-        dispatch(setAuthState({
-          isInit: true,
-          isValid: false,
-          interval: null,
-        }));
+        dispatch(setAuthIsValid(false));
+        dispatch(setTokenInterval(null));
       }
     },
   });
@@ -70,11 +53,9 @@ export default function useToken() {
       refresh();
     }, REFRESH_ACCESS_TOKEN_TIME);
 
-    dispatch(setAuthState({
-      isInit: true,
-      isValid: true,
-      interval,
-    }));
+    dispatch(setAuthIsInit(true));
+    dispatch(setAuthIsValid(true));
+    dispatch(setTokenInterval(interval));
   }
   
   return { refreshToken, refreshTokenInterval };

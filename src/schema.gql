@@ -186,6 +186,7 @@ type Mutation {
   replyTwig(draft: String!, parentTwigId: String!, postId: String!, sessionId: String!, twigId: String!, x: Int!, y: Int!): ReplyTwigResult!
   requestRole(arrowId: String!, sessionId: String!): Role!
   resendUserVerification: User!
+  saveArrow(arrowId: String!, draft: String!, sessionId: String!): Arrow!
   selectTwig(sessionId: String!, twigId: String!): SelectTwigResult!
   setUserColor(color: String!, sessionId: String!): User!
   setUserFocusById(arrowId: String, sessionId: String!): User!

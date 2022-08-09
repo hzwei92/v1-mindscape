@@ -1,149 +1,124 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { RootState } from '../../app/store';
-import { IdToIdToIdToTrueType, IdToIdToTrueType } from '../../utils';
-import { SpaceType } from '../space/space';
-import { Arrow, CreateLinkType, IdToChildIdToTrueType, IdToHeightType, IdToParentIdType, IdToTrueType } from './arrow';
+import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { RootState } from "../../app/store";
+import { IdToType } from "../../types";
+import { setInit, setLogin, setLogout } from "../auth/authSlice";
+import { mergeTwigs } from "../twig/twigSlice";
+import { setCurrentUser } from "../user/userSlice";
+import type { Arrow } from "./arrow";
 
 export interface ArrowState {
-  createLink: CreateLinkType;
-  commitArrowId: string;
-  removeArrowId: string;
-  'FRAME': {
-    selectArrowId: string,
-    sourceIdToTargetIdToLinkIdToTrue: IdToIdToIdToTrueType;
-    linkIdToTrue: IdToTrueType;
-    idToLinkIdToTrue: IdToIdToTrueType;
-    idToHeight: IdToHeightType;
-  },
-  'FOCUS': {
-    selectArrowId: '',
-    sourceIdToTargetIdToLinkIdToTrue: IdToIdToIdToTrueType;
-    linkIdToTrue: IdToTrueType;
-    idToLinkIdToTrue: IdToIdToTrueType;
-    idToHeight: IdToHeightType;
-  },
-}
-
-const initialState: ArrowState = {
-  createLink: {
-    sourceId: '',
-    targetId: '',
-  },
-  commitArrowId: '',
-  removeArrowId: '',
-  'FRAME': {
-    selectArrowId: '',
-    sourceIdToTargetIdToLinkIdToTrue: {},
-    linkIdToTrue: {},
-    idToLinkIdToTrue: {},
-    idToHeight: {},
-  },
-  'FOCUS': {
-    selectArrowId: '',
-    sourceIdToTargetIdToLinkIdToTrue: {},
-    linkIdToTrue: {},
-    idToLinkIdToTrue: {},
-    idToHeight: {},
-  }
+  idToArrow: IdToType<Arrow>;
+  urlToArrowId: IdToType<string>;
 };
 
-export const arrowSlice = createSlice({
+const initialState: ArrowState = {
+  idToArrow: {},
+  urlToArrowId: {},
+};
+
+const arrowSlice = createSlice({
   name: 'arrow',
   initialState,
   reducers: {
-    setCreateLink: (state, action: PayloadAction<CreateLinkType>) => {
-      return {
-        ...state,
-        createLink: action.payload,
-      };
-    },
-    setCommitArrowId: (state, action: PayloadAction<string>) => {
-      return {
-        ...state,
-        commitArrowId: '',
-      }
-    },
-    setRemoveArrowId: (state, action: PayloadAction<string>) => {
-      return {
-        ...state,
-        removeArrowId: '',
-      }
-    },
-    setSelectArrowId: (state, action: PayloadAction<{space: SpaceType, arrowId: string}>) => {
-      return {
-        ...state,
-        [action.payload.space]: {
-          ...state[action.payload.space],
-          selectArrowId: action.payload.arrowId
-        }
-      }
-    },
-    addArrows: (state, action: PayloadAction<{space: SpaceType, arrows: Arrow[]}>) => {
-      const idToLinkIdToTrue: IdToIdToTrueType = {
-        ...state[action.payload.space].idToLinkIdToTrue,
-      };
-      const linkIdToTrue: IdToTrueType = {
-        ...state[action.payload.space].linkIdToTrue,
-      };
-      const sourceIdToTargetIdToLinkIdToTrue: IdToIdToIdToTrueType = {
-        ...state[action.payload.space].sourceIdToTargetIdToLinkIdToTrue,
-      };
+    mergeArrows: (state, action: PayloadAction<Arrow[]>) => {
+      return action.payload.reduce((acc, arrow) => {
+        if (arrow?.id) {
+          acc.idToArrow[arrow.id] = arrow;
 
-      action.payload.arrows.forEach(arrow => {
-        if (arrow.sourceId === arrow.targetId) return;
-
-        sourceIdToTargetIdToLinkIdToTrue[arrow.sourceId] = {
-          ...(sourceIdToTargetIdToLinkIdToTrue[arrow.sourceId] || {}),
-          [arrow.targetId]: {
-            ...((sourceIdToTargetIdToLinkIdToTrue[arrow.sourceId] || {})[arrow.targetId] || {}),
-            [arrow.id]: true,
-          },
-        };
-        linkIdToTrue[arrow.id] = true;
-        idToLinkIdToTrue[arrow.targetId] = {
-          ...idToLinkIdToTrue[arrow.targetId],
-          [arrow.id]: true,
-        };
-        idToLinkIdToTrue[arrow.sourceId] = {
-          ...idToLinkIdToTrue[arrow.sourceId],
-          [arrow.id]: true,
-        }
+          if (arrow.url) {
+            acc.urlToArrowId[arrow.url] = arrow.id
+          }
+        } 
+        return acc;
+      }, {
+        idToArrow: { ...state.idToArrow },
+        urlToArrowId: { ...state.urlToArrowId },
       });
-
-      return {
-        ...state,
-        [action.payload.space]: {
-          ...state[action.payload.space],
-          sourceIdToTargetIdToLinkIdToTrue,
-          linkIdToTrue,
-          idToLinkIdToTrue,
-        }
-      }
-    },
-    resetArrows: (state, action: PayloadAction<SpaceType>) => {
-      return {
-        ...state,
-        [action.payload]: initialState[action.payload],
-      };
     },
   },
+  extraReducers: builder => {
+    builder
+      .addCase(setInit, (state, action) => {
+        if (!action.payload) {
+          return initialState;
+        }
+      })
+      .addCase(setLogin, (state, action) => {
+        return [action.payload.frame, action.payload.focus].reduce((acc, arrow) => {
+          if (arrow?.id) {
+            acc.idToArrow[arrow.id] = arrow;
+
+            if (arrow.url) {
+              acc.urlToArrowId[arrow.url] = arrow.id
+            }
+          } 
+          return acc;
+        }, {
+          idToArrow: {} as IdToType<Arrow>,
+          urlToArrowId: {} as IdToType<string>,
+        });
+      })
+      .addCase(setLogout, () => {
+        return initialState;
+      })
+      .addCase(setCurrentUser, (state, action) => {
+        return [action.payload?.frame, action.payload?.focus].reduce((acc, arrow) => {
+          if (arrow?.id) {
+            acc.idToArrow[arrow.id] = arrow;
+            
+            if (arrow.url) {
+              acc.urlToArrowId[arrow.url] = arrow.id
+            }
+          } 
+          return acc;
+        }, {
+          idToArrow: { ...state.idToArrow },
+          urlToArrowId: { ...state.urlToArrowId },
+        });
+      })
+      .addCase(mergeTwigs, (state, action) => {
+        return action.payload.twigs.reduce((acc, twig) => {
+          if (twig.detail) {
+            if (twig.detail.deleteDate) {
+              delete acc.idToArrow[twig.detail.id];
+              if (twig.detail.url) {
+                delete acc.urlToArrowId[twig.detail.url];
+              }
+            }
+            else {
+              acc.idToArrow[twig.detail.id] = Object.assign({}, 
+                acc.idToArrow[twig.detail.id], 
+                twig.detail
+              );
+              if (twig.detail.url) {
+                acc.urlToArrowId[twig.detail.url] = twig.detail.id;
+              }
+            }
+          }
+          return acc;
+        }, {
+          idToArrow: { ...state.idToArrow },
+          urlToArrowId: { ...state.urlToArrowId },
+        });
+      })
+  }
 });
 
-export const {
-  setCreateLink,
-  setCommitArrowId,
-  setRemoveArrowId,
-  setSelectArrowId,
-  addArrows,
-  resetArrows,
-} = arrowSlice.actions;
+export const { mergeArrows } = arrowSlice.actions;
+export const selectIdToArrow = (state: RootState) => state.arrow.idToArrow;
+export const selectUrlToArrowId = (state: RootState) => state.arrow.urlToArrowId;
 
-export const selectCreateLink = (state: RootState) => state.arrow.createLink;
-export const selectCommitArrowId = (state: RootState) => state.arrow.commitArrowId;
-export const selectRemoveArrowId = (state: RootState) => state.arrow.removeArrowId;
-export const selectSelectArrowId = (space: SpaceType) => (state: RootState) => state.arrow[space].selectArrowId;
-export const selectIdToHeight = (space: SpaceType) => (state: RootState) => state.arrow[space].idToHeight;
-export const selectLinkIdToTrue = (space: SpaceType) => (state: RootState) => state.arrow[space].linkIdToTrue;
-export const selectIdToLinkIdToTrue = (space: SpaceType) => (state: RootState) => state.arrow[space].idToLinkIdToTrue;
-export const selectSourceIdToTargetIdToLinkIdToTrue = (space: SpaceType) => (state: RootState) => state.arrow[space].sourceIdToTargetIdToLinkIdToTrue;
-export default arrowSlice.reducer
+export const selectArrow = createSelector(
+  [
+    selectIdToArrow,
+    (state, id: string | null | undefined) => id,
+  ],
+  (idToArrow, id) => {
+    if (id) {
+      return idToArrow[id];
+    }
+    return null;
+  }
+);
+
+export default arrowSlice.reducer;

@@ -1,26 +1,25 @@
 import { Box, Button, Card, IconButton, Typography, } from '@mui/material';
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { getColor } from '../../utils';
 import AccountSettings from './AccountSettings';
-import { selectMode } from '../window/windowSlice';
 import { User } from '../user/user';
-import { selectMenuMode, setMenuMode } from '../menu/menuSlice';
 import useLogout from '../auth/useLogout';
 import Verify from '../auth/Verify';
 import Register from '../auth/Register';
 import Logout from '../auth/Logout';
 import Login from '../auth/Login';
+import { AppContext } from '../../App';
+import { MenuMode } from '../menu/menu';
 
-interface AccountComponentProps {
-  user: User | null;
-}
-
-export default function AccountComponent(props: AccountComponentProps) {
-  const mode = useAppSelector(selectMode);
-  const color = getColor(mode);
-  const menuMode = useAppSelector(selectMenuMode);
+export default function AccountComponent() {
+  const {
+    user,
+    brightColor: color,
+    menuMode,
+    setMenuMode,
+  } = useContext(AppContext);
 
   const [isLogin, setIsLogin] = useState(false);
   const [isLogout, setIsLogout] = useState(false);
@@ -29,19 +28,16 @@ export default function AccountComponent(props: AccountComponentProps) {
 
   const { logoutUser } = useLogout();
 
-  if (!props.user || !menuMode) return null;
+  if (!user || menuMode !== MenuMode.ACCOUNT) return null;
 
   const handleClose = () => {
     setIsLogin(false);
     setIsLogout(false);
-    dispatch(setMenuMode({
-      mode: '',
-      toggle: false
-    }));
+    setMenuMode(MenuMode.NONE);
   };
 
   const handleLogoutClick = (event: React.MouseEvent) => {
-    if (props.user?.email) {
+    if (user?.email) {
       logoutUser();
       handleClose();
     }
@@ -49,10 +45,10 @@ export default function AccountComponent(props: AccountComponentProps) {
       setIsLogout(true)
     }
   }
+
   const handleLoginClick = (event: React.MouseEvent) => {
     setIsLogin(true);
   }
-
 
   return (
     <Box sx={{
@@ -93,8 +89,8 @@ export default function AccountComponent(props: AccountComponentProps) {
           </Button>
         </Card>
         {
-          props.user?.email
-            ? props.user?.verifyEmailDate
+          user?.email
+            ? user?.verifyEmailDate
               ? <Card elevation={5} sx={{
                   padding: 1,
                   margin: 1,
@@ -105,13 +101,13 @@ export default function AccountComponent(props: AccountComponentProps) {
                   <Box sx={{
                     marginLeft: 1,
                   }}>
-                    { props.user.email }
+                    { user.email }
                   </Box>
                 </Card>
               : <Verify />
             : <Register />
         }
-        <AccountSettings user={props.user} />
+        <AccountSettings user={user} />
         {
           isLogout
             ? <Logout setIsLogout={setIsLogout}/>

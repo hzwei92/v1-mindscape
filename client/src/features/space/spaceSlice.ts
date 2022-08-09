@@ -1,97 +1,105 @@
 import { createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../../app/store';
-import { MOBILE_WIDTH } from '../../constants';
-import { DragState, ScrollState, SpaceType } from './space';
+import { IdToType } from '../../types';
+import { DirectionType, DragState, PosType, ScrollState, SpaceType } from '../space/space';
 
 export interface SpaceState {
-  space: SpaceType;
-  FRAME: {
+  selectedSpace: SpaceType;
+  [SpaceType.FRAME]: {
     isOpen: boolean;
-    twigId: string;
+    selectedTwigId: string;
     scale: number;
     scroll: ScrollState;
+    cursor: PosType;
     drag: DragState;
-  }
-  FOCUS: {
+    idToPos: IdToType<PosType>;
+    idToHeight: IdToType<number>;
+  };
+  [SpaceType.FOCUS]: {
     isOpen: boolean;
-    twigId: string;
+    selectedTwigId: string;
     scale: number;
     scroll: ScrollState;
+    cursor: PosType;
     drag: DragState;
+    idToPos: IdToType<PosType>;
+    idToHeight: IdToType<number>;
   }
 }
 
 const initialState: SpaceState = {
-  space: 'FRAME',
-  FRAME: {
-    isOpen: true,
-    twigId: '',
-    scale: window.innerWidth < MOBILE_WIDTH 
-      ? 0.5 
-      : 1,
-    drag: {
-      isScreen: false,
-      twigId: '',
-      dx: 0,
-      dy: 0,
-      targetTwigId: '',
-    },
-    scroll: {
-      left: 0,
-      top: 0,
-    },
-  },
-  FOCUS: {
+  selectedSpace: SpaceType.FRAME,
+  [SpaceType.FRAME]: {
     isOpen: false,
-    twigId: '',
-    scale: window.innerWidth < MOBILE_WIDTH 
-      ? 0.5 
-      : 1,
-    drag: {
-      isScreen: false,
-      twigId: '',
-      dx: 0,
-      dy: 0,
-      targetTwigId: '',
-    },
+    selectedTwigId: '',
+    scale: 0.75,
     scroll: {
       left: 0,
       top: 0,
     },
+    cursor: {
+      x: 0,
+      y: 0,
+    },
+    drag: {
+      isScreen: false,
+      twigId: '',
+      targetTwigId: '',
+      targetDirection: DirectionType.NONE,
+    },
+    idToPos: {},
+    idToHeight: {},
+  },
+  [SpaceType.FOCUS]: {
+    isOpen: false,
+    selectedTwigId: '',
+    scale: 0.75,
+    scroll: {
+      left: 0,
+      top: 0,
+    },
+    cursor: {
+      x: 0,
+      y: 0,
+    },
+    drag: {
+      isScreen: false,
+      twigId: '',
+      targetTwigId: '',
+      targetDirection: DirectionType.NONE,
+    },
+    idToPos: {},
+    idToHeight: {},
   },
 };
 
 export const spaceSlice = createSlice({
-  name: 'space',
+  name: 'frame',
   initialState,
   reducers: {
-    setSpace: (state, action: PayloadAction<SpaceType>) => {
+    setSelectedSpace: (state, action: PayloadAction<SpaceType>) => {
       return {
         ...state,
-        space: action.payload,
-        [action.payload]: {
-          ...state[action.payload],
-          isOpen: true
-        },
-      };
+        selectedSpace: action.payload,
+      }
     },
     setIsOpen: (state, action: PayloadAction<{space: SpaceType, isOpen: boolean}>) => {
       return {
         ...state,
         [action.payload.space]: {
           ...state[action.payload.space],
-          isOpen: action.payload.isOpen
+          isOpen: action.payload.isOpen,
         },
       };
     },
-    setTwigId: (state, action: PayloadAction<{space: SpaceType, twigId: string}>) => {
+    setSelectedTwigId: (state, action: PayloadAction<{space: SpaceType, selectedTwigId: string}>) => {
       return {
         ...state,
         [action.payload.space]: {
           ...state[action.payload.space],
-          twigId: action.payload.twigId,
+          selectedTwigId: action.payload.selectedTwigId,
         },
-      }
+      };
     },
     setScale: (state, action: PayloadAction<{space: SpaceType, scale: number}>) => {
       return {
@@ -100,7 +108,7 @@ export const spaceSlice = createSlice({
           ...state[action.payload.space],
           scale: action.payload.scale,
         },
-      }
+      };
     },
     setScroll: (state, action: PayloadAction<{space: SpaceType, scroll: ScrollState}>) => {
       return {
@@ -109,7 +117,16 @@ export const spaceSlice = createSlice({
           ...state[action.payload.space],
           scroll: action.payload.scroll,
         },
-      }
+      };
+    },
+    setCursor: (state, action: PayloadAction<{space: SpaceType, cursor: PosType}>) => {
+      return {
+        ...state,
+        [action.payload.space]: {
+          ...state[action.payload.space],
+          cursor: action.payload.cursor,
+        },
+      };
     },
     setDrag: (state, action: PayloadAction<{space: SpaceType, drag: DragState}>) => {
       return {
@@ -118,26 +135,80 @@ export const spaceSlice = createSlice({
           ...state[action.payload.space],
           drag: action.payload.drag,
         },
+      };
+    },
+    mergeIdToPos: (state, action: PayloadAction<{space: SpaceType, idToPos: IdToType<PosType>}>) => {
+      return {
+        ...state,
+        [action.payload.space]: {
+          ...state[action.payload.space],
+          idToPos: {
+            ...state[action.payload.space].idToPos,
+            ...action.payload.idToPos,
+          },
+        },
+      };
+    },
+    moveTwigs: (state, action: PayloadAction<{space: SpaceType, twigIds: string[], dx: number, dy: number}>) => {
+      const idToPos = action.payload.twigIds.reduce((acc: IdToType<PosType>, twigId: string) => {
+        acc[twigId] = {
+          x: Math.round(acc[twigId].x + action.payload.dx),
+          y: Math.round(acc[twigId].y + action.payload.dy),
+        };
+        return acc;
+      }, {  ...state[action.payload.space].idToPos });
+      return {
+        ...state,
+        [action.payload.space]: {
+          ...state[action.payload.space],
+          idToPos,
+        },
       }
     },
-  }
+    mergeIdToHeight: (state, action: PayloadAction<{space: SpaceType, idToHeight: IdToType<number>}>) => {
+      return {
+        ...state,
+        [action.payload.space]: {
+          ...state[action.payload.space],
+          idToHeight: {
+            ...state[action.payload.space].idToHeight,
+            ...action.payload.idToHeight,
+          }
+        },
+      };
+    },
+    resetSpace: (state, action: PayloadAction<SpaceType>) => {
+      return {
+        ...state,
+        [action.payload]: {
+          ...initialState[action.payload],
+        },
+      };
+    },
+  },
 });
 
 export const {
-  setSpace,
+  setSelectedSpace,
   setIsOpen,
-  setTwigId,
+  setSelectedTwigId,
   setScale,
   setScroll,
+  setCursor,
   setDrag,
+  mergeIdToPos,
+  moveTwigs,
+  mergeIdToHeight,
+  resetSpace,
 } = spaceSlice.actions;
 
-export const selectSpace = (state: RootState) => state.space.space;
 export const selectIsOpen = (space: SpaceType) => (state: RootState) => state.space[space].isOpen;
-export const selectTwigId = (space: SpaceType) => (state: RootState) => state.space[space].twigId;
+export const selectSelectedTwigId = (space: SpaceType) => (state: RootState) => state.space[space].selectedTwigId;
 export const selectScale = (space: SpaceType) => (state: RootState) => state.space[space].scale;
 export const selectScroll = (space: SpaceType) => (state: RootState) => state.space[space].scroll;
+export const selectCursor = (space: SpaceType) => (state: RootState) => state.space[space].cursor;
 export const selectDrag = (space: SpaceType) => (state: RootState) => state.space[space].drag;
-
+export const selectIdToPos = (space: SpaceType) => (state: RootState) => state.space[space].idToPos;
+export const selectIdToHeight = (space: SpaceType) => (state: RootState) => state.space[space].idToHeight;
 
 export default spaceSlice.reducer

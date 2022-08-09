@@ -1,21 +1,20 @@
-import { useApolloClient, useReactiveVar } from '@apollo/client';
+import { useReactiveVar } from '@apollo/client';
+import { useContext } from 'react';
+import { AppContext } from '../../App';
 import { useAppSelector } from '../../app/hooks';
 import { focusSpaceElVar, frameSpaceElVar } from '../../cache';
 import { VIEW_RADIUS } from '../../constants';
-import { SpaceType } from '../space/space';
-import { selectScale } from '../space/spaceSlice';
-import { User } from '../user/user';
-import { Twig } from './twig';
-import { TWIG_WITH_XY } from './twigFragments';
+import { SpaceState, SpaceType } from '../space/space';
+import { selectIdToPos, selectScale } from '../space/spaceSlice';
 
-export default function useCenterTwig(user: User | null, space: SpaceType) {
-  const client = useApolloClient();
+export default function useCenterTwig(space: SpaceType) {
+  const { user } = useContext(AppContext);
 
-  const spaceEl = useReactiveVar(space === 'FRAME'
+  const spaceEl = useReactiveVar(space === SpaceType.FRAME
     ? frameSpaceElVar
-    : focusSpaceElVar
-  );
+    : focusSpaceElVar);
 
+  const idToPos = useAppSelector(selectIdToPos(space));
   const scale = useAppSelector(selectScale(space));
 
   const centerTwig = (twigId: string, isSmooth: boolean, delay: number, coords?: any) => {
@@ -23,16 +22,12 @@ export default function useCenterTwig(user: User | null, space: SpaceType) {
       if (!spaceEl?.current) return;
       if (!user) return;
       
-      const twig = client.cache.readFragment({
-        id: client.cache.identify({
-          id: twigId,
-          __typename: 'Twig',
-        }),
-        fragment: TWIG_WITH_XY,
-      }) as Twig;
+      const pos = idToPos[twigId];
 
-      const x1 = (twig.x + VIEW_RADIUS) * scale;
-      const y1 = (twig.y + VIEW_RADIUS) * scale;
+      const x1 = ((coords?.x ?? pos.x) + VIEW_RADIUS) * scale;
+      const y1 = ((coords?.y ?? pos.y) + VIEW_RADIUS) * scale;
+
+      console.log('centerTwig', scale);
 
       spaceEl.current.scrollTo({
         left: (x1 - spaceEl.current.clientWidth / 2),

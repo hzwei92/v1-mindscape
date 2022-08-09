@@ -1,16 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import useToken from './useToken';
 import { FULL_USER_FIELDS } from '../user/userFragments';
-import { gql, useLazyQuery, useMutation } from '@apollo/client';
+import { gql, useMutation } from '@apollo/client';
 import { useSnackbar } from 'notistack';
 import { Box, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { getColor } from '../../utils';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { selectMode } from '../window/windowSlice';
-import { selectAuthState } from './authSlice';
-import { setUserId } from '../user/userSlice';
-import { useNavigate } from 'react-router-dom';
+import { setCurrentUser } from '../user/userSlice';
+import { AppContext } from '../../App';
+import { selectAuthIsValid, selectAuthIsInit } from './authSlice';
 
 const INIT_USER = gql`
   mutation InitUser {
@@ -22,7 +20,7 @@ const INIT_USER = gql`
 `;
 
 const GET_CURRENT_USER = gql`
-  query GetCurrentUser {
+  mutation GetCurrentUser {
     getCurrentUser {
       ...FullUserFields
     }
@@ -31,16 +29,21 @@ const GET_CURRENT_USER = gql`
 `;
 
 export default function useAuth() {
-  const auth = useAppSelector(selectAuthState);
-  const mode = useAppSelector(selectMode);
-  const color = getColor(mode, true);
+  const dispatch = useAppDispatch();
+
+  const {
+    brightColor: color
+  } = useContext(AppContext);
+
+  const isInit = useAppSelector(selectAuthIsInit);
+  const isValid = useAppSelector(selectAuthIsValid);
+
   const [isLoading, setIsLoading] = useState(false);
 
-  const dispatch = useAppDispatch();
   const { refreshToken, refreshTokenInterval } = useToken();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const [getUser] = useLazyQuery(GET_CURRENT_USER, {
+  const [getUser] = useMutation(GET_CURRENT_USER, {
     onError: error => {
       console.error(error);
     },
@@ -53,7 +56,7 @@ export default function useAuth() {
 
       refreshTokenInterval();
 
-      dispatch(setUserId(data.getCurrentUser.id));
+      dispatch(setCurrentUser(data.getCurrentUser));
       
       const handleDismissClick = (event: React.MouseEvent) => {
         closeSnackbar(data.getCurrentUser.id);
@@ -89,7 +92,7 @@ export default function useAuth() {
 
       refreshTokenInterval();
 
-      dispatch(setUserId(data.initUser.id));
+      dispatch(setCurrentUser(data.initUser));
 
       const handleDismissClick = (event: React.MouseEvent) => {
         closeSnackbar(data.initUser.id);
@@ -119,8 +122,8 @@ export default function useAuth() {
   }, [])
 
   useEffect(() => {
-    if (!auth.isInit) return;
-    if (auth.isValid) {
+    if (!isInit) return;
+    if (isValid) {
       setIsLoading(true);
       getUser();
     }
@@ -128,5 +131,5 @@ export default function useAuth() {
       setIsLoading(true)
       initUser();
     }
-  }, [auth.isInit, auth.isValid]);
+  }, [isInit, isValid]);
 }

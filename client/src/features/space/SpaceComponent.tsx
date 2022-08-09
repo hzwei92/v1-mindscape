@@ -1,91 +1,95 @@
-import { gql, useApolloClient, useReactiveVar } from '@apollo/client';
 import { Box } from '@mui/material';
-import React, { useEffect, useRef, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { adjustTwigVar, focusSpaceElVar, frameSpaceElVar } from '../../cache';
-import { VIEW_RADIUS, SPACE_BAR_HEIGHT } from '../../constants';
-import { checkPermit, getAppbarWidth, IdToTrueType } from '../../utils';
-import { selectFrameWidth } from '../frame/frameSlice';
-import { selectMenuMode, selectMenuWidth } from '../menu/menuSlice';
-import { User } from '../user/user';
-import { selectUserIdToTrue } from '../user/userSlice';
-import { selectMode, selectWidth } from '../window/windowSlice';
-import { SpaceType } from './space';
-import { selectDrag, selectIsOpen, selectScale, selectScroll, setDrag, setScale, setScroll } from './spaceSlice';
+import React, { Dispatch, SetStateAction, useContext, useEffect, useRef, useState } from 'react';
+import { VIEW_RADIUS, SPACE_BAR_HEIGHT, DisplayMode, MAX_Z_INDEX, TWIG_WIDTH } from '../../constants';
+import { checkPermit, getTwigColor } from '../../utils';
+import { DirectionType, PendingLinkType, PosType, ScrollState, SpaceType } from './space';
 import useInitSpace from './useInitSpace';
-import { setFocusIsSynced } from '../focus/focusSlice';
-import { selectIdToHeight, selectSourceIdToTargetIdToLinkIdToTrue } from '../arrow/arrowSlice';
-import { ABSTRACT_ARROW_FIELDS, FULL_ARROW_FIELDS } from '../arrow/arrowFragments';
 import { Arrow } from '../arrow/arrow';
 import { Role } from '../role/role';
-import { FULL_TWIG_FIELDS, TWIG_WITH_XY, TWIG_WITH_POS } from '../twig/twigFragments';
-import { IdToCoordsType, Twig } from '../twig/twig';
-import TwigComponent from '../twig/TwigComponent';
-import { selectDetailIdToTwigId, selectIdToDescIdToTrue, selectTwigIdToTrue } from '../twig/twigSlice';
-import Sheaf from '../arrow/Sheaf';
 import useMoveTwig from '../twig/useMoveTwig';
-import useAdjustTwigs from '../twig/useAdjustTwigs';
+import { AppContext } from '../../App';
+import { selectIdToUser } from '../user/userSlice';
+import { selectIdToDescIdToTrue, selectIdToTwig } from '../twig/twigSlice';
+import { IdToType } from '../../types';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { selectArrow, selectIdToArrow } from '../arrow/arrowSlice';
+import PostTwigMarker from '../twig/PostTwigMarker';
+import LinkTwigMarker from '../twig/LinkTwigMarker';
+import LinkTwig from '../twig/LinkTwig';
+import PostTwig from '../twig/PostTwig';
+import SpaceControls from './SpaceControls';
+import SpaceNav from './SpaceNav';
+import RemoveTwigDialog from './RemoveTwigDialog';
+import { 
+  moveTwigs, 
+  resetSpace, 
+  selectCursor, 
+  selectIdToPos, 
+  selectDrag, 
+  selectIdToHeight, 
+  selectScale, 
+  selectScroll, 
+  setCursor, 
+  setDrag,
+  mergeIdToPos, 
+  setScale, 
+  setScroll,
+} from './spaceSlice';
+import { focusSpaceElVar, frameSpaceElVar } from '../../cache';
+
+export const SpaceContext = React.createContext({} as {
+  abstract: Arrow;
+  space: SpaceType;
+  canView: boolean;
+  canPost: boolean;
+  canEdit: boolean;
+  pendingLink: PendingLinkType;
+  setPendingLink: Dispatch<SetStateAction<PendingLinkType>>;
+  removalTwigId: string;
+  setRemovalTwigId: Dispatch<SetStateAction<string>>;
+});
 
 interface SpaceComponentProps {
-  user: User;
   space: SpaceType;
 }
+
 export default function SpaceComponent(props: SpaceComponentProps) {
-  const client = useApolloClient();
+  //console.log('space');
   const dispatch = useAppDispatch();
 
-  const adjustTwigDetail = useReactiveVar(adjustTwigVar);
+  const { 
+    user,
+    appBarWidth,
+    menuWidth,
+    focusWidth,
+    brightColor: color,
+  } = useContext(AppContext);
 
-  const width = useAppSelector(selectWidth);
-  const mode = useAppSelector(selectMode);
-
-  const menuMode = useAppSelector(selectMenuMode);
-  const menuWidth = useAppSelector(selectMenuWidth);
-  const menuWidth1 = menuMode
-    ? menuWidth
-    : 0;
-
-  const frameIsOpen = useAppSelector(selectIsOpen('FRAME'));
-  const frameWidth = useAppSelector(selectFrameWidth);
-  const frameWidth1 = frameIsOpen
-    ? frameWidth
-    : 0;
-  
-  const offsetLeft = props.space === 'FRAME'
-    ? getAppbarWidth(width) + menuWidth1
-    : getAppbarWidth(width) + menuWidth1 + frameWidth1;
-
+  const offsetLeft = appBarWidth + menuWidth;
   const offsetTop = SPACE_BAR_HEIGHT;
-
-  const spaceWidth = props.space === 'FRAME'
-    ? frameWidth1
-    : width - offsetLeft;
 
   const scale = useAppSelector(selectScale(props.space));
   const scroll = useAppSelector(selectScroll(props.space));
+  const cursor = useAppSelector(selectCursor(props.space));
   const drag = useAppSelector(selectDrag(props.space));
-
+  const idToPos = useAppSelector(selectIdToPos(props.space));
   const idToHeight = useAppSelector(selectIdToHeight(props.space));
-  const twigIdToTrue = useAppSelector(selectTwigIdToTrue(props.space));
-  const idToDescIdToTrue = useAppSelector(selectIdToDescIdToTrue(props.space));
-  const userIdToTrue = useAppSelector(selectUserIdToTrue(props.space));
-  const detailIdToTwigId = useAppSelector(selectDetailIdToTwigId(props.space));
-  const sourceIdToTargetIdToLinkIdToTrue = useAppSelector(selectSourceIdToTargetIdToLinkIdToTrue(props.space));
 
-  const abstract = client.cache.readFragment({
-    id: client.cache.identify({
-      id: props.space === 'FRAME'
-        ? props.user.frameId
-        : props.user.focusId,
-      __typename: 'Arrow',
-    }),
-    fragment: ABSTRACT_ARROW_FIELDS,
-    fragmentName: 'AbstractArrowFields',
-  }) as Arrow;
+  const idToUser = useAppSelector(selectIdToUser(props.space));
+  const idToTwig = useAppSelector(selectIdToTwig(props.space));
+  const idToArrow = useAppSelector(selectIdToArrow);
+
+  const idToDescIdToTrue = useAppSelector(selectIdToDescIdToTrue(props.space));
+
+  const abstractId = props.space === SpaceType.FRAME
+    ? user?.frameId
+    : user?.focusId;
+
+  const abstract = useAppSelector(state => selectArrow(state, abstractId));
 
   let role = null as Role | null;
   (abstract?.roles || []).some(role_i => {
-    if (role_i.userId === props.user?.id && !role_i.deleteDate) {
+    if (role_i.userId === user?.id && !role_i.deleteDate) {
       role = role_i;
       return true;
     }
@@ -96,10 +100,12 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   const canPost = checkPermit(abstract?.canPost, role?.type)
   const canView = checkPermit(abstract?.canView, role?.type)
 
-  const [cursor, setCursor] = useState({
-    x: 0,
-    y: 0,
+  const [pendingLink, setPendingLink] = useState({
+    sourceId: '',
+    targetId: '',
   });
+
+  const [removalTwigId, setRemovalTwigId] = useState('');
 
   const [touches, setTouches] = useState(null as React.TouchList | null);
 
@@ -117,12 +123,36 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   //useAddTwigSub(props.user, props.space, abstract);
 
   const { moveTwig } = useMoveTwig(props.space);
-  const { adjustTwigs} = useAdjustTwigs(abstract)
-
   useEffect(() => {
-    if (!spaceEl.current) return;
+    if (Object.keys(idToTwig).length === 0) {
+      dispatch(resetSpace(props.space));
+      return;
+    }
+    const idToPos1 = Object.keys(idToTwig).reduce((acc: IdToType<PosType>, twigId) => {
+      const pos = idToPos[twigId];
+      if (!pos) {
+        const twig = idToTwig[twigId];
+        acc[twigId] = {
+          x: twig.x,
+          y: twig.y,
+        };
+      }
+      return acc;
+    }, {});
 
-    if (props.space === 'FRAME') {
+    if (Object.keys(idToPos1).length) {
+      dispatch(mergeIdToPos({
+        space: props.space,
+        idToPos: idToPos1,
+      }));
+    }
+  }, [idToTwig]);
+  
+  useEffect(() => {
+    if (!spaceEl?.current) return;
+
+
+    if (props.space === SpaceType.FRAME) {
       frameSpaceElVar(spaceEl);
     }
     else {
@@ -140,43 +170,19 @@ export default function SpaceComponent(props: SpaceComponentProps) {
     return () => {
       spaceEl.current?.removeEventListener('wheel', preventWheelDefault);
     }
-  }, [spaceEl.current]);
+  }, [spaceEl?.current]);
 
   useEffect(() => {
-    if (!scaleEvent || !spaceEl.current) return;
-
-    const center = {
-      x: cursor.x / scale,
-      y: cursor.y / scale,
-    };
-
-    const scale1 = Math.min(Math.max(.03125, scale + scaleEvent.deltaY * -0.008), 4)
-
-    const center1 = {
-      x: center.x * scale1,
-      y: center.y * scale1,
+    if (!spaceEl?.current) return;
+    const { scrollLeft, scrollTop } = spaceEl.current;
+    if (scroll.left !== scrollLeft || scroll.top !== scrollTop) {
+      spaceEl.current.scrollTo(scroll.left, scroll.top);
     }
+  }, [scroll, spaceEl.current])
 
-    setCursor(center1);
-
-    const left = center1.x - (scaleEvent.clientX - offsetLeft);
-    const top = center1.y - (scaleEvent.clientY - offsetTop);
-    
-    spaceEl.current.scrollTo({
-      left,
-      top,
-    });
-
-    dispatch(setScale({
-      space: props.space,
-      scale: scale1
-    }));
-
-    setScaleEvent(null);
-  }, [scaleEvent, spaceEl.current]);
 
   useEffect(() => {
-    if (!moveEvent || !spaceEl.current) return;
+    if (!moveEvent || !spaceEl?.current) return;
 
     const x = spaceEl.current.scrollLeft + moveEvent.clientX - offsetLeft;
     const y = spaceEl.current.scrollTop + moveEvent.clientY - offsetTop;
@@ -188,39 +194,63 @@ export default function SpaceComponent(props: SpaceComponentProps) {
       moveDrag(dx, dy);
     }
 
-    setCursor({
-      x,
-      y,
-    });
+    dispatch(setCursor({
+      space: props.space,
+      cursor: {
+        x,
+        y,
+      },
+    }));
 
     //publishCursor(x, y); TODO
 
     setMoveEvent(null);
   }, [moveEvent]);
 
-  useEffect(() => {
-    if (Object.keys(adjustTwigDetail.idToCoords).length && !drag.twigId) {
-      console.log('adjustment', adjustTwigDetail.idToCoords);
-      adjustTwigs(adjustTwigDetail.idToCoords);
-      adjustTwigVar({
-        idToCoords: {},
-      });
-    }
-  }, [adjustTwigDetail.idToCoords, drag.twigId])
   if (!abstract) return null;
 
   const handleWheel = (event: React.WheelEvent) => {
     if (event.ctrlKey || event.metaKey) {
-      if (!scaleEvent) {
-        setScaleEvent(event);
-        setIsScaling(true);
+      if (!spaceEl.current) return;
+
+      const { scrollLeft, scrollTop } = spaceEl.current;
+
+      if (scroll.left !== scrollLeft || scroll.top !== scrollTop) {
+        spaceEl.current.scrollTo({
+          left: scroll.left,
+          top: scroll.top,
+        });
       }
+
+      const center = {
+        x: cursor.x / scale,
+        y: cursor.y / scale,
+      };
+
+      const scale1 = Math.min(Math.max(.03125, scale + event.deltaY * -0.004), 4)
+
+      const left = props.space === 'FRAME'
+        ? Math.round((center.x * scale1) - (event.clientX - appBarWidth - menuWidth - focusWidth))
+        : Math.round((center.x * scale1) - (event.clientX - appBarWidth - menuWidth));
+      const top = Math.round(center.y * scale1 - (event.clientY - SPACE_BAR_HEIGHT));
+      
+      spaceEl.current.scrollTo({
+        left,
+        top,
+      });
+
+      setIsScaling(true);
+      updateScroll(left, top)
+      dispatch(setScale({
+        space: props.space,
+        scale: scale1
+      }));
     }
   };
 
   const moveDrag = (dx: number, dy: number, targetTwigId?: string) => {
     if (drag.isScreen) {
-      if (!spaceEl.current) return;
+      if (!spaceEl?.current) return;
       spaceEl.current.scrollBy(-1 * dx, -1 * dy)
       return;
     }
@@ -230,28 +260,15 @@ export default function SpaceComponent(props: SpaceComponentProps) {
     const dx1 = dx / scale;
     const dy1 = dy / scale;
 
-    dispatch(setDrag({
+    dispatch(moveTwigs({
       space: props.space,
-      drag: {
-        ...drag,
-        targetTwigId: targetTwigId || drag.targetTwigId,
-        dx: drag.dx + dx1,
-        dy: drag.dy + dy1,
-      }
+      twigIds: [
+        drag.twigId,
+        ...Object.keys(idToDescIdToTrue[drag.twigId] || {}),
+      ],
+      dx: dx1,
+      dy: dy1,
     }));
-
-    [drag.twigId, ...Object.keys(idToDescIdToTrue[drag.twigId] || {})].forEach(twigId => {
-      client.cache.modify({
-        id: client.cache.identify({
-          id: twigId,
-          __typename: 'Twig',
-        }),
-        fields: {
-          x: cachedVal => cachedVal + dx1,
-          y: cachedVal => cachedVal + dy1,
-        }
-      });
-    })
 
     if (canEdit) {
       //dragTwig(drag.twigId, dx1, dy1);
@@ -264,24 +281,136 @@ export default function SpaceComponent(props: SpaceComponentProps) {
       drag: {
         isScreen: false,
         twigId: '',
-        dx: 0,
-        dy: 0,
         targetTwigId: '',
+        targetDirection: DirectionType.NONE,
       }
     }));
 
-    if (!drag.twigId || (drag.dx === 0 && drag.dy === 0)) return;
+    if (!drag.twigId) return;
 
     if (canEdit) {
       if (drag.targetTwigId) {
-        //graftTwig(drag.twigId, drag.targetTwigId);
+        // const dragTwig = idToTwig[drag.twigId];
+        // const target = idToTwig[drag.targetTwigId];
+
+        // let parentTwigId;
+        // let rank;
+        // let displayMode;
+
+        // if (drag.targetDirection === DirectionType.NONE) {
+        //   parentTwigId = target.id;
+        //   rank = 1;
+        //   displayMode = target.displayMode;
+        // }
+        // else if (drag.targetDirection === DirectionType.DOWN) {
+        //   console.log('down');
+        //   if (target.displayMode === DisplayMode.VERTICAL) {
+        //     console.log('vertical');
+        //     parentTwigId = target.parent.id;
+        //     if (dragTwig.parent.id === parentTwigId && dragTwig.rank < target.rank) {
+        //       console.log('rank', target)
+        //       rank = target.rank;
+        //     }
+        //     else {
+        //       console.log('rank + 1')
+        //       rank = target.rank + 1;
+        //     }
+        //   }
+        //   else {
+        //     parentTwigId = target.id;
+        //     rank = 1;
+        //   }
+        //   displayMode = DisplayMode.VERTICAL;
+        // }
+        // else if (drag.targetDirection === DirectionType.RIGHT) {
+        //   if (target.displayMode === DisplayMode.HORIZONTAL) {
+        //     parentTwigId = target.parent.id;
+        //     if (dragTwig.parent.id === parentTwigId && dragTwig.rank < target.rank) {
+        //       rank = target.rank;
+        //     }
+        //     else {
+        //       rank = target.rank + 1;
+        //     }
+        //   }
+        //   else {
+        //     parentTwigId = target.id;
+        //     rank = 1;
+        //   }
+        //   displayMode = DisplayMode.HORIZONTAL;
+        // }
+        // else if (drag.targetDirection === DirectionType.UP) { 
+        //   parentTwigId = target.parent.id;
+        //   if (dragTwig.parent.id === parentTwigId && dragTwig.rank < target.rank) {
+        //     rank = target.rank - 1;
+        //   }
+        //   else {
+        //     rank = target.rank;
+        //   }
+        //   displayMode = DisplayMode.VERTICAL;
+        // }
+        // else { // drag.targetDirection === DirectionType.LEFT
+        //   parentTwigId = target.parent.id;
+        //   if (dragTwig.parent.id === parentTwigId && dragTwig.rank < target.rank) {
+        //     rank = target.rank - 1;
+        //   }
+        //   else {
+        //     rank = target.rank;
+        //   }
+        //   displayMode = DisplayMode.HORIZONTAL;
+        // }
+    
+        // const parentTwig = idToTwig[parentTwigId];
+        // if (dragTwig.tabId) {
+        //   if (parentTwig.windowId) {
+        //     graftTwig(drag.twigId, parentTwigId, rank, displayMode);
+        //   }
+        //   else {
+        //     copyTwig(drag.twigId, parentTwigId, rank, displayMode);
+        //   }
+        // }
+        // else if (dragTwig.groupId) {
+        //   if (parentTwig.windowId && !parentTwig.groupId) {
+        //     graftTwig(drag.twigId, parentTwigId, rank, displayMode);
+        //   }
+        //   else {
+        //     copyTwig(drag.twigId, parentTwigId, rank, displayMode);
+        //   }
+        // }
+        // else if (dragTwig.windowId) {
+        //   if (parentTwig.id === dragTwig.parent.id) {
+        //     graftTwig(drag.twigId, parentTwigId, rank, displayMode);
+        //   }
+        //   else {
+        //     copyTwig(drag.twigId, parentTwigId, rank, displayMode);
+        //   }
+        // }
+        // else if (dragTwig.bookmarkId) {
+        //   if (parentTwig.bookmarkId) {
+        //     graftTwig(drag.twigId, parentTwigId, rank, displayMode);
+        //   }
+        //   else {
+        //     copyTwig(drag.twigId, parentTwigId, rank, displayMode);
+        //   }
+        // }
+        // else if (dragTwig.detail.url) {
+        //   if (parentTwig.windowId || parentTwig.bookmarkId) {
+        //     copyTwig(drag.twigId, parentTwigId, rank, displayMode);
+        //   }
+        //   else {
+        //     graftTwig(drag.twigId, parentTwigId, rank, displayMode);
+        //   }
+        // }
+        // else {
+        //   graftTwig(drag.twigId, parentTwigId, rank, displayMode);
+        // }
       }
       else {
-        moveTwig(drag.twigId);
+        const pos = idToPos[drag.twigId]
+        moveTwig(drag.twigId, pos.x, pos.y, DisplayMode.SCATTERED);
       }
     }
     else {
-      dispatch(setFocusIsSynced(false));
+      // dispatch(setFocusIsSynced(false));
     }
   };
 
@@ -295,6 +424,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
         drag: {
           ...drag,
           targetTwigId: '',
+          targetDirection: DirectionType.NONE,
         },
       }));
     }
@@ -302,7 +432,27 @@ export default function SpaceComponent(props: SpaceComponentProps) {
     if (!moveEvent) {
       setMoveEvent(event);
     }
+    // if (!spaceEl.current) return; 
+    // const x = props.space === 'FRAME'
+    //   ? spaceEl.current.scrollLeft + event.clientX - appBarWidth - menuWidth - focusWidth
+    //   : spaceEl.current.scrollLeft + event.clientX - appBarWidth - menuWidth;
+    // const y = spaceEl.current.scrollTop + event.clientY - SPACE_BAR_HEIGHT + 1;
 
+    // const dx = x - cursor.x;
+    // const dy = y - cursor.y;
+
+    // if (dx !== 0 || dy !== 0){
+    //   moveDrag(dx, dy);
+    // }
+
+    // spaceDispatch({
+    //   type: 'setCursor',
+    //   cursor: {
+    //     x,
+    //     y,
+    //   },
+    // });
+    
   }
 
   const handleMouseUp = (event: React.MouseEvent) => {
@@ -322,23 +472,25 @@ export default function SpaceComponent(props: SpaceComponentProps) {
       },
     }));
 
-    if (isScaling) {
-      setIsScaling(false);
-    }
-    else if (!scaleEvent) {
-      const dx = left - scroll.left;
-      const dy = top - scroll.top;
+    const dx = left - scroll.left;
+    const dy = top - scroll.top;
 
-      setCursor({
+    dispatch(setCursor({
+      space: props.space,
+      cursor: {
         x: cursor.x + dx,
         y: cursor.y + dy,
-      });
-    }
-
+      },
+    }));
   }
 
   const handleScroll = (event: React.UIEvent) => {
-    updateScroll(event.currentTarget.scrollLeft, event.currentTarget.scrollTop);
+    if (isScaling) {
+      setIsScaling(false);
+    }
+    else {
+      updateScroll(event.currentTarget.scrollLeft, event.currentTarget.scrollTop);
+    }
   }
 
   const handleMouseDown = (event: React.MouseEvent) => {
@@ -347,250 +499,387 @@ export default function SpaceComponent(props: SpaceComponentProps) {
       drag: {
         isScreen: true,
         twigId: '',
-        dx: 0,
-        dy: 0,
         targetTwigId: '',
+        targetDirection: DirectionType.NONE,
       }
     }));
   }
 
-  const handleTargetMouseMove = (targetId: string) => (event: React.MouseEvent) => {
+  const handleTargetMouseMove = (targetId: string, direction: DirectionType) => (event: React.MouseEvent) => {
     event.stopPropagation();
-    if (drag.targetTwigId !== targetId) {
+    if (drag.targetTwigId !== targetId || drag.targetDirection !== direction) {
       dispatch(setDrag({
         space: props.space,
         drag: {
           ...drag,
           targetTwigId: targetId,
+          targetDirection: direction,
         },
       }));
     }
     handleMouseMove(event, targetId);
   }
-
-  const sheafs: JSX.Element[] = [];
-
-  Object.keys(sourceIdToTargetIdToLinkIdToTrue).forEach(sourceId => {
-    Object.keys(sourceIdToTargetIdToLinkIdToTrue[sourceId]).forEach(targetId => {
-      const links = Object.keys(sourceIdToTargetIdToLinkIdToTrue[sourceId][targetId]).map(linkId => {
-        return client.cache.readFragment({
-          id: client.cache.identify({
-            id: linkId,
-            __typename: 'Arrow'
-          }),
-          fragment: FULL_ARROW_FIELDS,
-          fragmentName: 'FullArrowFields',
-        }) as Arrow;
-      });
-
-      sheafs.push(
-        <Sheaf
-          key={`sheaf-${sourceId}-${targetId}`}
-          user={props.user}
-          abstract={abstract}
-          space={props.space}
-          links={links}
-          canEdit={canEdit}
-        />
-      )
-    })
-  })
-
-  const adjusted: IdToCoordsType = {};
+ 
+  // const adjusted: IdToCoordsType = {};
+  const twigMarkers: JSX.Element[] = [];
   const twigs: JSX.Element[] = [];
-  Object.keys(twigIdToTrue).forEach(twigId => {
-    const twig = client.cache.readFragment({
-      id: client.cache.identify({
-        id: twigId,
-        __typename: 'Twig',
-      }),
-      fragment: FULL_TWIG_FIELDS,
-      fragmentName: 'FullTwigFields'
-    }) as Twig;
 
-    if (!twig) return;
+  const dropTargets: JSX.Element[] = [];
 
-    let x: number;
-    let y: number;
-    if (twig.detail.sourceId !== twig.detail.targetId) {
-      const sourceTwig = client.cache.readFragment({
-        id: client.cache.identify({
-          id: detailIdToTwigId[twig.detail.sourceId],
-          __typename: 'Twig',
-        }),
-        fragment: TWIG_WITH_XY,
-      }) as Twig;
-      const targetTwig = client.cache.readFragment({
-        id: client.cache.identify({
-          id: detailIdToTwigId[twig.detail.targetId],
-          __typename: 'Twig',
-        }),
-        fragment: TWIG_WITH_XY,
-      }) as Twig;
+  const idToPos1: IdToType<PosType> = {};
+  Object.keys(idToPos).forEach(twigId => {
+    const twig = idToTwig[twigId];
+    const pos = idToPos[twigId];
 
-      x = Math.round((sourceTwig.x + targetTwig.x) / 2);
-      y = Math.round((sourceTwig.y + targetTwig.y) / 2);
+    if (!twig || twig.deleteDate || !pos) return;
 
-      if (x !== twig.x || y !== twig.y) {
-        const dx = x - twig.x;
-        const dy = y - twig.y;
-        [twig.id, ...Object.keys(idToDescIdToTrue[twig.id] || {})].forEach(descId => {
-          const id = client.cache.identify({
-            id: descId,
-            __typename: 'Twig',
-          });
-          client.cache.modify({
-            id,
-            fields: {
-              x: cachedVal => cachedVal + dx,
-              y: cachedVal => cachedVal + dy,
-            }
-          });
-          const desc = client.cache.readFragment({
-            id,
-            fragment: TWIG_WITH_XY,
-          }) as Twig;
-          adjusted[descId] = {
-            x: desc.x,
-            y: desc.y,
-          };
+    const parentTwig = idToTwig[twig.parent?.id];
+
+    if (parentTwig && !parentTwig.deleteDate) {
+      const parentPos = idToPos[twig.parent.id];
+
+      if (
+        parentPos &&
+        (twig.displayMode === DisplayMode.SCATTERED || (pos.x !== 0 && pos.y !== 0))
+      ) {
+        twigMarkers.push(
+          <PostTwigMarker
+            key={`post-twig-marker-${twigId}`}
+            twig={twig}
+            pos={pos}
+            parentPos={parentPos}
+          />
+        );
+      }
+    }
+
+
+    if (
+      drag.twigId &&
+      twig.id !== drag.twigId && 
+      !Object.keys(idToDescIdToTrue[drag.twigId] || {}).some(descId => descId === twig.id)
+    ) {
+      const dragTwig = idToTwig[drag.twigId];
+
+      if (
+        (!dragTwig.windowId && !dragTwig.bookmarkId) ||
+        (dragTwig.tabId && (!twig.bookmarkId || !idToArrow[twig.detailId].url)) ||
+        (dragTwig.groupId && !twig.groupId && (!twig.bookmarkId || !idToArrow[twig.detailId].url)) ||
+        (dragTwig.windowId && !twig.windowId && (!twig.bookmarkId || !idToArrow[twig.detailId].url)) ||
+        (dragTwig.bookmarkId && (!twig.bookmarkId || !idToArrow[twig.detailId].url))
+      ) {
+        dropTargets.push(
+          <Box 
+            key={'twig-main-droptarget-' + twig.id} 
+            onMouseMove={handleTargetMouseMove(twig.id, DirectionType.NONE)} 
+            sx={{
+              position: 'absolute',
+              left: pos.x + VIEW_RADIUS,
+              top: pos.y + VIEW_RADIUS,
+              zIndex: MAX_Z_INDEX + twig.z,
+              width: TWIG_WIDTH,
+              height: idToHeight[twig.id],
+              backgroundColor: getTwigColor(twig.color || twig.user?.color),
+              opacity: drag.targetTwigId === twig.id && drag.targetDirection === DirectionType.NONE
+                ? 0.4
+                : 0,
+              borderRadius: 2,
+              border: `2px solid ${color}`,
+            }}
+          />
+        )  
+      }
+
+      if (twig.displayMode === DisplayMode.HORIZONTAL) {
+        if (
+          (!dragTwig.windowId && !dragTwig.bookmarkId) ||
+          dragTwig.tabId ||
+          (dragTwig.groupId && !parentTwig.groupId) ||
+          (dragTwig.windowId && !parentTwig.windowId) ||
+          (dragTwig.bookmarkId && (!parentTwig.bookmarkId || !idToArrow[parentTwig.detailId].url))
+        ) {
+          dropTargets.push(
+            <Box 
+              key={'twig-left-droptarget-' + twig.id} 
+              onMouseMove={handleTargetMouseMove(twig.id, DirectionType.LEFT)} 
+              sx={{
+                position: 'absolute',
+                left: pos.x + VIEW_RADIUS - 50,
+                top: pos.y + VIEW_RADIUS,
+                zIndex: MAX_Z_INDEX + twig.z ,
+                width: 100,
+                height: idToHeight[twig.id],
+                backgroundColor: getTwigColor(twig.color || twig.user?.color),
+                opacity: drag.targetTwigId === twig.id && drag.targetDirection === DirectionType.LEFT
+                  ? 0.4
+                  : 0,
+                borderRadius: 2,
+                border: `2px solid ${color}`,
+              }}
+            />
+          );
+        }
+      }
+      if (twig.displayMode === DisplayMode.VERTICAL) {
+        if (
+          (!dragTwig.windowId && !dragTwig.bookmarkId) ||
+          (dragTwig.tabId && (!parentTwig.bookmarkId || !idToArrow[parentTwig.detailId].url)) ||
+          (dragTwig.groupId && !parentTwig.groupId && (!parentTwig.bookmarkId || !idToArrow[parentTwig.detailId].url)) ||
+          (dragTwig.windowId && !parentTwig.windowId && (!parentTwig.bookmarkId || !idToArrow[parentTwig.detailId].url)) ||
+          (dragTwig.bookmarkId && (!parentTwig.bookmarkId || !idToArrow[parentTwig.detailId].url))
+        ) {
+          dropTargets.push(
+            <Box 
+              key={'twig-up-droptarget-' + twig.id} 
+              onMouseMove={handleTargetMouseMove(twig.id, DirectionType.UP)} 
+              sx={{
+                position: 'absolute',
+                left: pos.x + VIEW_RADIUS,
+                top: pos.y + VIEW_RADIUS - 50,
+                zIndex:MAX_Z_INDEX + twig.z,
+                width: TWIG_WIDTH,
+                height: 100,
+                backgroundColor: getTwigColor(twig.color || twig.user?.color),
+                opacity: drag.targetTwigId === twig.id && drag.targetDirection === DirectionType.UP
+                ? 0.4
+                : 0,
+                borderRadius: 2,
+                border: `2px solid ${color}`,
+              }}
+            />
+          );
+        }
+      }
+      let rightParent = twig.displayMode === DisplayMode.HORIZONTAL 
+        ? parentTwig 
+        : twig;
+      if (
+        (!dragTwig.windowId && !dragTwig.bookmarkId) ||
+        (dragTwig.tabId && (!rightParent.bookmarkId || !idToArrow[rightParent.detailId].url)) ||
+        (dragTwig.groupId && !rightParent.groupId && (!rightParent.bookmarkId || !idToArrow[rightParent.detailId].url)) ||
+        (dragTwig.windowId && !rightParent.windowId && (!rightParent.bookmarkId || !idToArrow[rightParent.detailId].url)) ||
+        (dragTwig.bookmarkId && (!rightParent.bookmarkId || !idToArrow[rightParent.detailId].url))
+      ) {
+        dropTargets.push(
+          <Box 
+            key={'twig-right-droptarget-' + twig.id} 
+            onMouseMove={handleTargetMouseMove(twig.id, DirectionType.RIGHT)} 
+            sx={{
+              position: 'absolute',
+              left: pos.x + VIEW_RADIUS + TWIG_WIDTH - 50,
+              top: pos.y + VIEW_RADIUS,
+              zIndex: MAX_Z_INDEX + twig.z,
+              width: 100,
+              height: idToHeight[twig.id],
+              backgroundColor: getTwigColor(twig.color || twig.user?.color),
+              opacity: drag.targetTwigId === twig.id && drag.targetDirection === DirectionType.RIGHT
+                ? 0.4
+                : 0,
+              borderRadius: 2,
+              border: `2px solid ${color}`,
+            }}
+          />
+        );
+      }
+      let downParent = twig.displayMode === DisplayMode.VERTICAL
+        ? parentTwig
+        : twig;
+      if (
+        (!dragTwig.windowId && !dragTwig.bookmarkId) ||
+        (dragTwig.tabId && (!downParent.bookmarkId || !idToArrow[downParent.detailId].url)) ||
+        (dragTwig.groupId && !downParent.groupId && (!downParent.bookmarkId || !idToArrow[downParent.detailId].url)) ||
+        (dragTwig.windowId && !downParent.windowId && (!downParent.bookmarkId || !idToArrow[downParent.detailId].url)) ||
+        (dragTwig.bookmarkId && (!downParent.bookmarkId || !idToArrow[downParent.detailId].url))
+      ) {
+        dropTargets.push(
+          <Box 
+            key={'twig-down-droptarget-' + twig.id} 
+            onMouseMove={handleTargetMouseMove(twig.id, DirectionType.DOWN)} 
+            sx={{
+              position: 'absolute',
+              left: pos.x + VIEW_RADIUS,
+              top: pos.y + VIEW_RADIUS + idToHeight[twig.id] - 50,
+              zIndex: MAX_Z_INDEX + twig.z,
+              width: TWIG_WIDTH,
+              height: 100,
+              backgroundColor: getTwigColor(twig.color || twig.user?.color),
+              opacity: drag.targetTwigId === twig.id && drag.targetDirection === DirectionType.DOWN
+                ? 0.4
+                : 0,
+              borderRadius: 2,
+              border: `2px solid ${color}`,
+            }}
+          />
+        )
+      }
+    }
+
+    if (twig.displayMode !== DisplayMode.SCATTERED) return;
+
+    if (twig.sourceId !== twig.targetId) {
+      const sourceTwig = twig.sourceId
+        ? idToTwig[twig.sourceId]
+        : null;
+      const targetTwig = twig.targetId
+        ? idToTwig[twig.targetId]
+        : null;
+
+      if (
+        !sourceTwig || 
+        sourceTwig.deleteDate || 
+        !targetTwig || 
+        targetTwig.deleteDate
+      ) return;
+
+      const sourcePos = twig.sourceId
+        ? idToPos[twig.sourceId]
+        : null;
+      const targetPos = twig.targetId
+        ? idToPos[twig.targetId]
+        : null;
+
+      const x = Math.round(((sourcePos?.x ?? 0) + (targetPos?.x ?? 0)) / 2);
+      const y = Math.round(((sourcePos?.y ?? 0) + (targetPos?.y ?? 0)) / 2);
+
+      if (x !== pos.x || y !== pos.y) {
+        const dx = x - pos.x;
+        const dy = y - pos.y;
+        [
+          twigId, 
+          ...Object.keys(idToDescIdToTrue[twigId] || {})
+        ].forEach(descId => {
+          const descPos = idToPos[descId];
+
+          idToPos1[descId] = {
+            x: descPos.x + dx,
+            y: descPos.y + dy,
+          }
         })
       }
+      twigs.push(
+        <Box key={`twig-${twigId}`} sx={{
+          position: 'absolute',
+          left: x + VIEW_RADIUS,
+          top: y + VIEW_RADIUS,
+          zIndex: twig.z,
+          pointerEvents: 'none',
+        }}>
+          <LinkTwig twig={twig} />
+        </Box>
+      );
+
+      twigMarkers.push(
+        <LinkTwigMarker
+          key={`link-twig-marker-${twigId}`}
+          twig={twig}
+          sourcePos={sourcePos}
+          targetPos={targetPos}
+        />
+      );
     }
     else {
-      x = twig.x;
-      y = twig.y;
+      twigs.push(
+        <Box key={`twig-${twigId}`} sx={{
+          position: 'absolute',
+          left: pos.x + VIEW_RADIUS,
+          top: pos.y + VIEW_RADIUS,
+          zIndex: twig.z,
+          pointerEvents: 'none',
+        }}>
+          <PostTwig twig={twig} />
+        </Box>
+      );
     }
-
-    twigs.push(
-      <Box key={`twig-${twigId}`} sx={{
-        position: 'absolute',
-        left: x + VIEW_RADIUS,
-        top: y + VIEW_RADIUS,
-        zIndex: twig.z,
-      }}>
-        <TwigComponent
-          user={props.user}
-          space={props.space}
-          role={role}
-          abstract={abstract}
-          twig={twig}
-          canEdit={canEdit}
-          canPost={canPost}
-          canView={canView}
-          setTouches={setTouches}
-        />
-      </Box>
-    )
   });
 
-  if (Object.keys(adjusted).length) {
-    adjustTwigVar({
-      idToCoords: {
-        ...adjustTwigDetail.idToCoords,
-        ...adjusted,
-      }
-    })
+  if (Object.keys(idToPos1).length) {
+    dispatch(mergeIdToPos({
+      space: props.space,
+      idToPos: idToPos1,
+    }));
   }
 
   const w = 2 * VIEW_RADIUS;
   const h = 2 * VIEW_RADIUS;
   return (
-    <Box 
-      ref={spaceEl}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      onScroll={handleScroll}
-      onWheel={handleWheel}
-      onTouchEnd={handleTouchEnd}
-      sx={{
-        position: 'relative',
-        top: `${SPACE_BAR_HEIGHT}px`,
-        height: `calc(100% - ${SPACE_BAR_HEIGHT}px)`,
-        width: '100%',
-        overflow: 'scroll',
-      }}
-    >
-      <Box 
-        onMouseMove={handleMouseMove}
+    <SpaceContext.Provider value={{
+      abstract,
+      space: props.space,
+      canEdit,
+      canPost,
+      canView,
+      pendingLink,
+      setPendingLink,
+      removalTwigId,
+      setRemovalTwigId,
+    }}>
+      <Box
+        ref={spaceEl}
+        onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
+        onMouseMove={handleMouseMove}
+        onWheel={handleWheel}
+        onScroll={handleScroll}
         sx={{
-          width: w * (scale < 1 ? scale : 1),
-          height: h * (scale < 1 ? scale : 1),
           position: 'relative',
-          cursor: drag.isScreen || drag.twigId
-            ? 'grabbing'
-            : 'grab',
-          transform: `scale(${scale})`,
-          transformOrigin: '0 0'
+          top: `${SPACE_BAR_HEIGHT}px`,
+          height: `calc(100% - ${SPACE_BAR_HEIGHT}px)`,
+          width: '100%',
+          overflow: 'scroll',
         }}
       >
-        <svg viewBox={`0 0 ${w} ${h}`} style={{
-          width: w,
-          height: h,
-        }}>
-          <defs>
-            {
-              Object.keys(userIdToTrue).map(userId => {
-                const user = client.cache.readFragment({
-                  id: client.cache.identify({
-                    id: userId,
-                    __typename: 'User',
-                  }),
-                  fragment: gql`
-                    fragment UserWithColor on User {
-                      id
-                      color
-                    }
-                  `,
-                }) as User;
-                return (
-                  <marker 
-                    key={`marker-${userId}`}
-                    id={`marker-${userId}`} 
-                    markerWidth='6'
-                    markerHeight='10'
-                    refX='7'
-                    refY='5'
-                    orient='auto'
-                  >
-                    <polyline 
-                      points='0,0 5,5 0,10'
-                      fill='none'
-                      stroke={user.color}
-                    />
-                  </marker>
-                )
-              })
-            }
-          </defs>
-          {
-            Object.keys(twigIdToTrue).map(twigId => {
-              const twig = client.cache.readFragment({
-                id: client.cache.identify({
-                  id: twigId,
-                  __typename: 'Twig',
-                }),
-                fragment: TWIG_WITH_POS,
-              }) as Twig;
-              if (twig.deleteDate || !twig.parent || twig.detailId === abstract.id) return null;
-              return (
-                <line 
-                  key={`twig-line-${twigId}`}
-                  x1={(twig.parent?.x ?? NaN) + VIEW_RADIUS}
-                  y1={(twig.parent?.y ?? NaN) + VIEW_RADIUS}
-                  x2={twig.x + VIEW_RADIUS}
-                  y2={twig.y + VIEW_RADIUS}
-                  stroke={mode === 'dark' ? 'white' : 'black'}
-                  strokeWidth={4}
-                />
-              )
-            })
-          }
-          { sheafs }
-        </svg>
-        { twigs }
+        <Box
+          sx={{
+            width: w * (scale < 1 ? scale : 1),
+            height: h * (scale < 1 ? scale : 1),
+            position: 'relative',
+            cursor: drag.isScreen || drag.twigId
+              ? 'grabbing'
+              : 'grab',
+            transform: `scale(${scale})`,
+            transformOrigin: '0 0'
+          }}
+        >
+          <svg viewBox={`0 0 ${w} ${h}`} style={{
+            width: w,
+            height: h,
+          }}>
+            <defs>
+              {
+                Object.keys(idToUser).map(userId => {
+                  const user = idToUser[userId];
+                  return (
+                    <marker 
+                      key={`marker-${userId}`}
+                      id={`marker-${userId}`} 
+                      markerWidth='6'
+                      markerHeight='10'
+                      refX='7'
+                      refY='5'
+                      orient='auto'
+                    >
+                      <polyline 
+                        points='0,0 5,5 0,10'
+                        fill='none'
+                        stroke={user?.color}
+                      />
+                    </marker>
+                  )
+                })
+              }
+            </defs>
+            { twigMarkers }
+          </svg>
+          { twigs }
+          { dropTargets }
+        </Box>
+        <SpaceControls
+          setShowSettings={setShowSettings}
+          setShowRoles={setShowRoles}
+        />
+        <SpaceNav />
+        <RemoveTwigDialog />
       </Box>
-    </Box>
+    </SpaceContext.Provider>
   );
 }

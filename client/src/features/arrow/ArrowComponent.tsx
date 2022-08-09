@@ -1,38 +1,29 @@
-import { useApolloClient } from '@apollo/client';
-import { Box, Link } from '@mui/material';
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { SpaceType } from '../space/space';
-import { Arrow } from './arrow';
-import { getColor, getTimeString } from '../../utils';
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { selectSpace } from '../space/spaceSlice';
-import UserTag from '../user/UserTag';
-import { MOBILE_WIDTH } from '../../constants';
-import { selectMode, selectWidth } from '../window/windowSlice';
-import { setMenuMode } from '../menu/menuSlice';
-import { User } from '../user/user';
+import { Box, Icon, Link, Typography } from '@mui/material';
+import type React from 'react';
+import { selectArrow } from './arrowSlice';
+import { useContext } from 'react';
 import ArrowEditor from './ArrowEditor';
+import { AppContext } from '../../App';
+import { useAppSelector } from '../../app/hooks';
+import { getTimeString } from '../../utils';
+import { TWIG_WIDTH } from '../../constants';
+import UserTag from '../user/UserTag';
+import ArrowVoter from './ArrowVoter';
 
 interface ArrowProps {
-  user: User | null;
-  space: SpaceType | null;
-  abstract: Arrow;
-  arrow: Arrow;
+  arrowId: string;
   instanceId: string;
+  isWindow: boolean;
+  isGroup: boolean;
+  isTab: boolean;
 }
 
 export default function ArrowComponent(props: ArrowProps) {
-  const navigate = useNavigate();
-  const client = useApolloClient();
+  const { dimColor } = useContext(AppContext);
 
-  const width = useAppSelector(selectWidth);
-  const mode = useAppSelector(selectMode);
-  const color = getColor(mode, true);
-  const space = useAppSelector(selectSpace);
-  
+  const arrow = useAppSelector(state => selectArrow(state, props.arrowId));
+
   //useAppSelector(state => selectInstanceById(state, props.instanceId)); // rerender on instance change
-  const dispatch = useAppDispatch();
 
   // useEffect(() => {
   //   dispatch(addInstance({
@@ -46,56 +37,40 @@ export default function ArrowComponent(props: ArrowProps) {
   //   };
   // }, []);
 
-  const handleJamClick = (event: React.MouseEvent) => {
-    event.stopPropagation();
+  if (!arrow) return null;
 
-    /*
-    if (arrow.jamId === user?.frameId && space !== 'FRAME') {
-      const route = `/u/${user.frame?.routeName}`;
-      navigate(route);
-    }
-    else if (arrow.jamId !== user?.focusId || space !== 'FOCUS') {
-      const route = `/${arrow.jam.userId ? 'u' : 'j'}/${arrow.jam.routeName}`;
-      dispatch(setFocusRouteName(route))
-      navigate(route);
-    }
-    */
-    if (width < MOBILE_WIDTH) {
-      dispatch(setMenuMode({
-        mode: '',
-        toggle: false
-      }));
-    }
-  }
-
-  const handleMouseDown = (event: React.MouseEvent) => {
-    event.stopPropagation();
-  }
-
-  const time = new Date(props.arrow.removeDate || props.arrow.commitDate || props.arrow.saveDate || Date.now()).getTime();
+  const time = new Date(arrow.removeDate || arrow.commitDate || arrow.saveDate || Date.now()).getTime();
   const timeString = getTimeString(time);
 
   return (
     <Box sx={{
       margin:1,
+      position: 'relative',
     }}>
       <Box sx={{
+        position: 'absolute',
+        left: -35,
+        top: -10,
+      }}>
+        <ArrowVoter arrow={arrow} />
+      </Box>
+      <Box sx={{
         fontSize: 14,
-        color,
+        color: dimColor,
         paddingBottom: '4px',
       }}>
-        <UserTag user={props.user} tagUser={props.arrow.user} />
+        <UserTag user={arrow.user} />
         { ' ' }
         { timeString }
         {
-          props.arrow.removeDate
+          arrow.removeDate
             ? ' (deleted)'
-            : props.arrow.commitDate 
+            : arrow.commitDate 
               ? ' (committed)'
               : null
         }
         {
-          // props.arrow.ownerArrow.id === props.abstract?.id
+          // arrow.ownerArrow.id === props.abstract?.id
           //   ? null
           //   : <Box sx={{
           //       marginTop: 1,
@@ -112,20 +87,50 @@ export default function ArrowComponent(props: ArrowProps) {
           //     </Box>
         }
       </Box>
-      <Box>
+      <Box sx={{
+        width: TWIG_WIDTH - 60,
+      }}>
         {
-          props.arrow.draft
-            ?  <ArrowEditor
-                user={props.user}
-                space={props.space}
-                arrow={props.arrow}
+          !arrow.url && !arrow.title
+            ? <ArrowEditor
+                arrow={arrow}
                 isReadonly={false}
                 instanceId={props.instanceId}
               />
-            : <Box>
-                {props.arrow.title}
-                <br/>
-                {props.arrow.url}
+            : <Box sx={{
+                paddingTop: '5px',
+              }}>
+                <Typography fontWeight='bold' fontSize={20} sx={{
+                  whiteSpace: 'pre-wrap',
+                  wordWrap: 'break-word',
+                }}>
+                  {
+                    arrow.faviconUrl
+                      ? <Box component='img' src={arrow.faviconUrl} sx={{
+                          display: 'inline-block',
+                          width: 20,
+                          height: 20,
+                          marginRight: 1,
+                        }}/> 
+                      : null
+                  }
+                  {arrow.title}
+                </Typography>
+                {
+                  arrow.url
+                    ? <Box>
+                        <Link component='button' sx={{
+                          cursor: 'pointer',
+                          whiteSpace: 'pre-wrap',
+                          width: '100%',
+                          wordWrap: 'break-word',
+                          textAlign: 'left',
+                        }}>
+                          {arrow.url}
+                        </Link>
+                      </Box>
+                    : null
+                }
               </Box>
         }
 

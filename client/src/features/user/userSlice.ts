@@ -1,65 +1,101 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../../app/store';
-import { Arrow } from '../arrow/arrow';
+import type { IdToType } from '../../types';
+import { setInit, setLogin, setLogout } from '../auth/authSlice';
 import { SpaceType } from '../space/space';
-import { Twig } from '../twig/twig';
-import { IdToTrueType } from './user';
-
+import { mergeTwigs } from '../twig/twigSlice';
+import type { User } from './user';
 
 export interface UserState {
-  userId: string;
-  FRAME: {
-    userIdToTrue: IdToTrueType;
+  currentUser: User | null;
+  [SpaceType.FRAME]: {
+    idToUser: IdToType<User>;
   };
-  FOCUS: {
-    userIdToTrue: IdToTrueType;
+  [SpaceType.FOCUS]: {
+    idToUser: IdToType<User>;
   };
 }
 
 const initialState: UserState = {
-  userId: '',
-  FRAME: {
-    userIdToTrue: {},
+  currentUser: null,
+  [SpaceType.FRAME]: {
+    idToUser: {},
   },
-  FOCUS: {
-    userIdToTrue: {},
+  [SpaceType.FOCUS]: {
+    idToUser: {},
   },
 };
 
-export const userSlice = createSlice({
+const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    setUserId: (state, action: PayloadAction<string>) => {
+    setCurrentUser: (state, action: PayloadAction<User | null>) => {
       return {
         ...state,
-        userId: action.payload,
-      };
-    },
-    addTwigUsers: (state, action: PayloadAction<{space: SpaceType, twigs: Twig[]}>) => {
-      return {
-        ...state,
-        [action.payload.space]: {
-          userIdToTrue: action.payload.twigs.reduce((acc, twig) => {
-            acc[twig.userId] = true;
-            acc[twig.detail.userId] = true;
-            return acc;
-          }, { ...state[action.payload.space].userIdToTrue })
-        }
+        currentUser: action.payload,
       }
     },
     resetUsers: (state, action: PayloadAction<SpaceType>) => {
       return {
         ...state,
-        [action.payload]: initialState[action.payload]
+        [action.payload]: {
+          idToUser: {},
+        }
       };
     },
   },
+  extraReducers: builder => {
+    builder
+      .addCase(setInit, (state, action) => {
+        if (!action.payload) {
+          return initialState;
+        }
+      })
+      .addCase(setLogin, (state, action) => {
+        return {
+          ...initialState,
+          currentUser: action.payload,
+        };
+      })
+      .addCase(setLogout, () => {
+        return initialState;
+      })
+      .addCase(mergeTwigs, (state, action) => {
+        const idToUser = action.payload.twigs.reduce((acc, twig) => {
+          if (!twig.deleteDate) {
+            acc[twig.userId] = Object.assign({}, 
+              acc[twig.userId], 
+              twig.user
+            );
+            if (twig.detail) {
+              acc[twig.detail.userId] = Object.assign({}, 
+                acc[twig.detail.userId], 
+                twig.detail.user
+              );
+            }
+          }
+          return acc;
+        }, { 
+          ...state[action.payload.space].idToUser
+        });
+
+        return {
+          ...state,
+          [action.payload.space]: {
+            idToUser,
+          }
+        };
+      });
+  },
 });
 
-export const { setUserId, addTwigUsers, resetUsers } = userSlice.actions;
+export const {
+  setCurrentUser,
+  resetUsers,
+} = userSlice.actions;
 
-export const selectUserId = (state: RootState) => state.user.userId;
-export const selectUserIdToTrue = (space: SpaceType) => (state: RootState) => state.user[space].userIdToTrue;
+export const selectCurrentUser = (state: RootState) => state.user.currentUser;
+export const selectIdToUser = (space: SpaceType) => (state: RootState) => state.user[space].idToUser;
 
 export default userSlice.reducer

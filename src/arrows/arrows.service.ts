@@ -18,6 +18,8 @@ import { WindowEntry } from 'src/twigs/dto/window-entry.dto';
 import { GroupEntry } from 'src/twigs/dto/group-entry.dto';
 import { Entry, TabEntry } from 'src/twigs/dto/tab-entry.dto';
 import { BookmarkEntry } from 'src/twigs/dto/bookmark-entry.dto';
+import { convertFromRaw } from 'draft-js';
+import { ABSTRACT_ARROW_FIELDS } from 'client/src/features/arrow/arrowFragments';
 
 @Injectable()
 export class ArrowsService {
@@ -164,6 +166,34 @@ export class ArrowsService {
 
   async saveArrows(arrows: Arrow[]) {
     return this.arrowsRepository.save(arrows);
+  }
+
+  async saveArrow(user: User, arrowId: string, draft: string) {
+    const arrow = await this.arrowsRepository.findOne({ 
+      where: {
+        id: arrowId 
+      }
+    });
+
+    if (!arrow) {
+      throw new BadRequestException('This arrow does not exist');
+    }
+    if (arrow.userId !== user.id) {
+      throw new BadRequestException('You do not have permission to edit this arrow');
+    }
+
+    const contentState = convertFromRaw(JSON.parse(draft));
+    const text = contentState.getPlainText('\n');
+
+    arrow.draft = draft;
+    arrow.text = text;
+    arrow.saveDate = new Date();
+
+    const arrow1 = await this.arrowsRepository.save(arrow);
+
+    this.searchService.saveArrows([arrow1]);
+
+    return arrow1;
   }
 
   async linkArrows(user: User, abstract: Arrow, sourceId: string, targetId: string) {

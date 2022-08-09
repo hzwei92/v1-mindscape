@@ -1,69 +1,48 @@
 import { Box, Card, createTheme, IconButton, Link, Theme, ThemeProvider } from '@mui/material';
-import React, { useEffect, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { MAX_Z_INDEX, MOBILE_WIDTH, SPACE_BAR_HEIGHT } from '../../constants';
+import React, { useContext, useEffect, useState } from 'react';
+import { useAppDispatch } from '../../app/hooks';
+import { MAX_Z_INDEX, SPACE_BAR_HEIGHT } from '../../constants';
 import { useNavigate } from 'react-router-dom';
-import { selectMode, selectWidth } from '../window/windowSlice';
-import { User } from '../user/user';
-import { selectIsOpen, selectSpace } from '../space/spaceSlice';
-import { selectMenuIsResizing, selectMenuMode, selectMenuWidth } from '../menu/menuSlice';
-import { selectFrameIsResizing, selectFrameWidth } from '../frame/frameSlice';
 import SpaceComponent from '../space/SpaceComponent';
 import CloseIcon from '@mui/icons-material/Close';
-import { getAppbarWidth } from '../../utils';
+import { AppContext } from '../../App';
+import { SpaceType } from '../space/space';
 
-interface FocusComponentProps {
-  user: User;
-}
-
-export default function FocusComponent(props: FocusComponentProps) {
+export default function FocusComponent() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
-  const mode = useAppSelector(selectMode);
-  const width = useAppSelector(selectWidth);
+  const { 
+    user,
+    width,
+    height,
+    palette,
+    dimColor: color,
+    menuIsResizing,
+    focusWidth,
+  } = useContext(AppContext);
 
-  const menuMode = useAppSelector(selectMenuMode);
-  const menuIsResizing = useAppSelector(selectMenuIsResizing);
-  const menuWidth = useAppSelector(selectMenuWidth);
-  const menuWidth1 = menuMode
-    ? menuWidth
-    : 0;
-
-  const frameIsOpen = useAppSelector(selectIsOpen('FRAME'));
-  const frameIsResizing = useAppSelector(selectFrameIsResizing);
-  const frameWidth = useAppSelector(selectFrameWidth);
-  const frameWidth1 = frameIsOpen
-    ? frameWidth
-    : 0;
-
-  const focusIsOpen = useAppSelector(selectIsOpen('FOCUS'));
-  const focusWidth = width - getAppbarWidth(width) - menuWidth1 - frameWidth1;
-  const focusWidth1 = focusIsOpen
-    ? focusWidth
-    : 0;
-
-  const space = useAppSelector(selectSpace);
+  const spaceIsResizing = false;
 
   const [theme, setTheme] = useState(null as Theme | null);
 
   useEffect(() => {
-    if (!props.user?.focusId) return;
+    if (!user?.focusId) return;
     setTheme(createTheme({
       palette: {
         primary: {
-          main: props.user.focus?.color || '',
+          main: user.focus?.color || '',
         },
-        mode,
+        mode: palette,
       },
       zIndex: {
         modal: MAX_Z_INDEX + 1000,
         snackbar: MAX_Z_INDEX + 10000
       },
     }));
-  }, [props.user?.focus?.color, mode]);
+  }, [user?.focus?.color, palette]);
 
-  if (!theme || !props.user) return null;
+  if (!theme || !user) return null;
 
   const handleClick = () => {
     console.log('focus');
@@ -77,11 +56,9 @@ export default function FocusComponent(props: FocusComponentProps) {
     <ThemeProvider theme={theme}>
       <Box onClick={handleClick} sx={{
         position: 'relative',
-        width: width < MOBILE_WIDTH && (space === 'FRAME' || menuMode)
-          ? 0
-          : focusWidth1,
+        width: focusWidth,
         height: '100%',
-        transition: menuIsResizing || frameIsResizing
+        transition: menuIsResizing || spaceIsResizing
           ? 'none'
           : 'width 0.5s',
         display: 'flex',
@@ -102,7 +79,7 @@ export default function FocusComponent(props: FocusComponentProps) {
             borderTopRightRadius: 0,
             width: focusWidth,
             height: `${SPACE_BAR_HEIGHT - 2}px`,
-            transition: menuIsResizing || frameIsResizing
+            transition: menuIsResizing || spaceIsResizing
               ? 'none'
               : 'width 0.5s',
           }}>
@@ -122,7 +99,7 @@ export default function FocusComponent(props: FocusComponentProps) {
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  m/{props.user.focus?.routeName}
+                  m/{user.focus?.routeName}
                 </Link>
               </Box>
             </Box>
@@ -131,7 +108,7 @@ export default function FocusComponent(props: FocusComponentProps) {
               flexDirection: 'column',
               justifyContent: 'center',
               margin: 1,
-              display: frameIsOpen
+              display: false
                 ? 'flex'
                 : 'none',
             }}>
@@ -143,7 +120,7 @@ export default function FocusComponent(props: FocusComponentProps) {
             </Box>
           </Card>
         </Box>
-        <SpaceComponent user={props.user} space={'FOCUS'}/>
+        <SpaceComponent space={SpaceType.FOCUS}/>
       </Box>
     </ThemeProvider>
   );

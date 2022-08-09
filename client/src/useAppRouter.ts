@@ -1,54 +1,20 @@
-import { useApolloClient, useReactiveVar } from '@apollo/client';
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from './app/hooks';
-import { selectIsOpen, setIsOpen, setSpace } from './features/space/spaceSlice';
 import { Role } from './features/role/role';
 import { User } from './features/user/user';
 import useSetUserFocus from './features/user/useSetUserFocus';
-import { setFrameWidth } from './features/frame/frameSlice';
-import { selectMenuMode, selectMenuWidth } from './features/menu/menuSlice';
-import { selectWidth } from './features/window/windowSlice';
-import { checkPermit, getAppbarWidth } from './utils';
-import { selectSelectArrowId, setSelectArrowId } from './features/arrow/arrowSlice';
+import { checkPermit } from './utils';
 import useCenterTwig from './features/twig/useCenterTwig';
 import useSelectTwig from './features/twig/useSelectTwig';
-import { selectDetailIdToTwigId, selectIToTwigId, selectNewTwigId, selectTwigIdToTrue } from './features/twig/twigSlice';
-import { TWIG_FIELDS } from './features/twig/twigFragments';
-import { Twig } from './features/twig/twig';
+import { SpaceType } from './features/space/space';
+import { selectIdToTwig, selectIToTwigId } from './features/twig/twigSlice';
+import { selectIdToPos, selectIsOpen, selectSelectedTwigId, setIsOpen, setSelectedSpace } from './features/space/spaceSlice';
 
 export default function useAppRouter(user: User | null) {
+  const dispatch = useAppDispatch();
   const location = useLocation();
   const navigate = useNavigate();
-  const client = useApolloClient();
-  const dispatch = useAppDispatch();
-
-  const width = useAppSelector(selectWidth);
-
-  const menuMode = useAppSelector(selectMenuMode);
-  const menuWidth = useAppSelector(selectMenuWidth);
-  const menuWidth1 = menuMode
-    ? menuWidth
-    : 0;
-
-  const frameIsOpen = useAppSelector(selectIsOpen('FRAME'));
-
-  const frameArrowId = useAppSelector(selectSelectArrowId('FRAME'));
-  const frameDetailIdToTwigId = useAppSelector(selectDetailIdToTwigId('FRAME'));
-  const frameTwigId = frameDetailIdToTwigId[frameArrowId];
-
-  const frameTwigIdToTrue = useAppSelector(selectTwigIdToTrue('FRAME'));
-  const frameIToTwigId = useAppSelector(selectIToTwigId('FRAME'));
-  const frameNewTwigId = useAppSelector(selectNewTwigId('FRAME'));
-
-  const focusIsOpen = useAppSelector(selectIsOpen('FOCUS'));
-
-  const focusArrowId = useAppSelector(selectSelectArrowId('FOCUS'));
-  const focusDetailIdToTwigId = useAppSelector(selectDetailIdToTwigId('FOCUS'));
-  const focusTwigId = focusDetailIdToTwigId[focusArrowId];
-
-  const focusTwigIdToTrue = useAppSelector(selectTwigIdToTrue('FOCUS'));
-  const focusIToTwigId = useAppSelector(selectIToTwigId('FOCUS'));
 
   let focusRole = null as Role | null;
   (user?.roles || []).filter(role_i => !role_i.deleteDate).some(role => {
@@ -59,18 +25,30 @@ export default function useAppRouter(user: User | null) {
     return false;
   });
 
-  const canEdit = checkPermit(user?.focus?.canEdit || 'OTHER', focusRole?.type);
+  const canEditFocus = checkPermit(user?.focus?.canEdit, focusRole?.type);
 
-  const { centerTwig: frameCenterTwig } = useCenterTwig(user, 'FRAME');
-  const { centerTwig: focusCenterTwig } = useCenterTwig(user, 'FOCUS');
-  const { selectTwig: frameSelectTwig } = useSelectTwig('FRAME', true);
-  const { selectTwig: focusSelectTwig } = useSelectTwig('FOCUS', canEdit);
+  const frameIsOpen = useAppSelector(selectIsOpen(SpaceType.FRAME));
+  const frameSelectedTwigId = useAppSelector(selectSelectedTwigId(SpaceType.FRAME));
+  const frameIdToTwig = useAppSelector(selectIdToTwig(SpaceType.FRAME));
+  const frameIToTwigId = useAppSelector(selectIToTwigId(SpaceType.FRAME));
+  const frameIdToPos = useAppSelector(selectIdToPos(SpaceType.FRAME));
+
+  const focusIsOpen = useAppSelector(selectIsOpen(SpaceType.FOCUS));
+  const focusSelectedTwigId = useAppSelector(selectSelectedTwigId(SpaceType.FOCUS));
+  const focusIdToTwig = useAppSelector(selectIdToTwig(SpaceType.FOCUS));
+  const focusIToTwigId = useAppSelector(selectIToTwigId(SpaceType.FOCUS));
+  const focusIdToPos = useAppSelector(selectIdToPos(SpaceType.FOCUS));
+
+  const { centerTwig: frameCenterTwig } = useCenterTwig(SpaceType.FRAME);
+  const { centerTwig: focusCenterTwig } = useCenterTwig(SpaceType.FOCUS);
+  const { selectTwig: frameSelectTwig } = useSelectTwig(SpaceType.FRAME, true);
+  const { selectTwig: focusSelectTwig } = useSelectTwig(SpaceType.FOCUS, canEditFocus);
 
   const { setUserFocusByRouteName } = useSetUserFocus(user);
 
   useEffect(() => {
     if (!user?.frame) return;
-    if (!Object.keys(frameTwigIdToTrue || {}).length) return;
+    if (!Object.keys(frameIdToPos || {}).length) return;
 
     const path = location.pathname.split('/');
     console.log(path);
@@ -80,81 +58,66 @@ export default function useAppRouter(user: User | null) {
         replace: true,
       })
       dispatch(setIsOpen({
-        space: 'FOCUS', 
-        isOpen:false
+        space: SpaceType.FRAME,
+        isOpen: false,
       }));
-      dispatch(setSpace('FRAME'));
+      dispatch(setSelectedSpace(SpaceType.FRAME));
     }
     else if (path[2].toLowerCase() === user.frame.routeName) {
       console.log('frame routing');
 
-      dispatch(setSpace('FRAME'));
+      setSelectedSpace(SpaceType.FRAME);
 
       document.title = `Mindscape | ${user.frame.text.split('\n')[0]}`;
 
-      const frameTwig = client.cache.readFragment({
-        id: client.cache.identify({
-          id: frameTwigId,
-          __typename: 'Twig',
-        }),
-        fragment: TWIG_FIELDS,
-      }) as Twig;
+      const frameTwig = frameIdToTwig[frameSelectedTwigId];
 
+      console.log(frameTwig);
       if (path[3] !== (frameTwig?.i ?? -1).toString()) {
+        console.log('hello')
         const twigId = frameIToTwigId[path[3] || (frameTwig.i ?? -1)];
-
-        const twig = client.cache.readFragment({
-          id: client.cache.identify({
-            id: twigId,
-            __typename: 'Twig',
-          }),
-          fragment: TWIG_FIELDS,
-        }) as Twig;
+        const twig = frameIdToTwig[twigId];
   
         if (twig?.id && !twig?.deleteDate) {
-          if (twigId === frameNewTwigId) {
-            console.log('frame, index select new')
-            dispatch(setSelectArrowId({
-              space: 'FRAME',
-              arrowId: twig.detailId,
-            }));
-            frameCenterTwig(twigId, true, 0);
-          }
-          else {
-            console.log('frame, index select');
-            frameSelectTwig(user.frame, twig, true);
-            frameCenterTwig(twigId, true, 0);
-          }
+          console.log('frame, index select');
+          frameSelectTwig(user.frame, twig);
+          frameCenterTwig(twigId, true, 0);
         }
         else {
           console.log('frame, index invalid');
-          dispatch(setSelectArrowId({
-            space: 'FRAME',
-            arrowId: user.frame.id,
-          }));
-          navigate(`/m/${user.frame.routeName}/0`, {
-            replace: true,
-          })
+          const twig = user?.frame?.rootTwigId
+            ? frameIdToTwig[user?.frame?.rootTwigId]
+            : null;
+          if (twig?.id && !twig?.deleteDate) {
+            navigate(`/m/${user.frame.routeName}/0`, {
+              replace: true,
+            })
+          }
+          else {
+            console.error('frame, index invalid; no root twig');
+          }
         }
       }
     }
     else {
       console.log('focus routing')
 
-      dispatch(setSpace('FOCUS'));
+      setSelectedSpace(SpaceType.FOCUS);
 
       if (!focusIsOpen) {
         if (frameIsOpen) {
-          dispatch(setFrameWidth((width - getAppbarWidth(width) - menuWidth1) / 2))
+          dispatch(setIsOpen({
+            space: SpaceType.FOCUS,
+            isOpen: true,
+          }));
+          // setFocusWdith ?? TODO
         }
       }
 
-      if (!frameTwigId) {
-        dispatch(setSelectArrowId({
-          space: 'FRAME',
-          arrowId: user.frame.id
-        }));
-        frameCenterTwig(frameDetailIdToTwigId[user.frame.id], true, 0);
+      if (!frameSelectedTwigId && user?.frame?.rootTwigId) {
+        const twig = frameIdToTwig[user?.frame?.rootTwigId];
+        frameSelectTwig(user.frame, twig);
+        frameCenterTwig(twig.id, true, 0);
       }
 
       if (path[2] !== user.focus?.routeName) {
@@ -162,40 +125,23 @@ export default function useAppRouter(user: User | null) {
         setUserFocusByRouteName(path[2]);
       }
       else {
-        if (!Object.keys(focusTwigIdToTrue || {}).length) return;
+        if (!Object.keys(focusIdToPos || {}).length) return;
 
         document.title = `Mindscape | ${user.focus.text.split('\n')[0]}`
 
-        const focusTwig = client.cache.readFragment({
-          id: client.cache.identify({
-            id: focusTwigId,
-            __typename: 'Twig',
-          }),
-          fragment: TWIG_FIELDS,
-        }) as Twig;
+        const focusTwig = focusIdToTwig[focusSelectedTwigId]
 
         if (path[3] !== (focusTwig?.i ?? -1).toString()) {
           const twigId = focusIToTwigId[path[3] || (focusTwig.i ?? -1)];
-
-          const twig = client.cache.readFragment({
-            id: client.cache.identify({
-              id: twigId,
-              __typename: 'Twig',
-            }),
-            fragment: TWIG_FIELDS,
-          }) as Twig;
+          const twig = focusIdToTwig[twigId];
 
           if (twig?.id && !twig?.deleteDate) {
             console.log('index select');
-            focusSelectTwig(user.focus, twig, true);
+            focusSelectTwig(user.focus, twig);
             focusCenterTwig(twigId, true, 0);
           }
           else {
             console.log('index invalid');
-            dispatch(setSelectArrowId({
-              space: 'FOCUS',
-              arrowId: user.focus.id,
-            }));
             navigate(`/m/${path[2]}/0`, {
               replace: true,
             });
@@ -203,6 +149,5 @@ export default function useAppRouter(user: User | null) {
         }
       }
     }
-  }, [location.pathname, Object.keys(frameTwigIdToTrue || {}).length, Object.keys(focusTwigIdToTrue || {}).length])
-
+  }, [location.pathname, Object.keys(frameIdToPos || {}).length, Object.keys(focusIdToPos || {}).length])
 }

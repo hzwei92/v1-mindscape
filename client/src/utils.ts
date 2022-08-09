@@ -140,7 +140,7 @@ export const getEmptyDraft = () => {
   return draft;
 }
 
-export const checkPermit = (permissionLevel: string, roleType?: string) => {
+export const checkPermit = (permissionLevel: string | undefined, roleType?: string) => {
   return permissionLevel === 'ADMIN'
     ? roleType === 'ADMIN'
     : permissionLevel === 'MEMBER'
@@ -148,14 +148,36 @@ export const checkPermit = (permissionLevel: string, roleType?: string) => {
       : true;
 }
 
-export type IdToTrueType = {
-  [id: string]: true;
-}
-
-export type IdToIdToTrueType = {
-  [id: string]: IdToTrueType;
-}
-
-export type IdToIdToIdToTrueType = {
-  [id: string]: IdToIdToTrueType;
+export const getTwigColor = (color?: string | null) => {
+  if (color) {
+    if (color === 'grey') {
+      return '#b2b4b8';
+    }
+    if (color === 'blue') {
+      return '#8ab4f8';
+    }
+    if (color === 'red') {
+      return '#f28b82';
+    }
+    if (color === 'yellow') {
+      return '#fad663';
+    }
+    if (color === 'green') {
+      return '#81c995';
+    }
+    if (color === 'pink') {
+      return '#fb8bcb';
+    }
+    if (color === 'purple') {
+      return '#c58af9';
+    }
+    if (color === 'cyan') {
+      return '#78d9ec';
+    }
+    if (color === 'orange') {
+      return '#faad70';
+    }
+    return color;
+  }
+  return null
 }

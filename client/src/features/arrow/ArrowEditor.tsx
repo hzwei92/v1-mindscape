@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   EditorState,
   convertToRaw,
@@ -10,15 +10,13 @@ import 'draft-js/dist/Draft.css';
 import Editor from '@draft-js-plugins/editor';
 import { Box } from '@mui/material';
 import linkifyIt, { LinkifyIt } from 'linkify-it';
-import { SpaceType } from '../space/space';
-import { Arrow } from './arrow';
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { User } from '../user/user';
+import type { Arrow } from './arrow';
 import tlds from 'tlds';
-import moveSelectionToEnd from '../editor/moveSelectionToEnd';
 import createIframelyPlugin from '../editor/createIframelyPlugin';
+import { AppContext } from '../../App';
+import { SpaceContext } from '../space/SpaceComponent';
+import useSaveArrow from './useSaveArrow';
 //import useSaveArrow from './useSaveArrow';
-import { TWIG_WIDTH } from '../../constants';
 
 const iframelyPlugin = createIframelyPlugin();
 
@@ -36,28 +34,22 @@ export function extractLinks(text: string): linkifyIt.Match[] | null {
   return linkify.match(text);
 }
 
-interface EditorComponentProps {
-  user: User | null;
-  space: SpaceType | null;
+interface ArrowEditorProps {
   arrow: Arrow;
   isReadonly: boolean;
   instanceId: string;
 }
 
-export default function EditorComponent(props: EditorComponentProps) {
-  const dispatch = useAppDispatch();
-
-  const createLink = {
-    sourceId: '',
-    targetId: '',
-  };// useAppSelector(selectCreateLink);
+export default function ArrowEditor(props: ArrowEditorProps) {
+  const { user, brightColor: color, } = useContext(AppContext);
+  const { space, pendingLink } = useContext(SpaceContext);
 
   const focusedArrowId = null; // useAppSelector(selectFocusedArrowId);
   const focusedSpace = 'FRAME' //useAppSelector(selectFocusedSpace);
 
   //const instance = useAppSelector(state => selectInstanceById(state, props.instanceId))
 
-  //const { saveArrow } = useSaveArrow(props.arrow.id, props.instanceId);
+  const { saveArrow } = useSaveArrow(props.arrow.id, props.instanceId);
 
   const [saveTimeout, setSaveTimeout] = useState(null as ReturnType<typeof setTimeout> | null);
   const [isFocused, setIsFocused] = useState(false);
@@ -77,7 +69,7 @@ export default function EditorComponent(props: EditorComponentProps) {
     if (isFocused && editorRef.current) {
       //editorRef.current.focus();
     }
-    if (focusedArrowId === props.arrow.id && focusedSpace === props.space && editorRef.current) {
+    if (focusedArrowId === props.arrow.id && focusedSpace === space && editorRef.current) {
       editorRef.current.focus();
       // dispatch(setFocused({
       //   space: null,
@@ -111,7 +103,7 @@ export default function EditorComponent(props: EditorComponentProps) {
   // }, [props.arrow.draft, instance])
 
   const handleChange = (newState: EditorState) => {
-    if (props.arrow.userId !== props.user?.id || props.arrow.commitDate) {
+    if (props.arrow.userId !== user?.id || props.arrow.commitDate) {
       return;
     }
     setEditorState(newState);
@@ -123,7 +115,7 @@ export default function EditorComponent(props: EditorComponentProps) {
         clearTimeout(saveTimeout);
       }
       const timeout = setTimeout(() => {
-        //saveArrow(draft);
+        saveArrow(draft);
         setSaveTimeout(null);
       }, 1000);
       setSaveTimeout(timeout);
@@ -148,15 +140,18 @@ export default function EditorComponent(props: EditorComponentProps) {
     setIsFocused(false);
   };
 
-  const isReadonly = props.isReadonly || !!props.arrow.commitDate || props.arrow.userId !== props.user?.id;
+  const isReadonly = props.isReadonly || 
+    !!props.arrow.commitDate || 
+    props.arrow.userId !== user?.id;
+
   return (
     <Box sx={{
-      fontSize: 14,
-      width: TWIG_WIDTH - 32,
+      marginTop: 1,
+      fontSize: 16,
       position: 'relative',
-      cursor: createLink.sourceId
+      cursor: pendingLink.sourceId
         ? 'crosshair'
-        : 'text', 
+        : 'text',
     }}>
       <Editor
         placeholder={

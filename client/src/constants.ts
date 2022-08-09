@@ -33,8 +33,8 @@ export const TWIG_WIDTH = 360;
 export const MENU_WIDTH = 400;
 export const MENU_MIN_WIDTH = 300;
 
-export const FRAME_WIDTH = 500;
-export const FRAME_MIN_WIDTH = 300;
+export const FOCUS_WIDTH = 500;
+export const FOCUS_MIN_WIDTH = 300;
 
 export const START_POST_I = 1;
 
@@ -42,4 +42,10 @@ export const SPACE_BAR_HEIGHT = 50;
 
 export const VIEW_RADIUS = 30000;
 
-export const NOT_FOUND = 'NOT_FOUND'
+export const NOT_FOUND = 'NOT_FOUND';
+
+export enum DisplayMode {
+  SCATTERED = 'SCATTERED',
+  VERTICAL = 'VERTICAL',
+  HORIZONTAL = 'HORIZONTAL',
+};

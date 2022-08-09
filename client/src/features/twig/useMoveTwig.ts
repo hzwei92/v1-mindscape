@@ -1,34 +1,36 @@
-import { gql, useApolloClient, useMutation, useReactiveVar } from '@apollo/client';
+import { gql, useMutation } from '@apollo/client';
 import { useSnackbar } from 'notistack';
-import { useAppSelector } from '../../app/hooks';
-import { sessionVar } from '../../cache';
-import { ROLE_FIELDS } from '../role/roleFragments';
+import { FULL_ROLE_FIELDS } from '../role/roleFragments';
 import { applyRole } from '../role/useApplyRole';
+import { selectSessionId } from '../auth/authSlice';
+import { mergeTwigs, selectIdToTwig } from './twigSlice';
+import { v4 } from 'uuid';
+import { useContext } from 'react';
 import { SpaceType } from '../space/space';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { Twig } from './twig';
-import { TWIG_FIELDS, TWIG_WITH_XY } from './twigFragments';
-import { selectIdToDescIdToTrue } from './twigSlice';
 
 const MOVE_TWIG = gql`
-  mutation MoveTwig($sessionId: String!, $twigId: String!, $x: Int!, $y: Int!) {
-    moveTwig(sessionId: $sessionId, twigId: $twigId, x: $x, y: $y) {
+  mutation MoveTwig($sessionId: String!, $twigId: String!, $x: Int!, $y: Int!, $displayMode: String!) {
+    moveTwig(sessionId: $sessionId, twigId: $twigId, x: $x, y: $y, displayMode: $displayMode) {
       twigs {
         id
         x
         y
       }
       role {
-        ...RoleFields
+        ...FullRoleFields
       }
     }
   }
-  ${ROLE_FIELDS}
+  ${FULL_ROLE_FIELDS}
 `;
 
 export default function useMoveTwig(space: SpaceType) {
-  const client = useApolloClient();
+  const dispatch = useAppDispatch();
 
-  const sessionDetail = useReactiveVar(sessionVar);
+  const sessionId = useAppSelector(selectSessionId);
+  const idToTwig = useAppSelector(selectIdToTwig(space));
 
   const { enqueueSnackbar } = useSnackbar();
   
@@ -42,24 +44,25 @@ export default function useMoveTwig(space: SpaceType) {
     },
     onCompleted: data => {
       console.log(data);
+      const twigs = data.moveTwig.twigs.map((twig: Twig) => {
+        return Object.assign({}, idToTwig[twig.id], twig);
+      })
+      dispatch(mergeTwigs({
+        id: v4(),
+        space,
+        twigs,
+      }))
     },
   });
 
-  const moveTwig = (twigId: string) => {
-    const twig = client.cache.readFragment({
-      id: client.cache.identify({
-        id: twigId,
-        __typename: 'Twig',
-      }),
-      fragment: TWIG_WITH_XY,
-    }) as Twig;
-
+  const moveTwig = (twigId: string, x: number, y: number, displayMode: string) => {
     move({
       variables: {
-        sessionId: sessionDetail.id,
-        twigId: twig.id,
-        x: Math.round(twig.x),
-        y: Math.round(twig.y),
+        sessionId: sessionId,
+        twigId,
+        x,
+        y,
+        displayMode,
       },
     });
   }

@@ -6,8 +6,8 @@ import { useState } from 'react';
 import { FULL_USER_FIELDS } from '../user/userFragments';
 import useToken from './useToken';
 import { useAppDispatch } from '../../app/hooks';
-import { setUserId } from '../user/userSlice';
- 
+import { setCurrentUser } from '../user/userSlice';
+
 const REGISTER_USER = gql`
   mutation RegisterGoogleUser($token: String!) {
     registerGoogleUser(token: $token) {
@@ -44,7 +44,7 @@ export default function GoogleButton(props: GoogleButtonProps) {
     onCompleted: data => {
       console.log(data);
       refreshTokenInterval();
-      dispatch(setUserId(data.registerGoogleUser.id));
+      dispatch(setCurrentUser(data.registerGoogleUser.id));
       props.onCompleted && props.onCompleted();
     },
   });
@@ -57,7 +57,7 @@ export default function GoogleButton(props: GoogleButtonProps) {
     onCompleted: data => {
       console.log(data);
       refreshTokenInterval();
-      dispatch(setUserId(data.loginGoogleUser.id));
+      dispatch(setCurrentUser(data.loginGoogleUser.id));
       props.onCompleted && props.onCompleted();
     },
   });

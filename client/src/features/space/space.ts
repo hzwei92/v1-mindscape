@@ -1,6 +1,23 @@
-import { IdToTrueType } from '../../utils';
+import React from "react";
+import { IdToType } from "../../types";
 
-export type SpaceType = 'FRAME' | 'FOCUS';
+export enum SpaceType {
+  FRAME = 'FRAME',
+  FOCUS = 'FOCUS',
+};
+
+export type PosType = {
+  x: number;
+  y: number
+};
+
+export enum DirectionType {
+  NONE = 'NONE',
+  UP = 'UP',
+  DOWN = 'DOWN',
+  LEFT = 'LEFT',
+  RIGHT = 'RIGHT',
+};
 
 export type ScrollState = {
   left: number;
@@ -10,7 +27,24 @@ export type ScrollState = {
 export type DragState = {
   isScreen: boolean;
   twigId: string;
-  dx: number;
-  dy: number;
   targetTwigId: string;
+  targetDirection: DirectionType;
 };
+
+
+export type SpaceState = {
+  isOpen: boolean;
+  selectedTwigId: string;
+  spaceEl: React.MutableRefObject<HTMLElement | undefined> | null;
+  scale: number;
+  scroll: ScrollState;
+  cursor: PosType;
+  drag: DragState;
+  idToPos: IdToType<PosType>;
+  idToHeight: IdToType<number>;
+}
+
+export type PendingLinkType = {
+  sourceId: string;
+  targetId: string;
+}

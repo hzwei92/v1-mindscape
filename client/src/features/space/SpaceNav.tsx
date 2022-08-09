@@ -1,101 +1,71 @@
-import { useApolloClient, useReactiveVar } from '@apollo/client';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Box, Fab } from '@mui/material';
 import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
 import FastRewindIcon from '@mui/icons-material/FastRewind';
 import FastForwardIcon from '@mui/icons-material/FastForward';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
 import CenterFocusStrongIcon from '@mui/icons-material/CenterFocusStrong';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { SpaceType } from './space';
-import { Twig } from '../twig/twig';
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { MAX_Z_INDEX, MOBILE_WIDTH, NOT_FOUND } from '../../constants';
+import { SpaceContext } from './SpaceComponent';
+import { useAppSelector } from '../../app/hooks';
+import { selectIdToTwig } from '../twig/twigSlice';
 import useCenterTwig from '../twig/useCenterTwig';
-import { selectIsOpen, selectSpace, selectTwigId, setSpace } from './spaceSlice';
-import { selectWidth } from '../window/windowSlice';
-import { selectMenuMode } from '../menu/menuSlice';
-import { Arrow } from '../arrow/arrow';
-import { User } from '../user/user';
-import { selectTwigIdToTrue } from '../twig/twigSlice';
-import { FULL_TWIG_FIELDS } from '../twig/twigFragments';
+import useSelectTwig from '../twig/useSelectTwig';
+import { Twig } from '../twig/twig';
+import { MAX_Z_INDEX } from '../../constants';
+import { getTwigColor } from '../../utils';
+import { selectSelectedTwigId } from './spaceSlice';
 
-interface SpaceNavProps {
-  user: User | null;
-  space: SpaceType;
-  superArrow: Arrow;
-}
+export default function SpaceNav() {
+  const { 
+    space, 
+    abstract, 
+    canEdit
+  } = useContext(SpaceContext);
 
-export default function SpaceNav(props: SpaceNavProps) {
-  const client = useApolloClient();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const dispatch = useAppDispatch();
+  const selectedTwigId = useAppSelector(selectSelectedTwigId(space));
 
-  const width = useAppSelector(selectWidth);
-  const menuMode = useAppSelector(selectMenuMode);
+  const frameIsOpen = true;
+  const focusIsOpen = false;
 
-  const space = useAppSelector(selectSpace);
-  const frameIsOpen = useAppSelector(selectIsOpen('FRAME'));
-  const focusIsOpen = useAppSelector(selectIsOpen('FOCUS'));
-
-  const twigIdToTrue = useAppSelector(selectTwigIdToTrue(props.space))
-  const twigId = useAppSelector(selectTwigId(props.space));
-
+  const idToTwig = useAppSelector(selectIdToTwig(space))
+  
+  const [isInit, setIsInit] = useState(false);
   const [twigs, setTwigs] = useState([] as Twig[]);
   const [index, setIndex] = useState(0);
-
   const hasEarlier = index > 0;
   const hasLater = index < twigs.length - 1;
 
-  const { centerTwig } = useCenterTwig(props.user, props.space);
+  const { centerTwig } = useCenterTwig(space);
+  const { selectTwig } = useSelectTwig(space, canEdit);
 
   useEffect(() => {
-    const sortedTwigs = Object.keys(twigIdToTrue)
-      .map(twigId => {
-        return client.cache.readFragment({
-          id: client.cache.identify({
-            id: twigId,
-            __typename: 'Twig'
-          }),
-          fragment: FULL_TWIG_FIELDS,
-          fragmentName: 'FullTwigFields'
-        }) as Twig;
-      })
+    const sortedTwigs = Object.keys(idToTwig).map(id => idToTwig[id])
+      .filter(twig => twig && !twig.deleteDate)
       .sort((a, b) => a.i < b.i ? -1 : 1);
       
     setTwigs(sortedTwigs);
-  }, [twigIdToTrue]);
+  }, [idToTwig]);
 
   useEffect(() => {
-    if (!twigId) return;
+    if (!selectedTwigId) return;
 
     twigs.some((twig, i) => {
-      if (twig.id === twigId) {
+      if (twig.id === selectedTwigId) {
         setIndex(i);
         return true;
       }
       return false;
     });
-  }, [twigId]);
+  }, [selectedTwigId]);
 
-  if (
-    props.space === 'FOCUS' && 
-    (!focusIsOpen ||
-    (width < MOBILE_WIDTH && (space === 'FRAME' || menuMode)))
-  ) return null;
+  if (space === 'FOCUS' && !focusIsOpen) return null;
+  if (space === 'FRAME' && !frameIsOpen) return null;
 
-
-  if (
-    props.space === 'FRAME' &&
-    (!frameIsOpen ||
-    (width < MOBILE_WIDTH && (space === 'FOCUS' || menuMode)))
-  ) return null;
-
-
-  const select = (twig: Twig) => {
-    const route = `/m/${props.superArrow.routeName}/${twig.i}`;
-    navigate(route)
+  const select = (twig: Twig, isInstant?: boolean) => {
+    if (selectedTwigId !== twig.id) {
+      selectTwig(abstract, twig);
+    }
+    centerTwig(twig.id, !isInstant, 0);
     setIndex(twig.i);
   }
 
@@ -132,13 +102,6 @@ export default function SpaceNav(props: SpaceNavProps) {
     event.preventDefault();
 
     const twig = twigs[index];
-    const route = `/m/${props.superArrow.routeName}/${twig.i}`;
-    if (route !== location.pathname) {
-      navigate(route);
-    }
-    if (space !== props.space) {
-      dispatch(setSpace(props.space));
-    }
     centerTwig(twig.id, true, 0);
   }
   
@@ -156,20 +119,24 @@ export default function SpaceNav(props: SpaceNavProps) {
     }}>
       <Fab title='Earliest' size='small' disabled={!hasEarlier} onClick={handleNavEarliest}  sx={{
         margin: 1,
-        color: hasEarlier ? (twigs[0]?.user?.color || 'dimgrey') : 'dimgrey',
+        color: hasEarlier 
+          ? (getTwigColor(twigs[0]?.color) || twigs[0]?.user?.color || 'dimgrey') 
+          : 'dimgrey',
       }}>
         <SkipPreviousIcon color='inherit' />
       </Fab>
       <Fab title='Previous' size='small' disabled={!hasEarlier} onClick={handleNavPrev} sx={{
         margin: 1,
-        color: hasEarlier ? (twigs[index - 1]?.user?.color || 'dimgrey') : 'dimgrey',
+        color: hasEarlier 
+          ? (getTwigColor(twigs[index - 1]?.color) || twigs[index - 1]?.user?.color || 'dimgrey') 
+          : 'dimgrey',
       }}>
         <FastRewindIcon color='inherit' />
       </Fab>
-      <Fab title='Selected' size='small' disabled={!twigId} onClick={handleNavFocus} sx={{
+      <Fab title='Selected' size='small' disabled={!selectedTwigId} onClick={handleNavFocus} sx={{
         margin: 1,
-        color:  twigs[index]?.user?.color || 'dimgrey',
-        border: space === props.space
+        color:  getTwigColor(twigs[index]?.color) || twigs[index]?.user?.color || 'dimgrey',
+        border: space === space
           ? '3px solid'
           : 'none'
       }}>
@@ -177,13 +144,17 @@ export default function SpaceNav(props: SpaceNavProps) {
       </Fab>
       <Fab title='Next' size='small' disabled={!hasLater} onClick={handleNavNext} sx={{
         margin: 1,
-        color: hasLater ? (twigs[index + 1]?.user?.color || 'dimgrey') : 'dimgrey',
+        color: hasLater 
+          ? (getTwigColor(twigs[index + 1]?.color) || twigs[index + 1]?.user?.color || 'dimgrey') 
+          : 'dimgrey',
       }}>
         <FastForwardIcon color='inherit' />
       </Fab>
       <Fab title='Latest' size='small' disabled={!hasLater} onClick={handleNavLatest} sx={{
         margin: 1,
-        color: hasLater ? (twigs[twigs.length - 1]?.user?.color || 'dimgrey') : 'dimgrey',
+        color: hasLater 
+          ? (getTwigColor(twigs[twigs.length - 1]?.color )|| twigs[twigs.length - 1]?.user?.color  || 'dimgrey') 
+          : 'dimgrey',
       }}>
         <SkipNextIcon color='inherit' />
       </Fab>

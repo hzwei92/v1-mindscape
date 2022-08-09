@@ -1,91 +1,103 @@
-import { Arrow } from '../arrow/arrow';
-import { User } from '../user/user';
+import { DisplayMode } from "../../constants";
+import { Arrow } from "../arrow/arrow";
+import { SpaceType } from "../space/space";
+import { User } from "../user/user";
 
 export type Twig = {
   id: string;
+  sourceId: string | null;
+  source: Twig | null;
+  targetId: string | null;
+  target: Twig | null;
   userId: string;
-  user: User;
+  user: User
   abstractId: string;
   abstract: Arrow;
   detailId: string;
   detail: Arrow;
   parent: Twig;
   children: Twig[];
-  color: string | null;
   i: number;
   x: number;
   y: number;
   z: number;
+  isRoot: boolean;
+  degree: number;
+  rank: number;
+  color: string | null;
+  displayMode: string;
+  bookmarkId: string | null,
+  windowId: number | null;
+  groupId: number | null;
+  tabId: number | null;
   isOpen: boolean;
-  createDate: Date | null;
-  updateDate: Date | null;
-  deleteDate: Date | null;
+  createDate: string | null;
+  updateDate: string | null;
+  deleteDate: string | null;
   __typename: string;
-};
+}
 
 
-export type IdToTwigType = {
-  [id: string]: Twig;
-};
-
-export type ArrowIdToTwigIdType = {
-  [arrowId: string]: string;
-};
-
-export type IToTwigIdType = {
-  [i: string]: string;
-};
-
-export type IdToHeightType = {
-  [id: string]: number;
-};
-
-export const createTwig = (
-  user: User, 
+export const createTwig = (p: {
   id: string,
+  source: Twig | null,
+  target: Twig | null,
+  user: User, 
   abstract: Arrow, 
   detail: Arrow, 
   parent: Twig, 
   x: number,
   y: number,
+  rank: number,
+  color: string | null,
   isOpen: boolean,
-) => {
-  const date = new Date();
-  const twig = {
-    id,
-    userId: user.id,
-    user,
-    abstractId: abstract.id,
-    abstract,
-    detailId: detail.id,
-    detail,
-    parent,
+  bookmarkId: string | null,
+  windowId: number | null,
+  groupId: number | null,
+  tabId: number | null,
+  displayMode: DisplayMode,
+}) => {
+  const twig: Twig = {
+    id: p.id,
+    sourceId: p.source?.id || null,
+    source: p.source,
+    targetId: p.target?.id || null,
+    target: p.target,
+    userId: p.user.id,
+    user: p.user,
+    abstractId: p.abstract.id,
+    abstract: p.abstract,
+    detailId: p.detail.id,
+    detail: p.detail,
+    parent: p.parent,
     children: [],
-    color: null,
-    i: abstract.twigN + 1,
-    x,
-    y,
-    z: abstract.twigZ + 1,
-    isOpen,
-    createDate: date,
-    updateDate: date,
+    isRoot: false,
+    i: p.abstract.twigN + 1,
+    x: p.x,
+    y: p.y,
+    z: p.abstract.twigZ + 1,
+    color: p.color,
+    degree: p.parent.degree + 1,
+    rank: p.rank,
+    tabId: p.tabId,
+    groupId: p.groupId,
+    windowId: p.windowId,
+    bookmarkId: p.bookmarkId,
+    isOpen: p.isOpen,
+    displayMode: p.displayMode,
+    createDate: null,
+    updateDate: null,
     deleteDate: null,
     __typename: 'Twig'
-  } as Twig;
+  };
   return twig;
 }
 
-export type CoordsType = {
-  x: number;
-  y: number;
-}
 
-export type IdToCoordsType = {
-  [id: string]: CoordsType;
-}
-
-export type IdWithCoordsType = {
-  id: string;
-  x: number;
-  y: number;
+export type CopyingTwigType = {
+  space: SpaceType;
+  twigId: string;
+  parentTwigId: string;
+  rank: number;
+  displayMode: DisplayMode;
 }

@@ -11,37 +11,39 @@ import CropFreeIcon from '@mui/icons-material/CropFree';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import { getAppbarWidth, getColor } from './utils';
 import { useAppDispatch, useAppSelector } from './app/hooks';
-import { selectMode, selectWidth, toggleMode } from './features/window/windowSlice';
 import { User } from './features/user/user';
 import useAuth from './features/auth/useAuth';
-import { setMenuMode } from './features/menu/menuSlice';
 import useAppRouter from './useAppRouter';
+import { useContext } from 'react';
+import { AppContext } from './App';
+import { MenuMode } from './features/menu/menu';
 //import useSavePostSub from './features/post/useSavePostSub';
 
-interface AppBarProps {
-  user: User | null;
-}
-export default function AppBar(props: AppBarProps) {
+export default function AppBar() {
   const dispatch = useAppDispatch();
 
-  const mode = useAppSelector(selectMode);
-  const width = useAppSelector(selectWidth);
-  const menuMode: string = '';
-  const color = getColor(mode)
+  const { 
+    user,
+    width, 
+    palette,
+    brightColor: color,
+    setPalette,
+    menuMode, 
+    setMenuMode
+  } = useContext(AppContext);
 
   useAuth();
-  useAppRouter(props.user);
-  //useSavePostSub(props.user);
+  useAppRouter(user);
 
   const handleAboutClick = () => {
 
   };
 
   const handleAccountClick = () => {
-    dispatch(setMenuMode({
-      mode: 'ACCOUNT',
-      toggle: true,
-    }))
+    setMenuMode(menuMode === MenuMode.ACCOUNT 
+      ? MenuMode.NONE 
+      : MenuMode.ACCOUNT
+    );
   };
 
   const handleSignalClick = () => {
@@ -70,7 +72,10 @@ export default function AppBar(props: AppBarProps) {
 
   }
   const handlePaletteClick = () => {
-    dispatch(toggleMode());
+    setPalette(palette === 'dark'
+      ? 'light'
+      : 'dark'
+    )
   }
   return (
     <Box>
@@ -92,7 +97,7 @@ export default function AppBar(props: AppBarProps) {
           }}>
             <IconButton title='About' size='small' onClick={handleAboutClick} sx={{
               border: menuMode === 'ABOUT'
-                ? `1px solid ${props.user?.color}`
+                ? `1px solid ${user?.color}`
                 : 'none',
               fontSize: width < MOBILE_WIDTH
                 ? 16
@@ -106,7 +111,7 @@ export default function AppBar(props: AppBarProps) {
           <Box title='Account' sx={{paddingTop: 1}}>
             <IconButton onClick={handleAccountClick} sx={{
               border: menuMode === 'ACCOUNT'
-                ? `1px solid ${props.user?.color}`
+                ? `1px solid ${user?.color}`
                 : 'none',
               color: menuMode === 'ACCOUNT'
                 ? 'primary.main'
@@ -118,7 +123,7 @@ export default function AppBar(props: AppBarProps) {
           <Box title='Signal' sx={{paddingTop: 1}}>
             <IconButton onClick={handleSignalClick} sx={{
               border: menuMode === 'SIGNAL'
-                ? `1px solid ${props.user?.color}`
+                ? `1px solid ${user?.color}`
                 : 'none',
               color: menuMode === 'SIGNAL'
                 ? 'primary.main'
@@ -130,7 +135,7 @@ export default function AppBar(props: AppBarProps) {
           <Box title='Graphs' sx={{paddingTop: 1}}>
             <IconButton onClick={handleGraphClick} sx={{
               border: menuMode === 'GRAPH'
-                ? `1px solid ${props.user?.color}`
+                ? `1px solid ${user?.color}`
                 : 'none',
               color: menuMode === 'GRAPH'
                 ? 'primary.main'
@@ -142,7 +147,7 @@ export default function AppBar(props: AppBarProps) {
           <Box title='Search' sx={{paddingTop: 1}}>
             <IconButton onClick={handleSearchClick} sx={{
               border: menuMode === 'SEARCH'
-                ? `1px solid ${props.user?.color}`
+                ? `1px solid ${user?.color}`
                 : 'none',
               color: menuMode === 'SEARCH'
                 ? 'primary.main'
@@ -154,7 +159,7 @@ export default function AppBar(props: AppBarProps) {
           <Box title='Map' sx={{paddingTop: 1}}>
             <IconButton onClick={handleMapClick} sx={{
               border: menuMode === 'MAP'
-                ? `1px solid ${props.user?.color}`
+                ? `1px solid ${user?.color}`
                 : 'none',
               color: menuMode === 'MAP'
                 ? 'primary.main'
@@ -166,7 +171,7 @@ export default function AppBar(props: AppBarProps) {
           <Box title='Feed' sx={{paddingTop: 1}}>
             <IconButton onClick={handleFeedClick} sx={{
               border: menuMode === 'FEED'
-                ? `1px solid ${props.user?.color}`
+                ? `1px solid ${user?.color}`
                 : 'none',
               color: menuMode === 'FEED'
                 ? 'primary.main'

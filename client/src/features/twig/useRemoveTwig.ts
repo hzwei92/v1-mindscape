@@ -1,0 +1,93 @@
+import { gql, useMutation, useReactiveVar } from '@apollo/client';
+import { useSnackbar } from 'notistack';
+import { useContext } from 'react';
+import { v4 } from 'uuid';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { selectSessionId } from '../auth/authSlice';
+import { FULL_ROLE_FIELDS } from '../role/roleFragments';
+import { SpaceContext } from '../space/SpaceComponent';
+import type { Twig } from './twig';
+import { mergeTwigs, selectIdToChildIdToTrue, selectIdToDescIdToTrue, selectIdToTwig } from './twigSlice';
+
+const REMOVE_TWIG = gql`
+  mutation RemoveTwig($sessionId: String!, $twigId: String!, $shouldRemoveDescs: Boolean!) {
+    removeTwig(sessionId: $sessionId, twigId: $twigId, shouldRemoveDescs: $shouldRemoveDescs) {
+      twigs {
+        id
+        deleteDate
+      }
+      role {
+        ...FullRoleFields
+      }
+    }
+  }
+  ${FULL_ROLE_FIELDS}
+`;
+
+export default function useRemoveTwig() {
+  const dispatch = useAppDispatch();
+
+  const { space, canEdit } = useContext(SpaceContext);
+
+  const sessionId = useAppSelector(selectSessionId);
+  const idToTwig = useAppSelector(selectIdToTwig(space));
+  const idToDescIdToTrue = useAppSelector(selectIdToDescIdToTrue(space));
+  const idToChildIdToTrue = useAppSelector(selectIdToChildIdToTrue(space));
+
+  const { enqueueSnackbar } = useSnackbar();
+  const [remove] = useMutation(REMOVE_TWIG, {
+    onError: error => {
+      console.error(error);
+      enqueueSnackbar(error.message);
+    },
+    onCompleted: data => {
+      console.log(data);
+    },
+  });
+
+  const removeTwig = (twig: Twig, shouldRemoveDescs: boolean) => {
+    if (canEdit) {
+      remove({
+        variables: {
+          sessionId,
+          twigId: twig.id,
+          shouldRemoveDescs,
+        }
+      });
+    }
+
+    const date = new Date().toISOString();
+
+    let twigs: Twig[] ;
+    if (shouldRemoveDescs) {
+      twigs = [twig.id, ...Object.keys(idToDescIdToTrue[twig.id] || {})].map(twigId => {
+        const twig = idToTwig[twigId];
+        return Object.assign({}, twig, {
+          deleteDate: date,
+        });
+      });
+    }
+    else {
+      twigs = [Object.assign({}, twig, {
+        deleteDate: date,
+      })];
+
+      Object.keys(idToChildIdToTrue[twig.id] || {}).forEach(childId => {
+        const child = idToTwig[childId];
+        if (child) {
+          twigs.push(Object.assign({}, child, {
+            parent: twig.parent,
+          }));
+        }
+      });
+    }
+
+    dispatch(mergeTwigs({
+      id: v4(),
+      space,
+      twigs,
+    }));
+  }
+
+  return { removeTwig };
+}

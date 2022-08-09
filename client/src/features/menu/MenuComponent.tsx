@@ -1,26 +1,17 @@
 import { Box, Paper } from '@mui/material';
-import { useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { getColor } from '../../utils';
+import { useContext, useState } from 'react';
+import { AppContext } from '../../App';
 import AccountComponent from '../account/AccountComponent';
-import { User } from '../user/user';
-import { selectMode } from '../window/windowSlice';
-import { selectMenuIsResizing, selectMenuMode, selectMenuWidth, setMenuIsResizing } from './menuSlice';
 
-interface MenuComponentProps {
-  user: User | null;
-}
-export default function MenuComponent(props: MenuComponentProps) {
-  const menuMode = useAppSelector(selectMenuMode);
-  const width = useAppSelector(selectMenuWidth);
-  const isResizing = useAppSelector(selectMenuIsResizing);
-  const mode = useAppSelector(selectMode);
-
-  const color = getColor(mode);
+export default function MenuComponent() {
+  const {
+    dimColor: color, 
+    menuWidth, 
+    menuIsResizing, 
+    setMenuIsResizing,
+  } = useContext(AppContext);
 
   const [showResizer, setShowResizer] = useState(false);
-
-  const dispatch = useAppDispatch();
 
   const handleResizeMouseEnter = (event: React.MouseEvent) => {
     setShowResizer(true);
@@ -31,7 +22,7 @@ export default function MenuComponent(props: MenuComponentProps) {
   };
 
   const handleResizeMouseDown = (event: React.MouseEvent) => {
-    dispatch(setMenuIsResizing(true));
+    setMenuIsResizing(true);
   };
 
   return (
@@ -40,10 +31,8 @@ export default function MenuComponent(props: MenuComponentProps) {
       display: 'flex',
       flexDirection: 'row',
       justifyContent: 'stretch',
-      width: menuMode 
-        ? width
-        : 0,
-      transition: isResizing
+      width: menuWidth,
+      transition: menuIsResizing
         ? 'none'
         : 'width 0.5s'
     }}>
@@ -52,7 +41,7 @@ export default function MenuComponent(props: MenuComponentProps) {
         width: 'calc(100% - 4px)',
         color,
       }}>
-        <AccountComponent user={props.user} />
+        <AccountComponent />
       </Paper>
       <Box 
         onMouseDown={handleResizeMouseDown}
@@ -62,9 +51,7 @@ export default function MenuComponent(props: MenuComponentProps) {
           width: 4,
           backgroundColor: showResizer
             ? 'primary.main'
-            : mode === 'dark'
-              ? 'dimgrey'
-              : 'lavender',
+            : color,
           cursor: 'col-resize'
         }}
       />

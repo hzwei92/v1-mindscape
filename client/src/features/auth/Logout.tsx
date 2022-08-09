@@ -1,16 +1,13 @@
 import { Box, Button, Card, Dialog, Typography } from '@mui/material';
-import { Dispatch, SetStateAction } from 'react';
-import { useAppSelector } from '../../app/hooks';
-import { getColor } from '../../utils';
-import { selectMode } from '../window/windowSlice';
+import { Dispatch, SetStateAction, useContext } from 'react';
+import { AppContext } from '../../App';
 import useLogout from './useLogout';
 
 interface LogoutProps {
   setIsLogout: Dispatch<SetStateAction<boolean>>;
 }
 export default function Logout(props: LogoutProps) {
-  const mode = useAppSelector(selectMode);
-  const color = getColor(mode);
+  const { brightColor } = useContext(AppContext);
 
   const { logoutUser } = useLogout();
 
@@ -48,7 +45,7 @@ export default function Logout(props: LogoutProps) {
           </Button>
           &nbsp;
           <Button onClick={handleCancelClick} sx={{
-            color,
+            color: brightColor,
           }}>
             Cancel
           </Button>

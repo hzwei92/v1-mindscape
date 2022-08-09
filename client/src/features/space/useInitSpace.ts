@@ -1,15 +1,13 @@
 import { gql, useMutation } from '@apollo/client';
-import { useEffect } from 'react';
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { useAppDispatch } from '../../app/hooks';
 import { SpaceType } from './space';
-import { selectFocusShouldSync, setFocusShouldSync } from '../focus/focusSlice';
-import { addTwigUsers, resetUsers } from '../user/userSlice';
-import { addArrows, resetArrows } from '../arrow/arrowSlice';
 import { Arrow } from '../arrow/arrow';
-import { addTwigs } from '../twig/twigSlice';
 import { FULL_TWIG_FIELDS } from '../twig/twigFragments';
 import useTwigTree from '../twig/useTwigTree';
-import { Twig } from '../twig/twig';
+import { mergeTwigs, resetTwigs } from '../twig/twigSlice';
+import { v4 } from 'uuid';
+import { resetUsers } from '../user/userSlice';
+import { useEffect } from 'react';
 
 const GET_DETAILS = gql`
   mutation GetTwigs($abstractId: String!) {
@@ -21,10 +19,9 @@ const GET_DETAILS = gql`
 `;
 
 export default function useInitSpace(space: SpaceType, abstract: Arrow | null, canView: boolean) {
-  const shouldSync = useAppSelector(selectFocusShouldSync)
   const dispatch = useAppDispatch();
 
-  const { setTwigTree } = useTwigTree(space);
+  const { loadTwigTree } = useTwigTree(space);
 
   const [getTwigs] = useMutation(GET_DETAILS, {
     onError: error => {
@@ -33,22 +30,13 @@ export default function useInitSpace(space: SpaceType, abstract: Arrow | null, c
     onCompleted: data => {
       console.log(data);
 
-      dispatch(addTwigs({
+      dispatch(mergeTwigs({
+        id: v4(),
         space,
         twigs: data.getTwigs,
       }));
 
-      setTwigTree(data.getTwigs);
-
-      dispatch(addArrows({
-        space,
-        arrows: data.getTwigs.map((twig: Twig) => twig.detail)
-      }))
-
-      dispatch(addTwigUsers({
-        space,
-        twigs: data.getTwigs,
-      }))
+      loadTwigTree(data.getTwigs);
     },
   });
 
@@ -56,7 +44,7 @@ export default function useInitSpace(space: SpaceType, abstract: Arrow | null, c
     console.log(abstract?.id);
     if (!abstract?.id) return;
     // TODO fire only once
-    dispatch(resetArrows(space));
+    dispatch(resetTwigs(space));
     dispatch(resetUsers(space));
 
     getTwigs({
@@ -64,11 +52,6 @@ export default function useInitSpace(space: SpaceType, abstract: Arrow | null, c
         abstractId: abstract.id
       }
     });
-    console.log('leggo')
-
-    if (shouldSync) {
-      dispatch(setFocusShouldSync(false));
-    }
-  }, [abstract?.id, (shouldSync && space === 'FOCUS'), canView])
+  }, [abstract?.id])
 
 }

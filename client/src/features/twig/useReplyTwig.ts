@@ -1,22 +1,23 @@
-import { gql, Reference, useApolloClient, useMutation, useReactiveVar } from '@apollo/client';
-import { sessionVar } from '../../cache';
+import { gql, useApolloClient, useMutation } from '@apollo/client';
 import { v4 } from 'uuid';
-import { useNavigate } from 'react-router-dom';
-import { SpaceType } from '../space/space';
-import { useAppDispatch } from '../../app/hooks';
-import { createTwig, Twig } from './twig';
-import { setSpace, setTwigId } from '../space/spaceSlice';
-import { User } from '../user/user';
 import { useSnackbar } from 'notistack';
-import { addTwigs, finishNewTwig, startNewTwig } from './twigSlice';
-import { getEmptyDraft } from '../../utils';
-import { FULL_TWIG_FIELDS, TWIG_FIELDS } from './twigFragments';
+import { FULL_TWIG_FIELDS } from './twigFragments';
 import { FULL_ROLE_FIELDS } from '../role/roleFragments';
 import { applyRole } from '../role/useApplyRole';
-import { FULL_ARROW_FIELDS } from '../arrow/arrowFragments';
-import { Arrow, createArrow } from '../arrow/arrow';
-import { addArrows } from '../arrow/arrowSlice';
-import useTwigTree from './useTwigTree';
+import { createArrow } from '../arrow/arrow';
+import { selectSessionId } from '../auth/authSlice';
+import useSelectTwig from './useSelectTwig';
+import useCenterTwig from './useCenterTwig';
+import { useContext } from 'react';
+import { createTwig, Twig } from './twig';
+import { mergeTwigs, selectIdToChildIdToTrue } from './twigSlice';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { AppContext } from '../../App';
+import { SpaceContext } from '../space/SpaceComponent';
+import { getEmptyDraft } from '../../utils';
+import { DisplayMode } from '../../constants';
+import { SpaceType } from '../space/space';
+import { selectIdToPos, setSelectedTwigId } from '../space/spaceSlice';
 
 const REPLY_TWIG = gql`
   mutation ReplyTwig(
@@ -52,18 +53,27 @@ const REPLY_TWIG = gql`
     }
   }
   ${FULL_TWIG_FIELDS}
-  ${FULL_ARROW_FIELDS}
   ${FULL_ROLE_FIELDS}
 `;
 
-export default function useReplyTwig(user: User | null, space: SpaceType, abstract: Arrow) {
-  const navigate = useNavigate();
+export default function useReplyTwig() {
   const client = useApolloClient();
   const dispatch = useAppDispatch();
 
-  const sessionDetail = useReactiveVar(sessionVar);
+  const { user } = useContext(AppContext);
+  const { 
+    space, 
+    abstract, 
+    canEdit
+  } = useContext(SpaceContext);
 
-  const { setTwigTree } = useTwigTree(space);
+  const idToPos = useAppSelector(selectIdToPos(space));
+
+  const sessionId = useAppSelector(selectSessionId);
+  const idToChildIdToTrue = useAppSelector(selectIdToChildIdToTrue(space));
+
+  const { selectTwig } = useSelectTwig(space, canEdit);
+  const { centerTwig } = useCenterTwig(space);
 
   const { enqueueSnackbar } = useSnackbar();
   
@@ -78,40 +88,33 @@ export default function useReplyTwig(user: User | null, space: SpaceType, abstra
     onCompleted: data => {
       console.log(data);
 
-      dispatch(finishNewTwig({
-        space,
-      }));
-      dispatch(addTwigs({
+      dispatch(mergeTwigs({
+        id: v4(),
         space,
         twigs: data.replyTwig.twigs
       }));
-
-      dispatch(addArrows({
-        space,
-        arrows: data.replyTwig.twigs.map((twig: Twig) => twig.detail)
-      }));
-
-      setTwigTree(data.replyTwig.twigs)
     }
   });
 
   const replyTwig = (parentTwig: Twig) => {
     if (!user) return;
     
-    const dx = parentTwig.x || 1;
-    const dy = parentTwig.y || 1;
+    const dx = Math.random() - 0.5;
+    const dy = Math.random() - 0.5;
     const dr = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+
+    const pos = idToPos[parentTwig.id];
 
     const postId = v4();
     const twigId = v4();
-    const x = Math.round((420 + 100 * Math.random()) * (dx / dr) + parentTwig.x);
-    const y = Math.round((420 + 100 * Math.random()) * (dy / dr) + parentTwig.y);
+    const x = Math.round(500 * (dx / dr) + pos.x);
+    const y = Math.round(500 * (dy / dr) + pos.y);
 
     const draft = getEmptyDraft();
 
     reply({
       variables: {
-        sessionId: sessionDetail.id,
+        sessionId,
         parentTwigId: parentTwig.id,
         twigId,
         postId,
@@ -121,66 +124,56 @@ export default function useReplyTwig(user: User | null, space: SpaceType, abstra
       },
     });
 
-    const post = createArrow(user, postId, draft, abstract, null, null);
-    const twig = createTwig(user, twigId, abstract, post, parentTwig, x, y, false);
-    
-    client.cache.writeQuery({
-      query: gql`
-        query WriteReplyTwig {
-          twig {
-            ...FullTwigFields
-          }
-        }
-        ${FULL_TWIG_FIELDS}
-      `,
-      data: {
-        twig,
-      },
+    const post = createArrow({
+      id: postId,
+      user,
+      draft, 
+      title: null, 
+      url: null, 
+      faviconUrl: null,
+      abstract, 
+      sheaf: null,
+      source: null, 
+      target: null,
     });
 
-    twig.createDate = null;
-    twig.updateDate = null;
-    post.activeDate = null;
-    post.saveDate = null;
-    post.createDate = null;
-    post.updateDate = null;
-    
-    const newRef = client.cache.writeFragment({
-      id: client.cache.identify(twig),
-      fragment: TWIG_FIELDS,
-      data: twig,
+    const rank = Object.keys(idToChildIdToTrue[parentTwig.id] || {}).length + 1;
+
+    const twig = createTwig({
+      id: twigId,
+      user,
+      abstract, 
+      detail: post, 
+      parent: parentTwig, 
+      x, 
+      y, 
+      rank, 
+      color: null,
+      isOpen: true, 
+      windowId: null, 
+      groupId: null, 
+      tabId: null,
+      bookmarkId: null, 
+      displayMode: DisplayMode.SCATTERED,
+      source: null,
+      target: null,
     });
 
-    client.cache.modify({
-      id: client.cache.identify(parentTwig),
-      fields: {
-        children: (cachedRefs = []) => {
-          return [...(cachedRefs || []), newRef];
-        }
-      }
-    });
-
-    dispatch(startNewTwig({
-      space,
-      newTwigId: twigId,
-    }));
-
-    dispatch(addTwigs({
-      space,
+    dispatch(mergeTwigs({
+      id: v4(),
+      space: SpaceType.FRAME,
       twigs: [twig],
-    }));
+    }))
 
-
-    dispatch(setTwigId({
+    dispatch(setSelectedTwigId({
       space,
-      twigId
+      selectedTwigId: twig.id,
     }));
 
-    dispatch(setSpace(space));
-
-    navigate(`/m/${abstract.routeName}/${twig.i}`);
-    //centerTwig(twigId, true, 100, coords);
+    centerTwig(twig.id, true, 0, {
+      x: twig.x,
+      y: twig.y
+    });
   }
-
   return { replyTwig }
 }
