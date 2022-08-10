@@ -21,11 +21,14 @@ interface TwigBarProps {
 function TwigBar(props: TwigBarProps) {
   const dispatch = useAppDispatch();
 
-  const { palette } = useContext(AppContext);
+  const { 
+    palette,
+    pendingLink,
+  } = useContext(AppContext);
+  
   const {
     space, 
     abstract, 
-    pendingLink,
     canEdit,
     setRemovalTwigId,
   } = useContext(SpaceContext);

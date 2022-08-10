@@ -8,7 +8,7 @@ import { findDefaultWeight, getEmptyDraft, IdToType } from 'src/utils';
 import { SearchService } from 'src/search/search.service';
 import { SubsService } from 'src/subs/subs.service';
 import { RoleType } from 'src/enums';
-import { PRIVATE_ARROW_DRAFT, PRIVATE_ARROW_TEXT } from 'src/constants';
+import { LOAD_LIMIT, PRIVATE_ARROW_DRAFT, PRIVATE_ARROW_TEXT } from 'src/constants';
 import { RolesService } from 'src/roles/roles.service';
 import { TwigsService } from 'src/twigs/twigs.service';
 import { VotesService } from 'src/votes/votes.service';
@@ -98,6 +98,28 @@ export class ArrowsService {
         url: In(urls),
       },
     });
+  }
+
+  async getArrowsBySourceId(sourceId: string, offset: number): Promise<Arrow[]> {
+    return this.arrowsRepository.createQueryBuilder('arrow')
+      .select('arrow')
+      .where('arrow.sourceId = :sourceId', { sourceId })
+      .orderBy('arrow.weight', 'DESC')
+      .addOrderBy('arrow.updateDate', 'DESC')
+      .limit(LOAD_LIMIT)
+      .offset(offset)
+      .getMany()
+  }
+
+  async getArrowsByTargetId(targetId: string, offset: number): Promise<Arrow[]> {
+    return this.arrowsRepository.createQueryBuilder('arrow')
+      .select('arrow')
+      .where('arrow.targetId = :targetId', { targetId })
+      .orderBy('arrow.weight', 'DESC')
+      .addOrderBy('arrow.updateDate', 'DESC')
+      .limit(LOAD_LIMIT)
+      .offset(offset)
+      .getMany()
   }
 
   async createArrow(params: {

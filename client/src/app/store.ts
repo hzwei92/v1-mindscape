@@ -6,11 +6,13 @@ import twigReducer from '../features/twig/twigSlice';
 import userReducer from '../features/user/userSlice';
 import sheafReducer from '../features/sheaf/sheafSlice';
 import spaceReducer from '../features/space/spaceSlice';
+import entryReducer from '../features/entry/entrySlice';
 
 export const store = configureStore({
   reducer: {
     arrow: arrowReducer,
     auth: authReducer,
+    entry: entryReducer,
     search: searchReducer,
     sheaf: sheafReducer,
     space: spaceReducer,

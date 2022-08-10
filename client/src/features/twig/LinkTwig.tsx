@@ -14,18 +14,22 @@ import { getTwigColor } from '../../utils';
 import ArrowComponent from '../arrow/ArrowComponent';
 import PostTwig from './PostTwig';
 import { selectSelectedTwigId } from '../space/spaceSlice';
+import TwigControls from './TwigControls';
+
 interface LinkTwigProps {
   twig: Twig;
 }
 
 export default function LinkTwig(props: LinkTwigProps) {
-  const { palette } = useContext(AppContext);
+  const { 
+    palette,
+    pendingLink, 
+    setPendingLink,
+  } = useContext(AppContext);
   
   const { 
     abstract,
     space, 
-    pendingLink, 
-    setPendingLink,
     canEdit,
   } = useContext(SpaceContext);
 
@@ -163,7 +167,7 @@ export default function LinkTwig(props: LinkTwigProps) {
           sx={{
             display: 'flex',
             flexDirection: 'column',
-            width: TWIG_WIDTH - 50,
+            width: TWIG_WIDTH - 20,
             opacity: .8,
             outline: isSelected
               ? `10px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`
@@ -189,21 +193,15 @@ export default function LinkTwig(props: LinkTwigProps) {
               paddingLeft: 0,
             }}>
               <Box sx={{
-                marginLeft: 0.5,
                 marginRight: 0.5,
+                paddingLeft: 4,
                 position: 'relative',
               }}>
-                <ArrowComponent
-                  arrowId={props.twig.detailId}
-                  instanceId={props.twig.id}
-                  isTab={!!props.twig.tabId}
-                  isGroup={!props.twig.tabId && !!props.twig.groupId}
-                  isWindow={!props.twig.tabId && !props.twig.groupId && !!props.twig.windowId}
-                />
                 <Box sx={{
                   position: 'absolute',
-                  left: TWIG_WIDTH - 85,
+                  left: TWIG_WIDTH - 55,
                   top: -6,
+                  zIndex: 1,
                 }}>
                   <IconButton onClick={handleOpenClick} sx={{
                     color: palette === 'dark'
@@ -215,6 +213,20 @@ export default function LinkTwig(props: LinkTwigProps) {
                     }}/>
                   </IconButton>
                 </Box>
+                <ArrowComponent
+                  arrowId={props.twig.detailId}
+                  instanceId={props.twig.id}
+                  showLinkLeftIcon={false}
+                  showLinkRightIcon={false}
+                  showPostIcon={false}
+                  isTab={!!props.twig.tabId}
+                  isGroup={!props.twig.tabId && !!props.twig.groupId}
+                  isWindow={!props.twig.tabId && !props.twig.groupId && !!props.twig.windowId}
+                />
+                <TwigControls 
+                  twig={props.twig}
+                  isPost={false}
+                />
               </Box>
             </Box>
           </Box>

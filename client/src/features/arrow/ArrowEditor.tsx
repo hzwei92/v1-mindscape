@@ -41,8 +41,13 @@ interface ArrowEditorProps {
 }
 
 export default function ArrowEditor(props: ArrowEditorProps) {
-  const { user, brightColor: color, } = useContext(AppContext);
-  const { space, pendingLink } = useContext(SpaceContext);
+  const { 
+    user, 
+    brightColor: color,
+    pendingLink,
+  } = useContext(AppContext);
+
+  const { space } = useContext(SpaceContext);
 
   const focusedArrowId = null; // useAppSelector(selectFocusedArrowId);
   const focusedSpace = 'FRAME' //useAppSelector(selectFocusedSpace);
@@ -156,7 +161,9 @@ export default function ArrowEditor(props: ArrowEditorProps) {
       <Editor
         placeholder={
           isReadonly 
-            ? ''
+            ? props.arrow.sourceId === props.arrow.targetId
+              ? 'Post'
+              : 'Link'
             : props.arrow.sourceId === props.arrow.targetId
               ? 'Post text...'
               : 'Link text...'}

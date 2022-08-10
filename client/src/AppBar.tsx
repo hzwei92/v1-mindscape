@@ -59,7 +59,10 @@ export default function AppBar() {
   };
 
   const handleSearchClick = () => {
-
+    setMenuMode(menuMode === MenuMode.SEARCH 
+      ? MenuMode.NONE 
+      : MenuMode.SEARCH
+    );
   };
 
   const handleFeedClick = () => {

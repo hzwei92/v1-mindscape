@@ -30,7 +30,7 @@ export interface SpaceState {
 const initialState: SpaceState = {
   selectedSpace: SpaceType.FRAME,
   [SpaceType.FRAME]: {
-    isOpen: false,
+    isOpen: true,
     selectedTwigId: '',
     scale: 0.75,
     scroll: {
@@ -202,6 +202,7 @@ export const {
   resetSpace,
 } = spaceSlice.actions;
 
+export const selectSelectedSpace = (state: RootState) => state.space.selectedSpace;
 export const selectIsOpen = (space: SpaceType) => (state: RootState) => state.space[space].isOpen;
 export const selectSelectedTwigId = (space: SpaceType) => (state: RootState) => state.space[space].selectedTwigId;
 export const selectScale = (space: SpaceType) => (state: RootState) => state.space[space].scale;

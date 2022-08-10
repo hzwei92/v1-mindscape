@@ -12,7 +12,10 @@ interface ArrowVoterProps {
   arrow: Arrow;
 }
 export default function ArrowVoter(props: ArrowVoterProps) {
-  const { user, dimColor } = useContext(AppContext);
+  const { 
+    user, 
+    dimColor: color,
+  } = useContext(AppContext);
 
   const [isVoting, setIsVoting] = useState(false);
 
@@ -54,7 +57,7 @@ export default function ArrowVoter(props: ArrowVoterProps) {
         sx={{
           color: (userVote?.weight || 0) > 0
             ? user?.color
-            : dimColor,
+            : color,
         }}
       >
         { 
@@ -70,7 +73,7 @@ export default function ArrowVoter(props: ArrowVoterProps) {
         size='small'
         sx={{
           minWidth: 0,
-          color: dimColor,
+          color,
           fontSize: 14,
         }}
       >
@@ -88,7 +91,7 @@ export default function ArrowVoter(props: ArrowVoterProps) {
         sx={{
           color: (userVote?.weight || 0) < 0
             ? user?.color
-            : dimColor,
+            : color,
         }}
       >
         {

@@ -43,8 +43,6 @@ export const SpaceContext = React.createContext({} as {
   canView: boolean;
   canPost: boolean;
   canEdit: boolean;
-  pendingLink: PendingLinkType;
-  setPendingLink: Dispatch<SetStateAction<PendingLinkType>>;
   removalTwigId: string;
   setRemovalTwigId: Dispatch<SetStateAction<string>>;
 });
@@ -99,12 +97,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   const canEdit = checkPermit(abstract?.canEdit, role?.type)
   const canPost = checkPermit(abstract?.canPost, role?.type)
   const canView = checkPermit(abstract?.canView, role?.type)
-
-  const [pendingLink, setPendingLink] = useState({
-    sourceId: '',
-    targetId: '',
-  });
-
+  
   const [removalTwigId, setRemovalTwigId] = useState('');
 
   const [touches, setTouches] = useState(null as React.TouchList | null);
@@ -808,8 +801,6 @@ export default function SpaceComponent(props: SpaceComponentProps) {
       canEdit,
       canPost,
       canView,
-      pendingLink,
-      setPendingLink,
       removalTwigId,
       setRemovalTwigId,
     }}>

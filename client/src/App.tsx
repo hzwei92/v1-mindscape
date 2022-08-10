@@ -11,7 +11,7 @@ import FrameComponent from './features/frame/FrameComponent';
 import FocusComponent from './features/focus/FocusComponent';
 import { User } from './features/user/user';
 import { MenuMode } from './features/menu/menu';
-import { DirectionType, PosType, SpaceState, SpaceType } from './features/space/space';
+import { DirectionType, PendingLinkType, PosType, SpaceState, SpaceType } from './features/space/space';
 import { IdToType } from './types';
 import { selectIsOpen } from './features/space/spaceSlice';
 
@@ -35,12 +35,18 @@ export const AppContext = React.createContext({} as {
   menuWidth: number;
 
   focusWidth: number;
+
+  pendingLink: PendingLinkType;
+  setPendingLink: Dispatch<SetStateAction<PendingLinkType>>;
 });
 
 function App() {
   //console.log('app');
   const user = useAppSelector(selectCurrentUser);
-  
+
+  const focusIsOpen = useAppSelector(selectIsOpen(SpaceType.FOCUS));
+  const frameIsOpen = useAppSelector(selectIsOpen(SpaceType.FRAME));
+
   const [width, setWidth] = useState(window.innerWidth);
   const [height, setHeight] = useState(window.innerHeight);
 
@@ -58,9 +64,10 @@ function App() {
   const [latentFocusWidth, setLatentFocusWidth] = useState(FOCUS_WIDTH);
   const [focusWidth, setFocusWidth] = useState(0);
 
-  const focusIsOpen = useAppSelector(selectIsOpen(SpaceType.FOCUS));
-
-  const frameIsOpen = useAppSelector(selectIsOpen(SpaceType.FRAME));
+  const [pendingLink, setPendingLink] = useState({
+    sourceId: '',
+    targetId: '',
+  });
 
   const [theme, setTheme] = useState(createTheme({
     zIndex: {
@@ -187,6 +194,9 @@ function App() {
       menuWidth,
 
       focusWidth,
+
+      pendingLink,
+      setPendingLink,
     }}>
       <ThemeProvider theme={theme}>
         <SnackbarProvider

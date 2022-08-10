@@ -113,7 +113,7 @@ export const selectArrow = createSelector(
     selectIdToArrow,
     (state, id: string | null | undefined) => id,
   ],
-  (idToArrow, id) => {
+  (idToArrow, id): Arrow | null => {
     if (id) {
       return idToArrow[id];
     }

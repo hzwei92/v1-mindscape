@@ -108,4 +108,22 @@ export class ArrowsResolver {
     const arrow = await this.arrowsService.saveArrow(user, arrowId, draft);
     return arrow;
   }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => [Arrow], {name: 'getIns'})
+  async getIns(
+    @Args('arrowId') arrowId: string,
+    @Args('offset', {type: () => Int}) offset: number,
+  ) {
+    return this.arrowsService.getArrowsByTargetId(arrowId, offset)
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => [Arrow], {name: 'getOuts'})
+  async getOuts(
+    @Args('arrowId') arrowId: string,
+    @Args('offset', {type: () => Int}) offset: number,
+  ) {
+    return this.arrowsService.getArrowsBySourceId(arrowId, offset)
+  }
 }

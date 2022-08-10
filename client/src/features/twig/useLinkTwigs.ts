@@ -8,6 +8,7 @@ import { v4 } from 'uuid';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { selectSessionId } from '../auth/authSlice';
 import { SpaceContext } from '../space/SpaceComponent';
+import { AppContext } from '../../App';
 
 const LINK_TWIGS = gql`
   mutation LinkTwigs($sessionId: String!, $abstractId: String!, $sourceId: String!, $targetId: String!) {
@@ -48,7 +49,15 @@ export default function useLinkTwigs() {
   const dispatch = useAppDispatch();
   const sessionId = useAppSelector(selectSessionId);
 
-  const { space, abstract, pendingLink , setPendingLink } = useContext(SpaceContext);
+  const {
+    pendingLink,
+    setPendingLink,
+  } = useContext(AppContext);
+
+  const { 
+    space, 
+    abstract,
+  } = useContext(SpaceContext);
 
   const { enqueueSnackbar } = useSnackbar();
 

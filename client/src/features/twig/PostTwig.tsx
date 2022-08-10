@@ -23,13 +23,13 @@ export default function PostTwig(props: PostTwigProps) {
   const {
     dimColor,
     palette,
+    pendingLink,
+    setPendingLink,
   } = useContext(AppContext);
 
   const {
     space,
     abstract,
-    pendingLink,
-    setPendingLink,
     canEdit,
   } = useContext(SpaceContext);
 
@@ -207,6 +207,9 @@ export default function PostTwig(props: PostTwigProps) {
                 <ArrowComponent
                   arrowId={props.twig.detailId}
                   instanceId={props.twig.id}
+                  showLinkLeftIcon={false}
+                  showLinkRightIcon={false}
+                  showPostIcon={false}
                   isTab={!!props.twig.tabId}
                   isGroup={!props.twig.tabId && !!props.twig.groupId}
                   isWindow={!props.twig.tabId && !props.twig.groupId && !!props.twig.windowId}

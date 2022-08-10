@@ -9,9 +9,14 @@ import { getTimeString } from '../../utils';
 import { TWIG_WIDTH } from '../../constants';
 import UserTag from '../user/UserTag';
 import ArrowVoter from './ArrowVoter';
-
+import AdjustIcon from '@mui/icons-material/Adjust';
+import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
+import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
 interface ArrowProps {
   arrowId: string;
+  showLinkLeftIcon: boolean;
+  showLinkRightIcon: boolean;
+  showPostIcon: boolean;
   instanceId: string;
   isWindow: boolean;
   isGroup: boolean;
@@ -58,8 +63,28 @@ export default function ArrowComponent(props: ArrowProps) {
         fontSize: 14,
         color: dimColor,
         paddingBottom: '4px',
+        display: 'flex',
+        flexDirection: 'row',
       }}>
+        <Box component='span' sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+        }}>
+            {
+              props.showLinkLeftIcon
+                ? <KeyboardDoubleArrowLeftIcon fontSize='inherit' />
+                : props.showLinkRightIcon
+                  ? <KeyboardDoubleArrowRightIcon fontSize='inherit' />
+                  : props.showPostIcon
+                    ? <AdjustIcon fontSize='inherit' />
+                    : null
+            }
+        </Box>
+        &nbsp;
+        { ' ' }
         <UserTag user={arrow.user} />
+        &nbsp;
         { ' ' }
         { timeString }
         {

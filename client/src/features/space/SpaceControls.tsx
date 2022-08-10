@@ -10,7 +10,7 @@ import { Dispatch, SetStateAction, useContext } from 'react';
 import { SpaceContext } from './SpaceComponent';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { AppContext } from '../../App';
-import { selectScale, setScale } from './spaceSlice';
+import { selectIsOpen, selectScale, setScale } from './spaceSlice';
 import { useReactiveVar } from '@apollo/client';
 import { SpaceType } from './space';
 import { focusSpaceElVar, frameSpaceElVar } from '../../cache';
@@ -25,6 +25,8 @@ export default function SpaceControls(props: SpaceControlsProps) {
   const { width } = useContext(AppContext);
   const { space } = useContext(SpaceContext);
 
+  const isOpen = useAppSelector(selectIsOpen(space));
+
   const spaceEl = useReactiveVar(space === SpaceType.FRAME
     ? frameSpaceElVar
     : focusSpaceElVar);
@@ -32,6 +34,9 @@ export default function SpaceControls(props: SpaceControlsProps) {
   const scale = useAppSelector(selectScale(space));
 
   const isSynced = true;
+
+  if (!isOpen) return null;
+
 
   const handleScaleDownClick = (event: React.MouseEvent) => {
     event.stopPropagation();

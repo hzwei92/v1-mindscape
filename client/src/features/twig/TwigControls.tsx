@@ -14,10 +14,14 @@ import { useSnackbar } from 'notistack';
 import UserTag from '../user/UserTag';
 import { AppContext } from '../../App';
 import { SpaceContext } from '../space/SpaceComponent';
-import { useAppSelector } from '../../app/hooks';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { selectArrow } from '../arrow/arrowSlice';
 import { selectSheaf } from '../sheaf/sheafSlice';
 import useReplyTwig from './useReplyTwig';
+import { v4 } from 'uuid';
+import { addEntry } from '../entry/entrySlice';
+import { searchPushSlice } from '../search/searchSlice';
+import { MenuMode } from '../menu/menu';
 //import useCenterTwig from './useCenterTwig';
 
 interface TwigControlsProps {
@@ -25,20 +29,23 @@ interface TwigControlsProps {
   isPost: boolean;
 }
 function TwigControls(props: TwigControlsProps) {
+  const dispatch = useAppDispatch();
+
   const {
     user,
     brightColor: color,
+    pendingLink,
+    setPendingLink,
+    setMenuMode,
   } = useContext(AppContext);
   
   const {
     space,
     abstract,
-    pendingLink,
-    setPendingLink,
-    canEdit,
     canPost,
     canView
   } = useContext(SpaceContext)
+
   const arrow = useAppSelector(state => selectArrow(state, props.twig.detailId));
   const sheaf = useAppSelector(state => selectSheaf(state, arrow?.sheafId));
 
@@ -52,10 +59,10 @@ function TwigControls(props: TwigControlsProps) {
 
   const { replyTwig } = useReplyTwig();
   
-  // const { detail } = useSubArrow(props.twig.post, () => {
+  // const { sub } = useSubArrow(props.twig.post, () => {
   //   props.setIsLoading(false);
   // });
-  // const { undetail } = useUndetail(props.twig.post, () => {
+  // const { unsub } = useUnsub(props.twig.post, () => {
   //   props.setIsLoading(false);
   // });
 
@@ -155,13 +162,13 @@ function TwigControls(props: TwigControlsProps) {
 
   const handleSubClick = (event: React.MouseEvent) => {
     event.stopPropagation();
-    //detail();
+    //sub();
     handleMenuClose();
   }
   
   const handleUnsubClick = (event: React.MouseEvent) => {
     event.stopPropagation();
-    //undetail();
+    //unsub();
     handleMenuClose();
   }
 
@@ -210,10 +217,63 @@ function TwigControls(props: TwigControlsProps) {
   const handlePrevClick = (event: React.MouseEvent) => {
     event.stopPropagation();
 
+    if (!arrow) return;
+
+    const id = v4();
+    
+    dispatch(addEntry({
+      id,
+      userId: arrow.userId,
+      parentId: '',
+      arrowId: arrow.id,
+      showIns: true,
+      showOuts: false,
+      inIds: [],
+      outIds: [],
+      sourceId: null,
+      targetId: null,
+      shouldGetLinks: true,
+    }));
+
+    dispatch(searchPushSlice({
+      originalQuery: '',
+      query: '',
+      entryIds: [id],
+      userIds: [],
+    }));
+
+    setMenuMode(MenuMode.SEARCH);
   }
 
   const handleNextClick = (event: React.MouseEvent) => {
     event.stopPropagation();
+
+    if (!arrow) return;
+
+    const id = v4();
+
+    dispatch(addEntry({
+      id,
+      userId: arrow.userId,
+      parentId: '',
+      arrowId: arrow.id,
+      showIns: false,
+      showOuts: true,
+      inIds: [],
+      outIds: [],
+      sourceId: null,
+      targetId: null,
+      shouldGetLinks: true,
+    }));
+
+    dispatch(searchPushSlice({
+      originalQuery: '',
+      query: '',
+      entryIds: [id],
+      userIds: [],
+    }));
+
+    setMenuMode(MenuMode.SEARCH);
   }
 
   return (

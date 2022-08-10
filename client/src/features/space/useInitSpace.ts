@@ -21,8 +21,6 @@ const GET_DETAILS = gql`
 export default function useInitSpace(space: SpaceType, abstract: Arrow | null, canView: boolean) {
   const dispatch = useAppDispatch();
 
-  const { loadTwigTree } = useTwigTree(space);
-
   const [getTwigs] = useMutation(GET_DETAILS, {
     onError: error => {
       console.error(error);
@@ -35,8 +33,6 @@ export default function useInitSpace(space: SpaceType, abstract: Arrow | null, c
         space,
         twigs: data.getTwigs,
       }));
-
-      loadTwigTree(data.getTwigs);
     },
   });
 

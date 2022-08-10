@@ -160,6 +160,8 @@ type Mutation {
   getArrowByRouteName(routeName: String!): Arrow
   getCurrentUser: User!
   getCurrentUserLeads: [Lead!]!
+  getIns(arrowId: String!, offset: Int!): [Arrow!]!
+  getOuts(arrowId: String!, offset: Int!): [Arrow!]!
   getTwigs(abstractId: String!): [Twig!]!
   getUser(userId: String!): User!
   graftTwig(displayMode: String!, parentTwigId: String!, rank: Int!, sessionId: String!, twigId: String!): GraftTwigResult!

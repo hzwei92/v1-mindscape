@@ -2,6 +2,7 @@ import { Box, Paper } from '@mui/material';
 import { useContext, useState } from 'react';
 import { AppContext } from '../../App';
 import AccountComponent from '../account/AccountComponent';
+import SearchComponent from '../search/SearchComponent';
 
 export default function MenuComponent() {
   const {
@@ -42,6 +43,7 @@ export default function MenuComponent() {
         color,
       }}>
         <AccountComponent />
+        <SearchComponent />
       </Paper>
       <Box 
         onMouseDown={handleResizeMouseDown}
