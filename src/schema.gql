@@ -146,7 +146,6 @@ type MoveTwigResult {
 
 type Mutation {
   addTwig(arrowId: String!, parentTwigId: String!, sessionId: String!): AddTwigResult!
-  adjustTwigs(abstractId: String!, twigIds: [String!]!, xs: [Int!]!, ys: [Int!]!): [Twig!]!
   changeBookmark(bookmarkId: String!, title: String!, url: String): Twig!
   copyToBookmark(entries: [BookmarkEntry!]!): [Twig!]!
   copyToTab(entries: [TabEntry!]!, groupEntry: GroupEntry): [Twig!]!
@@ -235,6 +234,7 @@ type RemoveTwigResult {
 
 type ReplyTwigResult {
   abstract: Arrow!
+  arrow: Arrow!
   role: Role
   twigs: [Twig!]!
 }

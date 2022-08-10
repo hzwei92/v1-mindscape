@@ -198,27 +198,23 @@ export default function PostTwig(props: PostTwigProps) {
               isSelected={isSelected}
             />
             <Box sx={{
-              display: 'flex',
+              padding: 0.5,
+              paddingLeft: 4,
             }}>
-              <Box sx={{
-                padding: 0.5,
-                paddingLeft: 4,
-              }}>
-                <ArrowComponent
-                  arrowId={props.twig.detailId}
-                  instanceId={props.twig.id}
-                  showLinkLeftIcon={false}
-                  showLinkRightIcon={false}
-                  showPostIcon={false}
-                  isTab={!!props.twig.tabId}
-                  isGroup={!props.twig.tabId && !!props.twig.groupId}
-                  isWindow={!props.twig.tabId && !props.twig.groupId && !!props.twig.windowId}
-                />
-                <TwigControls
-                  twig={props.twig}
-                  isPost={true}
-                />
-              </Box>
+              <ArrowComponent
+                arrowId={props.twig.detailId}
+                instanceId={props.twig.id}
+                showLinkLeftIcon={false}
+                showLinkRightIcon={false}
+                showPostIcon={false}
+                isTab={!!props.twig.tabId}
+                isGroup={!props.twig.tabId && !!props.twig.groupId}
+                isWindow={!props.twig.tabId && !props.twig.groupId && !!props.twig.windowId}
+              />
+              <TwigControls
+                twig={props.twig}
+                isPost={true}
+              />
             </Box>
           </Card>
         </Box>

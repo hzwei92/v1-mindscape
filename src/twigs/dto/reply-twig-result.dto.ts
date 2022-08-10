@@ -8,6 +8,9 @@ export class ReplyTwigResult {
   @Field(() => Arrow)
   abstract: Arrow;
 
+  @Field(() => Arrow)
+  arrow: Arrow;
+  
   @Field(() => [Twig])
   twigs: Twig[];
 

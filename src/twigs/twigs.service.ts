@@ -269,8 +269,12 @@ export class TwigsService {
     await this.arrowsService.incrementTwigN(parentTwig.abstractId, 2);
     await this.arrowsService.incrementTwigZ(parentTwig.abstractId, 2);
     const abstract = await this.arrowsService.getArrowById(parentTwig.abstractId);
+
+    const arrow = await this.arrowsService.getArrowById(parentTwig.detailId);
+
     return {
       abstract,
+      arrow,
       twigs: [postTwig, linkTwig],
       role: role1,
     };
@@ -812,43 +816,6 @@ export class TwigsService {
       sibs,
       role: role1,
     }
-  }
-
-  async adjustTwigs(user: User, abstractId: string,  twigIds: string[], xs: number[], ys: number[]) {
-    if (twigIds.length !== xs.length || twigIds.length !== ys.length) {
-      throw new BadRequestException('Invalid input');
-    }
-    const abstract = await this.arrowsService.getArrowById(abstractId);
-    if (!abstract) {
-      throw new BadRequestException('This abstract does not exist')
-    }
-
-    const role = await this.rolesService.getRoleByUserIdAndArrowId(user.id, abstract.id);
-
-    if (!checkPermit(abstract.canEdit, role?.type)) {
-      throw new BadRequestException('Insufficient privileges');
-    }
-
-    const twigs = await this.getTwigsByIds(twigIds);
-    if (twigs.length !== twigIds.length) {
-      throw new BadRequestException('Invalid Twig IDs');
-    }
-
-    twigs.forEach(twig => {
-      if (twig.abstractId !== abstractId) {
-        throw new BadRequestException('Invalid abstract ID')
-      }
-    });
-
-    const twigs0 = twigs.map((twig, i) => {
-      const twig0 = new Twig();
-      twig0.id = twig.id;
-      twig0.x = xs[i];
-      twig0.y = ys[i];
-      return twig0;
-    });
-
-    return this.twigsRepository.save(twigs0);
   }
 
   async openTwig(user: User, twigId: string, shouldOpen: boolean) {

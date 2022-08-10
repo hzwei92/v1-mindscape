@@ -114,9 +114,7 @@ export default function ArrowComponent(props: ArrowProps) {
           //     </Box>
         }
       </Box>
-      <Box sx={{
-        width: TWIG_WIDTH - 60,
-      }}>
+      <Box>
         {
           !arrow.url && !arrow.title
             ? <ArrowEditor

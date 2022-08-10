@@ -18,6 +18,7 @@ import { getEmptyDraft } from '../../utils';
 import { DisplayMode } from '../../constants';
 import { SpaceType } from '../space/space';
 import { selectIdToPos, setSelectedTwigId } from '../space/spaceSlice';
+import { mergeArrows } from '../arrow/arrowSlice';
 
 const REPLY_TWIG = gql`
   mutation ReplyTwig(
@@ -43,6 +44,10 @@ const REPLY_TWIG = gql`
         twigZ
         twigN
         updateDate
+      }
+      arrow {
+        id
+        outCount
       }
       twigs {
         ...FullTwigFields
@@ -88,6 +93,8 @@ export default function useReplyTwig() {
     onCompleted: data => {
       console.log(data);
 
+      dispatch(mergeArrows([data.replyTwig.arrow]));
+      
       dispatch(mergeTwigs({
         id: v4(),
         space,

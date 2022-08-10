@@ -225,19 +225,6 @@ export class TwigsResolver {
     return this.twigsService.copyTwig(user, twigId, parentTwigId, rank, displayMode);
   }
 
-
-  @UseGuards(GqlAuthGuard)
-  @Mutation(() => [Twig], {name: 'adjustTwigs'})
-  async adjustTwig(
-    @CurrentUser() user: UserEntity,
-    @Args('abstractId') abstractId: string,
-    @Args('twigIds', {type: () => [String]}) twigIds: string[],
-    @Args('xs', {type: () => [Int]}) xs: number[],
-    @Args('ys', {type: () => [Int]}) ys: number[],
-  ) {
-    return this.twigsService.adjustTwigs(user, abstractId, twigIds, xs, ys);
-  }
-
   @UseGuards(GqlAuthGuard)
   @Mutation(() => OpenTwigResult, {name: 'openTwig'})
   async openTwig(
