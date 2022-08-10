@@ -8,6 +8,9 @@ import EditIcon from '@mui/icons-material/Edit';
 import SendIcon from '@mui/icons-material/Send';
 import { User } from '../user/user';
 import { useSnackbar } from 'notistack';
+import { useAppDispatch } from '../../app/hooks';
+import { SpaceType } from '../space/space';
+import { mergeUsers } from '../user/userSlice';
 
 const SET_USER_NAME = gql`
   mutation SetUserName($sessionId: String!, $name: String!) {
@@ -34,6 +37,8 @@ interface UserSettingsProps {
 }
 
 export default function UserSettings(props: UserSettingsProps) {
+  const dispatch = useAppDispatch();
+
   const sessionDetail = useReactiveVar(sessionVar);
 
   const [isEditingName, setIsEditingName] = useState(false);
@@ -63,6 +68,7 @@ export default function UserSettings(props: UserSettingsProps) {
     },
     onCompleted: data => {
       console.log(data);
+      dispatch(mergeUsers([data.setUserName]));
     }
   })
 
@@ -86,17 +92,24 @@ export default function UserSettings(props: UserSettingsProps) {
     setNameTimeout(timeout);
   };
 
-  const handleNameSubmitClick = (event: React.MouseEvent) => {
+  const handleNameSubmitClick = () => {
     setUserName({
       variables: {
         name,
         sessionId: sessionDetail.id,
       }
     })
+    setIsEditingName(false);
   };
 
   const handleMouseDown = (event: React.MouseEvent) => {
     event.preventDefault();
+  }
+
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter') {
+      handleNameSubmitClick();
+    }
   }
 
   return (
@@ -139,6 +152,7 @@ export default function UserSettings(props: UserSettingsProps) {
               type='text'
               value={name}
               onChange={handleNameChange}
+              onKeyDown={handleKeyDown}
               error={!!nameError}
               endAdornment={
                 <InputAdornment position='end'>

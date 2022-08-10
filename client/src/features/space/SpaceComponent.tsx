@@ -12,7 +12,7 @@ import { selectIdToUser } from '../user/userSlice';
 import { selectIdToDescIdToTrue, selectIdToTwig } from '../twig/twigSlice';
 import { IdToType } from '../../types';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { selectArrow, selectIdToArrow } from '../arrow/arrowSlice';
+import { selectArrowById, selectIdToArrow } from '../arrow/arrowSlice';
 import PostTwigMarker from '../twig/PostTwigMarker';
 import LinkTwigMarker from '../twig/LinkTwigMarker';
 import LinkTwig from '../twig/LinkTwig';
@@ -36,6 +36,7 @@ import {
   setScroll,
 } from './spaceSlice';
 import { focusSpaceElVar, frameSpaceElVar } from '../../cache';
+import useTwigTree from '../twig/useTwigTree';
 
 export const SpaceContext = React.createContext({} as {
   abstract: Arrow;
@@ -73,17 +74,18 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   const idToPos = useAppSelector(selectIdToPos(props.space));
   const idToHeight = useAppSelector(selectIdToHeight(props.space));
 
-  const idToUser = useAppSelector(selectIdToUser(props.space));
+  const idToUser = useAppSelector(selectIdToUser);
   const idToTwig = useAppSelector(selectIdToTwig(props.space));
   const idToArrow = useAppSelector(selectIdToArrow);
 
   const idToDescIdToTrue = useAppSelector(selectIdToDescIdToTrue(props.space));
+  useTwigTree(props.space);
 
   const abstractId = props.space === SpaceType.FRAME
     ? user?.frameId
     : user?.focusId;
 
-  const abstract = useAppSelector(state => selectArrow(state, abstractId));
+  const abstract = useAppSelector(state => selectArrowById(state, abstractId));
 
   let role = null as Role | null;
   (abstract?.roles || []).some(role_i => {
@@ -97,7 +99,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   const canEdit = checkPermit(abstract?.canEdit, role?.type)
   const canPost = checkPermit(abstract?.canPost, role?.type)
   const canView = checkPermit(abstract?.canView, role?.type)
-  
+
   const [removalTwigId, setRemovalTwigId] = useState('');
 
   const [touches, setTouches] = useState(null as React.TouchList | null);

@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../../app/store';
 import type { IdToType } from '../../types';
 import { setInit, setLogin, setLogout } from '../auth/authSlice';
@@ -8,22 +8,12 @@ import type { User } from './user';
 
 export interface UserState {
   currentUser: User | null;
-  [SpaceType.FRAME]: {
-    idToUser: IdToType<User>;
-  };
-  [SpaceType.FOCUS]: {
-    idToUser: IdToType<User>;
-  };
+  idToUser: IdToType<User>;
 }
 
 const initialState: UserState = {
   currentUser: null,
-  [SpaceType.FRAME]: {
-    idToUser: {},
-  },
-  [SpaceType.FOCUS]: {
-    idToUser: {},
-  },
+  idToUser: {},
 };
 
 const userSlice = createSlice({
@@ -35,6 +25,29 @@ const userSlice = createSlice({
         ...state,
         currentUser: action.payload,
       }
+    },
+    mergeUsers: (state, action: PayloadAction<User[]>) => {
+      const idToUser = { ...state.idToUser };
+      let currentUser = state.currentUser
+        ? { ...state.currentUser }
+        : null;
+      action.payload.forEach(user => {
+        if (user.id === state.currentUser?.id) {
+          currentUser = {
+            ...currentUser,
+            ...user,
+          }
+        }
+        idToUser[user.id] = {
+          ...idToUser[user.id],
+          ...user,
+        };
+      });
+      return {
+        ...state,
+        currentUser,
+        idToUser,
+      };
     },
     resetUsers: (state, action: PayloadAction<SpaceType>) => {
       return {
@@ -77,14 +90,12 @@ const userSlice = createSlice({
           }
           return acc;
         }, { 
-          ...state[action.payload.space].idToUser
+          ...state.idToUser
         });
 
         return {
           ...state,
-          [action.payload.space]: {
-            idToUser,
-          }
+          idToUser,
         };
       });
   },
@@ -92,10 +103,19 @@ const userSlice = createSlice({
 
 export const {
   setCurrentUser,
+  mergeUsers,
   resetUsers,
 } = userSlice.actions;
 
 export const selectCurrentUser = (state: RootState) => state.user.currentUser;
-export const selectIdToUser = (space: SpaceType) => (state: RootState) => state.user[space].idToUser;
+export const selectIdToUser = (state: RootState) => state.user.idToUser;
+
+export const selectUserById = createSelector(
+  [
+    (state: RootState, id: string | undefined) => id,
+    (state: RootState, id: string | undefined) => selectIdToUser(state),
+  ],
+  (id, idToUser): User | null => id ? idToUser[id] || null : null,
+);
 
 export default userSlice.reducer

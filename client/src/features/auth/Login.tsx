@@ -52,6 +52,7 @@ export default function Login(props: LoginProps) {
           query LoginQuery {
             ...FullUserFields
           }
+          ${FULL_USER_FIELDS}
         `,
         data: data.loginUser,
       });

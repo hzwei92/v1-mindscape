@@ -1,7 +1,8 @@
 import { gql, useMutation, useReactiveVar } from '@apollo/client';
 import { useSnackbar } from 'notistack';
-import { useAppDispatch } from '../../app/hooks';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { sessionVar } from '../../cache';
+import { mergeArrows, selectArrowIdToInstanceIds, selectIdToInstance, updateInstance } from './arrowSlice';
 
 const SAVE_ARROW = gql`
   mutation SaveArrow($sessionId: String!, $arrowId: String!, $draft: String!) {
@@ -18,6 +19,9 @@ export default function useSaveArrow(arrowId: string, instanceId: string) {
   const sessionDetail = useReactiveVar(sessionVar);
   const dispatch = useAppDispatch();
 
+  const idToInstance = useAppSelector(selectIdToInstance);
+  const arrowIdToInstanceIds = useAppSelector(selectArrowIdToInstanceIds);
+
   const { enqueueSnackbar } = useSnackbar();
   
   const [save] = useMutation(SAVE_ARROW, {
@@ -28,6 +32,21 @@ export default function useSaveArrow(arrowId: string, instanceId: string) {
     },
     onCompleted: data => {
       console.log(data);
+      dispatch(mergeArrows([data.saveArrow]));
+      arrowIdToInstanceIds[arrowId].forEach(id => {
+        if (id === instanceId) {
+          dispatch(updateInstance({
+            ...idToInstance[id],
+            isNewlySaved: true,
+          }));
+        }
+        else {
+          dispatch(updateInstance({
+            ...idToInstance[id],
+            shouldRefreshDraft: true,
+          }));
+        }
+      });
     },
   });
 

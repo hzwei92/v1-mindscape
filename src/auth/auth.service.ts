@@ -216,10 +216,10 @@ export class AuthService {
     await this.usersService.setEmailVerificationCode(userId, code);
     console.log(code)
     return this.emailService.sendMail({
-      from: 'Mindscape <verify@mindscape.pub>',
+      from: 'Mindscape.pub <verify@mindscape.pub>',
       to: userEmail,
       subject: `Email verification code: ${code}`,
-      text: `Welcome to Granum. Use this code to verify your email: ${code}`
+      text: `Welcome to Mindscape.pub! Use this code to verify your email: ${code}`
     });
   }
 }

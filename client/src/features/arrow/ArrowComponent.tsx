@@ -1,17 +1,17 @@
-import { Box, Icon, Link, Typography } from '@mui/material';
-import type React from 'react';
-import { selectArrow } from './arrowSlice';
-import { useContext } from 'react';
+import { Box, Link, Typography } from '@mui/material';
+import { addInstance, removeInstance, selectArrowById, selectInstanceById } from './arrowSlice';
+import { useContext, useEffect } from 'react';
 import ArrowEditor from './ArrowEditor';
 import { AppContext } from '../../App';
-import { useAppSelector } from '../../app/hooks';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { getTimeString } from '../../utils';
 import { TWIG_WIDTH } from '../../constants';
 import UserTag from '../user/UserTag';
 import ArrowVoter from './ArrowVoter';
 import AdjustIcon from '@mui/icons-material/Adjust';
-import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
-import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
+import SouthEastIcon from '@mui/icons-material/SouthEast';
+import NorthWestIcon from '@mui/icons-material/NorthWest';
+import { selectUserById } from '../user/userSlice';
 interface ArrowProps {
   arrowId: string;
   showLinkLeftIcon: boolean;
@@ -24,23 +24,25 @@ interface ArrowProps {
 }
 
 export default function ArrowComponent(props: ArrowProps) {
+  const dispatch = useAppDispatch();
   const { dimColor } = useContext(AppContext);
 
-  const arrow = useAppSelector(state => selectArrow(state, props.arrowId));
+  const arrow = useAppSelector(state => selectArrowById(state, props.arrowId));
+  const arrowUser = useAppSelector(state => selectUserById(state, arrow?.userId));
 
-  //useAppSelector(state => selectInstanceById(state, props.instanceId)); // rerender on instance change
+  useAppSelector(state => selectInstanceById(state, props.instanceId)); // rerender on instance change
 
-  // useEffect(() => {
-  //   dispatch(addInstance({
-  //     id: props.instanceId,
-  //     arrowId: arrow.id,
-  //     isNewlySaved: false,
-  //     shouldRefreshDraft: false,
-  //   }));
-  //   return () => {
-  //     dispatch(removeInstance(props.instanceId));
-  //   };
-  // }, []);
+  useEffect(() => {
+    dispatch(addInstance({
+      id: props.instanceId,
+      arrowId: props.arrowId,
+      isNewlySaved: false,
+      shouldRefreshDraft: false,
+    }));
+    return () => {
+      dispatch(removeInstance(props.instanceId));
+    };
+  }, []);
 
   if (!arrow) return null;
 
@@ -72,10 +74,10 @@ export default function ArrowComponent(props: ArrowProps) {
           justifyContent: 'center',
         }}>
             {
-              props.showLinkLeftIcon
-                ? <KeyboardDoubleArrowLeftIcon fontSize='inherit' />
-                : props.showLinkRightIcon
-                  ? <KeyboardDoubleArrowRightIcon fontSize='inherit' />
+              props.showLinkRightIcon
+                ? <SouthEastIcon fontSize='inherit' />
+                : props.showLinkLeftIcon
+                  ? <NorthWestIcon fontSize='inherit' />
                   : props.showPostIcon
                     ? <AdjustIcon fontSize='inherit' />
                     : null
@@ -83,7 +85,7 @@ export default function ArrowComponent(props: ArrowProps) {
         </Box>
         &nbsp;
         { ' ' }
-        <UserTag user={arrow.user} />
+        <UserTag user={arrowUser} />
         &nbsp;
         { ' ' }
         { timeString }

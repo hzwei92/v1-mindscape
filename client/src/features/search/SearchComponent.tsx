@@ -19,6 +19,7 @@ export default function SearchComponent() {
     menuIsResizing,
     menuMode,
     setMenuMode,
+    menuWidth,
     brightColor: color,
   } = useContext(AppContext);
 
@@ -61,10 +62,12 @@ export default function SearchComponent() {
   return (
     <InstantSearch searchClient={searchClient} indexName={ALGOLIA_INDEX_NAME}>
       <Card elevation={5} sx={{
-        display: 'flex',
+        display: menuMode === MenuMode.SEARCH
+          ? 'flex'
+          : 'none',
         flexDirection: 'row',
         justifyContent: 'space-between',
-        padding: 1,
+        padding: menuWidth ? 1 : 0,
         marginBottom: 0,
         borderTopRightRadius: 0,
         borderTopLeftRadius: 0,
@@ -106,6 +109,9 @@ export default function SearchComponent() {
         </Box>
       </Card>
       <Box ref={containerEl} sx={{
+        display: menuMode === MenuMode.SEARCH
+          ? 'block'
+          : 'none',
         height: 'calc(100% - 50px)',
         width: '100%',
         overflowY: 'scroll',

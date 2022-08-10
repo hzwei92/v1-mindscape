@@ -120,7 +120,7 @@ export const { mergeSheafs } = sheafSlice.actions;
 export const selectIdToSheaf = (state: RootState) => state.sheaf.idToSheaf;
 export const selectUrlToSheafId = (state: RootState) => state.sheaf.urlToSheafId;
 
-export const selectSheaf = createSelector(
+export const selectSheafById = createSelector(
   [
     selectIdToSheaf,
     (state, id: string | null | undefined) => id,

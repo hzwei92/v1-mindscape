@@ -3,7 +3,6 @@ import { useAppDispatch } from '../../app/hooks';
 import { SpaceType } from './space';
 import { Arrow } from '../arrow/arrow';
 import { FULL_TWIG_FIELDS } from '../twig/twigFragments';
-import useTwigTree from '../twig/useTwigTree';
 import { mergeTwigs, resetTwigs } from '../twig/twigSlice';
 import { v4 } from 'uuid';
 import { resetUsers } from '../user/userSlice';

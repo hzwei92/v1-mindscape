@@ -15,8 +15,8 @@ import UserTag from '../user/UserTag';
 import { AppContext } from '../../App';
 import { SpaceContext } from '../space/SpaceComponent';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { selectArrow } from '../arrow/arrowSlice';
-import { selectSheaf } from '../sheaf/sheafSlice';
+import { selectArrowById } from '../arrow/arrowSlice';
+import { selectSheafById } from '../sheaf/sheafSlice';
 import useReplyTwig from './useReplyTwig';
 import { v4 } from 'uuid';
 import { addEntry } from '../entry/entrySlice';
@@ -46,8 +46,8 @@ function TwigControls(props: TwigControlsProps) {
     canView
   } = useContext(SpaceContext)
 
-  const arrow = useAppSelector(state => selectArrow(state, props.twig.detailId));
-  const sheaf = useAppSelector(state => selectSheaf(state, arrow?.sheafId));
+  const arrow = useAppSelector(state => selectArrowById(state, props.twig.detailId));
+  const sheaf = useAppSelector(state => selectSheafById(state, arrow?.sheafId));
 
   const frameTwig = null;
   const focusTwig = null;
@@ -252,6 +252,45 @@ function TwigControls(props: TwigControlsProps) {
 
     const id = v4();
 
+    let sourceId = null;
+    let targetId = null;
+    if (arrow.sourceId !== arrow.targetId) {
+      if (arrow.source) {
+        sourceId = v4();
+
+        dispatch(addEntry({
+          id: sourceId,
+          userId: arrow.source.userId,
+          parentId: id,
+          arrowId: arrow.source.id,
+          showIns: false,
+          showOuts: false,
+          inIds: [],
+          outIds: [],
+          sourceId: null,
+          targetId: null,
+          shouldGetLinks: false,
+        }));
+      }
+
+      if (arrow.target) {
+        targetId = v4();
+        dispatch(addEntry({
+          id: targetId,
+          userId: arrow.target.userId,
+          parentId: id,
+          arrowId: arrow.target.id,
+          showIns: false,
+          showOuts: false,
+          inIds: [],
+          outIds: [],
+          sourceId: null,
+          targetId: null,
+          shouldGetLinks: false,
+        }));
+      }
+    }
+
     dispatch(addEntry({
       id,
       userId: arrow.userId,
@@ -261,8 +300,8 @@ function TwigControls(props: TwigControlsProps) {
       showOuts: true,
       inIds: [],
       outIds: [],
-      sourceId: null,
-      targetId: null,
+      sourceId,
+      targetId,
       shouldGetLinks: true,
     }));
 
@@ -462,13 +501,13 @@ function TwigControls(props: TwigControlsProps) {
         color,
         fontSize: 12,
       }}>
-        {sheaf?.inCount} IN
+        {arrow?.inCount} IN
       </Button>
       <Button onMouseDown={handleMouseDown} onClick={handleNextClick} sx={{
         color,
         fontSize: 12,
       }}>
-        {sheaf?.outCount} OUT
+        {arrow?.outCount} OUT
       </Button>
     </Box>
   )

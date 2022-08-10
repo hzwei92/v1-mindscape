@@ -17,8 +17,6 @@ export default function EntryTree(props: EntryTreeProps) {
   const idToEntry = useAppSelector(selectIdToEntry);
   const entry = idToEntry[props.entryId];
   
-  console.log('entry', entry);
-  
   const idToArrow = useAppSelector(selectIdToArrow);
   const arrow = idToArrow[entry.arrowId];
   
@@ -55,7 +53,7 @@ export default function EntryTree(props: EntryTreeProps) {
     if (entry.sourceId && entry.sourceId !== entry.parentId) {
       entryIds.push(entry.sourceId);
     }
-    else if (entry.targetId && entry.targetId !== entry.parentId) {
+    if (entry.targetId && entry.targetId !== entry.parentId) {
       entryIds.push(entry.targetId);
     }
   }

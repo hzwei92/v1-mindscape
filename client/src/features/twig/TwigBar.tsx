@@ -2,8 +2,6 @@ import { Box, IconButton, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import React, { useContext } from 'react';
 import type { Twig } from './twig';
-// import AdjustIcon from '@mui/icons-material/Adjust';
-// import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
 import { mergeTwigs } from './twigSlice';
 import { v4 } from 'uuid';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
@@ -25,7 +23,7 @@ function TwigBar(props: TwigBarProps) {
     palette,
     pendingLink,
   } = useContext(AppContext);
-  
+
   const {
     space, 
     abstract, 

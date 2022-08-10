@@ -167,7 +167,7 @@ export default function LinkTwig(props: LinkTwigProps) {
           sx={{
             display: 'flex',
             flexDirection: 'column',
-            width: TWIG_WIDTH - 20,
+            width: TWIG_WIDTH - 40,
             opacity: .8,
             outline: isSelected
               ? `10px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`
@@ -199,7 +199,7 @@ export default function LinkTwig(props: LinkTwigProps) {
               }}>
                 <Box sx={{
                   position: 'absolute',
-                  left: TWIG_WIDTH - 55,
+                  left: TWIG_WIDTH - 75,
                   top: -6,
                   zIndex: 1,
                 }}>

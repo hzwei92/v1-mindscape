@@ -1,7 +1,7 @@
 import { createTheme, PaletteMode, Paper, ThemeProvider } from '@mui/material';
 import React, { Dispatch, SetStateAction, useEffect, useReducer, useState } from 'react';
 import { useAppSelector } from './app/hooks';
-import { FOCUS_WIDTH, MAX_Z_INDEX, MENU_WIDTH } from './constants';
+import { FOCUS_MIN_WIDTH, FOCUS_WIDTH, MAX_Z_INDEX, MENU_MIN_WIDTH, MENU_WIDTH } from './constants';
 import { selectCurrentUser } from './features/user/userSlice';
 import { SnackbarProvider } from 'notistack';
 import AppBar from './AppBar';
@@ -63,6 +63,7 @@ function App() {
   
   const [latentFocusWidth, setLatentFocusWidth] = useState(FOCUS_WIDTH);
   const [focusWidth, setFocusWidth] = useState(0);
+  const [focusIsResizing, setFocusIsResizing] = useState(false);
 
   const [pendingLink, setPendingLink] = useState({
     sourceId: '',
@@ -148,29 +149,29 @@ function App() {
   }, [focusIsOpen, frameIsOpen]);
 
   const handleMouseMove = (event: React.MouseEvent) => {
-    // if (menuIsResizing) {
-    //   event.preventDefault();
-    //   dispatch(setMenuWidth(
-    //     Math.max(event.clientX - getAppbarWidth(width), MENU_MIN_WIDTH)
-    //   ));
-    // }
-    // else if (frameIsResizing) {
-    //   event.preventDefault();
-    //   dispatch(setFocusWidth(
-    //     Math.max(event.clientX - getAppbarWidth(width) - menuWidth1, FRAME_MIN_WIDTH)
-    //   ));
-    // }
+    if (menuIsResizing) {
+      event.preventDefault();
+      setMenuWidth(
+        Math.max(event.clientX - appBarWidth, MENU_MIN_WIDTH)
+      );
+    }
+    else if (focusIsResizing) {
+      event.preventDefault();
+      setFocusWidth(
+        Math.max(event.clientX - appBarWidth - menuWidth, FOCUS_MIN_WIDTH)
+      );
+    }
   }
 
   const handleMouseUp = (event: React.MouseEvent) => {
-    // if (menuIsResizing) {
-    //   event.preventDefault();
-    //   dispatch(setMenuIsResizing(false));
-    // }
-    // else if (frameIsResizing) {
-    //   event.preventDefault();
-    //   dispatch(setFrameIsResizing(false));
-    // }
+    if (menuIsResizing) {
+      event.preventDefault();
+      setMenuIsResizing(false);
+    }
+    else if (focusIsResizing) {
+      event.preventDefault();
+      setFocusIsResizing(false);
+    }
   }
 
   return (

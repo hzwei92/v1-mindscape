@@ -159,6 +159,7 @@ export class ArrowsService {
     arrow0.faviconUrl = faviconUrl;
     arrow0.routeName = arrow0.id;
     arrow0.color = user.color;
+    arrow0.saveDate = new Date();
     const arrow1 = await this.arrowsRepository.save(arrow0);
 
     if (sourceId && targetId) {

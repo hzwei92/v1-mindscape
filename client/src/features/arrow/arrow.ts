@@ -71,15 +71,6 @@ export type Arrow = {
   __typename: string;
 }
 
-export type IdToHeightType = {
-  [id: string]: number;
-};
-
-export type CreateLinkType = {
-  sourceId: string;
-  targetId: string;
-};
-
 export const createArrow = (params: {
   id: string,
   user: User,
@@ -173,3 +164,10 @@ export const createArrow = (params: {
   };
   return arrow
 }
+
+export type ArrowInstance = {
+  id: string;
+  arrowId: string;
+  isNewlySaved: boolean;
+  shouldRefreshDraft: boolean;
+};

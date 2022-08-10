@@ -185,8 +185,8 @@ export default function EntryComponent(props: EntryComponentProps) {
         <ArrowComponent
           arrowId={props.entry.arrowId}
           instanceId={props.entry.id}
-          showLinkLeftIcon={!!props.entry.sourceId && props.entry.sourceId !== props.entry.parentId}
           showLinkRightIcon={!!props.entry.targetId && props.entry.targetId !== props.entry.parentId}
+          showLinkLeftIcon={!!props.entry.sourceId && props.entry.sourceId !== props.entry.parentId}
           showPostIcon={!props.entry.sourceId && !props.entry.targetId}
           isWindow={false}
           isGroup={false}

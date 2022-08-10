@@ -16,6 +16,9 @@ import createIframelyPlugin from '../editor/createIframelyPlugin';
 import { AppContext } from '../../App';
 import { SpaceContext } from '../space/SpaceComponent';
 import useSaveArrow from './useSaveArrow';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { selectInstanceById, updateInstance } from './arrowSlice';
+import moveSelectionToEnd from '../editor/moveSelectionToEnd';
 //import useSaveArrow from './useSaveArrow';
 
 const iframelyPlugin = createIframelyPlugin();
@@ -41,6 +44,8 @@ interface ArrowEditorProps {
 }
 
 export default function ArrowEditor(props: ArrowEditorProps) {
+  const dispatch = useAppDispatch();
+
   const { 
     user, 
     brightColor: color,
@@ -49,10 +54,7 @@ export default function ArrowEditor(props: ArrowEditorProps) {
 
   const { space } = useContext(SpaceContext);
 
-  const focusedArrowId = null; // useAppSelector(selectFocusedArrowId);
-  const focusedSpace = 'FRAME' //useAppSelector(selectFocusedSpace);
-
-  //const instance = useAppSelector(state => selectInstanceById(state, props.instanceId))
+  const instance = useAppSelector(state => selectInstanceById(state, props.instanceId))
 
   const { saveArrow } = useSaveArrow(props.arrow.id, props.instanceId);
 
@@ -74,38 +76,39 @@ export default function ArrowEditor(props: ArrowEditorProps) {
     if (isFocused && editorRef.current) {
       //editorRef.current.focus();
     }
-    if (focusedArrowId === props.arrow.id && focusedSpace === space && editorRef.current) {
-      editorRef.current.focus();
-      // dispatch(setFocused({
-      //   space: null,
-      //   arrowId: '',
-      // }));
-    }
-  }, [focusedArrowId, focusedSpace, editorRef.current]);
+    // if (focusedArrowId === props.arrow.id && focusedSpace === space && editorRef.current) {
+    //   editorRef.current.focus();
+    //   dispatch(setFocused({
+    //     space: null,
+    //     arrowId: '',
+    //   }));
+    // }
+  }, [/*focusedArrowId, focusedSpace,*/ editorRef.current]);
 
-  // useEffect(() => {
-  //   if (instance?.isNewlySaved) {
-  //     dispatch(updateInstance({
-  //       ...instance,
-  //       isNewlySaved: false,
-  //     }));
-  //   }
-  //   if (instance?.shouldRefreshDraft && props.arrow.draft) {
-  //     const contentState = convertFromRaw(JSON.parse(props.arrow.draft));
-  //     if (isFocused) {
-  //       setEditorState(moveSelectionToEnd(EditorState.createWithContent(contentState)));
-  //     }
-  //     else {
-  //       setEditorState(
-  //         EditorState.createWithContent(contentState)
-  //       );
-  //     }
-  //     dispatch(updateInstance({
-  //       ...instance,
-  //       shouldRefreshDraft: false,
-  //     }));
-  //   }
-  // }, [props.arrow.draft, instance])
+  useEffect(() => {
+    if (instance?.isNewlySaved) {
+      dispatch(updateInstance({
+        ...instance,
+        isNewlySaved: false,
+      }));
+    }
+    if (instance?.shouldRefreshDraft && props.arrow.draft) {
+      console.log('refresh draft',instance, props.arrow.draft);
+      const contentState = convertFromRaw(JSON.parse(props.arrow.draft));
+      if (isFocused) {
+        setEditorState(moveSelectionToEnd(EditorState.createWithContent(contentState)));
+      }
+      else {
+        setEditorState(
+          EditorState.createWithContent(contentState)
+        );
+      }
+      dispatch(updateInstance({
+        ...instance,
+        shouldRefreshDraft: false,
+      }));
+    }
+  }, [props.arrow.draft, instance])
 
   const handleChange = (newState: EditorState) => {
     if (props.arrow.userId !== user?.id || props.arrow.commitDate) {
@@ -162,8 +165,8 @@ export default function ArrowEditor(props: ArrowEditorProps) {
         placeholder={
           isReadonly 
             ? props.arrow.sourceId === props.arrow.targetId
-              ? 'Post'
-              : 'Link'
+              ? 'Empty post'
+              : 'Empty link'
             : props.arrow.sourceId === props.arrow.targetId
               ? 'Post text...'
               : 'Link text...'}

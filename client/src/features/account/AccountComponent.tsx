@@ -24,8 +24,6 @@ export default function AccountComponent() {
   const [isLogin, setIsLogin] = useState(false);
   const [isLogout, setIsLogout] = useState(false);
 
-  const dispatch = useAppDispatch();
-
   const { logoutUser } = useLogout();
 
   if (!user || menuMode !== MenuMode.ACCOUNT) return null;

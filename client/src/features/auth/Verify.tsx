@@ -1,7 +1,8 @@
-import { gql, useApolloClient, useMutation } from '@apollo/client';
+import { gql, useMutation } from '@apollo/client';
 import { Box, Button, Card, FormControl, TextField, Typography } from '@mui/material';
 import React, { useState } from 'react';
 import { useAppDispatch } from '../../app/hooks';
+import { mergeUsers } from '../user/userSlice';
 const VERIFY_USER = gql`
   mutation VerifyUser($code: String!) {
     verifyUser(code: $code) {
@@ -20,6 +21,8 @@ const RESEND_USER_VERIFICATION = gql`
 `;
 
 export default function Verify() {
+  const dispatch = useAppDispatch();
+
   const [code, setCode] = useState('');
   const [message, setMessage] = useState('');
   
@@ -30,6 +33,7 @@ export default function Verify() {
     },
     onCompleted: data => {
       console.log(data);
+      dispatch(mergeUsers([data.verifyUser]));
     }
   });
 

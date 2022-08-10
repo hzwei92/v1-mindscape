@@ -3,7 +3,7 @@ import React, { useContext, useState } from 'react';
 import { useAppSelector } from '../../app/hooks';
 import { MAX_Z_INDEX, VIEW_RADIUS } from '../../constants';
 import { getPolylineCoords } from '../../utils';
-import { selectArrow } from '../arrow/arrowSlice';
+import { selectArrowById } from '../arrow/arrowSlice';
 import { PosType } from '../space/space';
 import { SpaceContext } from '../space/SpaceComponent';
 import { selectSelectedTwigId } from '../space/spaceSlice';
@@ -44,7 +44,7 @@ export default function LinkTwigMarker(props: LinkTwigMarkerProps) {
   //   }
   // }, [links.length]);
 
-  const link = useAppSelector(state => selectArrow(state, props.twig.detailId))
+  const link = useAppSelector(state => selectArrowById(state, props.twig.detailId))
   
   const handleMouseDown = (event: React.MouseEvent) => {
     event.stopPropagation();

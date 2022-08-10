@@ -44,7 +44,7 @@ export default function GoogleButton(props: GoogleButtonProps) {
     onCompleted: data => {
       console.log(data);
       refreshTokenInterval();
-      dispatch(setCurrentUser(data.registerGoogleUser.id));
+      dispatch(setCurrentUser(data.registerGoogleUser));
       props.onCompleted && props.onCompleted();
     },
   });
@@ -57,7 +57,7 @@ export default function GoogleButton(props: GoogleButtonProps) {
     onCompleted: data => {
       console.log(data);
       refreshTokenInterval();
-      dispatch(setCurrentUser(data.loginGoogleUser.id));
+      dispatch(setCurrentUser(data.loginGoogleUser));
       props.onCompleted && props.onCompleted();
     },
   });

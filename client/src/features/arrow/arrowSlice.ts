@@ -4,16 +4,20 @@ import { IdToType } from "../../types";
 import { setInit, setLogin, setLogout } from "../auth/authSlice";
 import { mergeTwigs } from "../twig/twigSlice";
 import { setCurrentUser } from "../user/userSlice";
-import type { Arrow } from "./arrow";
+import type { Arrow, ArrowInstance } from "./arrow";
 
 export interface ArrowState {
   idToArrow: IdToType<Arrow>;
   urlToArrowId: IdToType<string>;
+  idToInstance: IdToType<ArrowInstance>;
+  arrowIdToInstanceIds: IdToType<string[]>;
 };
 
 const initialState: ArrowState = {
   idToArrow: {},
   urlToArrowId: {},
+  idToInstance: {},
+  arrowIdToInstanceIds: {},
 };
 
 const arrowSlice = createSlice({
@@ -21,9 +25,15 @@ const arrowSlice = createSlice({
   initialState,
   reducers: {
     mergeArrows: (state, action: PayloadAction<Arrow[]>) => {
-      return action.payload.reduce((acc, arrow) => {
-        if (arrow?.id) {
-          acc.idToArrow[arrow.id] = arrow;
+      const {
+        idToArrow,
+        urlToArrowId,
+      } = action.payload.reduce((acc, arrow) => {
+        if (arrow.id) {
+          acc.idToArrow[arrow.id] = {
+            ...acc.idToArrow[arrow.id],
+            ...arrow
+          };
 
           if (arrow.url) {
             acc.urlToArrowId[arrow.url] = arrow.id
@@ -34,6 +44,59 @@ const arrowSlice = createSlice({
         idToArrow: { ...state.idToArrow },
         urlToArrowId: { ...state.urlToArrowId },
       });
+
+      return {
+        ...state,
+        idToArrow,
+        urlToArrowId,
+      }
+    },
+    addInstance: (state, action: PayloadAction<ArrowInstance>) => {
+      return {
+        ...state,
+        idToInstance: {
+          ...state.idToInstance,
+          [action.payload.id]: action.payload,
+        },
+        arrowIdToInstanceIds: {
+          ...state.arrowIdToInstanceIds,
+          [action.payload.arrowId]: [
+            ...(state.arrowIdToInstanceIds[action.payload.arrowId] || []),
+            action.payload.id,
+          ],
+        },
+      };
+    },
+    updateInstance: (state, action: PayloadAction<ArrowInstance>) => {
+      return {
+        ...state,
+        idToInstance: {
+          ...state.idToInstance,
+          [action.payload.id]: action.payload,
+        }
+      };
+    },
+    removeInstance: (state, action: PayloadAction<string>) => {
+      const idToInstance = {
+        ...state.idToInstance,
+      };
+      const arrowIdToInstanceIds = {
+        ...state.arrowIdToInstanceIds,
+      }
+      delete idToInstance[action.payload];
+      const instance = state.idToInstance[action.payload];
+      if (instance) {
+        arrowIdToInstanceIds[instance.arrowId] = arrowIdToInstanceIds[instance.arrowId]
+          .filter(instanceId => instanceId !== action.payload);
+        if (!arrowIdToInstanceIds[instance.arrowId].length) {
+          delete arrowIdToInstanceIds[instance.arrowId];
+        }
+      }
+      return {
+        ...state,
+        idToInstance,
+        arrowIdToInstanceIds,
+      };
     },
   },
   extraReducers: builder => {
@@ -44,7 +107,10 @@ const arrowSlice = createSlice({
         }
       })
       .addCase(setLogin, (state, action) => {
-        return [action.payload.frame, action.payload.focus].reduce((acc, arrow) => {
+        const {
+          idToArrow,
+          urlToArrowId,
+        } = [action.payload.frame, action.payload.focus].reduce((acc, arrow) => {
           if (arrow?.id) {
             acc.idToArrow[arrow.id] = arrow;
 
@@ -57,12 +123,21 @@ const arrowSlice = createSlice({
           idToArrow: {} as IdToType<Arrow>,
           urlToArrowId: {} as IdToType<string>,
         });
+
+        return {
+          ...state,
+          idToArrow,
+          urlToArrowId,
+        }
       })
       .addCase(setLogout, () => {
         return initialState;
       })
       .addCase(setCurrentUser, (state, action) => {
-        return [action.payload?.frame, action.payload?.focus].reduce((acc, arrow) => {
+        const {
+          idToArrow,
+          urlToArrowId,
+        } = [action.payload?.frame, action.payload?.focus].reduce((acc, arrow) => {
           if (arrow?.id) {
             acc.idToArrow[arrow.id] = arrow;
             
@@ -75,9 +150,18 @@ const arrowSlice = createSlice({
           idToArrow: { ...state.idToArrow },
           urlToArrowId: { ...state.urlToArrowId },
         });
+
+        return {
+          ...state,
+          idToArrow,
+          urlToArrowId,
+        };
       })
       .addCase(mergeTwigs, (state, action) => {
-        return action.payload.twigs.reduce((acc, twig) => {
+        const {
+          idToArrow,
+          urlToArrowId,
+        } = action.payload.twigs.reduce((acc, twig) => {
           if (twig.detail) {
             if (twig.detail.deleteDate) {
               delete acc.idToArrow[twig.detail.id];
@@ -100,25 +184,47 @@ const arrowSlice = createSlice({
           idToArrow: { ...state.idToArrow },
           urlToArrowId: { ...state.urlToArrowId },
         });
+
+        return {
+          ...state,
+          idToArrow,
+          urlToArrowId,
+        }
       })
   }
 });
 
-export const { mergeArrows } = arrowSlice.actions;
+export const { 
+  mergeArrows,
+  addInstance,
+  updateInstance,
+  removeInstance,
+} = arrowSlice.actions;
+
 export const selectIdToArrow = (state: RootState) => state.arrow.idToArrow;
 export const selectUrlToArrowId = (state: RootState) => state.arrow.urlToArrowId;
+export const selectIdToInstance = (state: RootState) => state.arrow.idToInstance;
+export const selectArrowIdToInstanceIds = (state: RootState) => state.arrow.arrowIdToInstanceIds;
 
-export const selectArrow = createSelector(
+export const selectArrowById = createSelector(
   [
     selectIdToArrow,
     (state, id: string | null | undefined) => id,
   ],
   (idToArrow, id): Arrow | null => {
     if (id) {
-      return idToArrow[id];
+      return idToArrow[id] || null;
     }
     return null;
   }
 );
+
+export const selectInstanceById = createSelector(
+  [
+    selectIdToInstance,
+    (state: RootState, instanceId: string) => instanceId,
+  ],
+  (idToInstance, instanceId): ArrowInstance => idToInstance[instanceId],
+)
 
 export default arrowSlice.reducer;
