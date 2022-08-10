@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../../app/store';
 import { IdToType } from '../../types';
+import { setInit, setLogin, setLogout } from '../auth/authSlice';
 import { Entry } from './entry';
 
 export interface EntryState {
@@ -17,7 +18,7 @@ export const entrySlice = createSlice({
   name: 'entry',
   initialState,
   reducers: {
-    mergeIdToEntry: (state, action: PayloadAction<IdToType<Entry>>) => {
+    mergeEntries: (state, action: PayloadAction<IdToType<Entry>>) => {
       return {
         ...state,
         idToEntry: {
@@ -56,34 +57,28 @@ export const entrySlice = createSlice({
         idToEntry,
       };
     },
-    entryStartNew: (state, action: PayloadAction<string>) => {
-      return {
-        ...state,
-        newEntryId: action.payload,
-      }
-    },
-    entryFinishNew: (state, action: PayloadAction<string>) => {
-      return {
-        idToEntry: {
-          ...state.idToEntry,
-          [state.newEntryId]: {
-            ...state.idToEntry[state.newEntryId],
-            linkId: action.payload,
-          },
-        },
-        newEntryId: '',
-      }
-    },
   },
+  extraReducers: builder => {
+    builder
+      .addCase(setInit, (state, action) => {
+        if (!action.payload) {
+          return initialState;
+        }
+      })
+      .addCase(setLogin, (state, action) => {
+        return initialState;
+      })
+      .addCase(setLogout, () => {
+        return initialState;
+      })
+  }
 });
 
 export const {
-  mergeIdToEntry,
+  mergeEntries,
   addEntry,
   updateEntry,
   removeEntries,
-  entryStartNew,
-  entryFinishNew,
 } = entrySlice.actions;
 
 export const selectIdToEntry = (state: RootState) => state.entry.idToEntry;

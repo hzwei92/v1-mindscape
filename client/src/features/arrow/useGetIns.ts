@@ -3,7 +3,7 @@ import { v4 } from 'uuid';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { IdToType } from '../../types';
 import { Entry } from '../entry/entry';
-import { mergeIdToEntry, selectIdToEntry } from '../entry/entrySlice';
+import { mergeEntries, selectIdToEntry } from '../entry/entrySlice';
 import { VOTE_FIELDS } from '../vote/voteFragments';
 import { Arrow } from './arrow';
 import { FULL_ARROW_FIELDS } from './arrowFragments';
@@ -107,7 +107,7 @@ export default function useGetIns(entryId: string, arrowId: string) {
         }
       });
 
-      dispatch(mergeIdToEntry(idToEntry1));
+      dispatch(mergeEntries(idToEntry1));
     },
     fetchPolicy: 'network-only',
   });

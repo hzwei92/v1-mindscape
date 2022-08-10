@@ -270,12 +270,13 @@ export class TwigsService {
     await this.arrowsService.incrementTwigZ(parentTwig.abstractId, 2);
     const abstract = await this.arrowsService.getArrowById(parentTwig.abstractId);
 
-    const arrow = await this.arrowsService.getArrowById(parentTwig.detailId);
+    const source = await this.arrowsService.getArrowById(parentTwig.detailId);
 
     return {
       abstract,
-      arrow,
-      twigs: [postTwig, linkTwig],
+      source,
+      link: linkTwig,
+      target: postTwig,
       role: role1,
     };
   }

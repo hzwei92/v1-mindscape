@@ -1,6 +1,7 @@
 import { Stack } from '@mui/material';
 import { createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../../app/store';
+import { setInit, setLogin, setLogout } from '../auth/authSlice';
 import { SearchSlice } from './search';
 
 export interface SearchState {
@@ -74,6 +75,20 @@ export const searchSlice = createSlice({
       }
     },
   },
+  extraReducers: builder => {
+    builder
+      .addCase(setInit, (state, action) => {
+        if (!action.payload) {
+          return initialState;
+        }
+      })
+      .addCase(setLogin, (state, action) => {
+        return initialState;
+      })
+      .addCase(setLogout, () => {
+        return initialState;
+      })
+  }
 });
 
 export const {

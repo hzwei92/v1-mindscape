@@ -9,10 +9,13 @@ export class ReplyTwigResult {
   abstract: Arrow;
 
   @Field(() => Arrow)
-  arrow: Arrow;
+  source: Arrow;
   
-  @Field(() => [Twig])
-  twigs: Twig[];
+  @Field(() => Twig)
+  link: Twig;
+
+  @Field(() => Twig)
+  target: Twig;
 
   @Field(() => Role, { nullable: true })
   role: Role;

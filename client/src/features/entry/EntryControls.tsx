@@ -19,6 +19,7 @@ import useCenterTwig from '../twig/useCenterTwig';
 import { useNavigate } from 'react-router-dom';
 import { Arrow } from '../arrow/arrow';
 import { AppContext } from '../../App';
+import useReplyEntry from './useReplyEntry';
 
 interface EntryControlsProps {
   entry: Entry;
@@ -42,7 +43,8 @@ export default function EntryControls(props: EntryControlsProps) {
 
   const [isEditingRoute, setIsEditingRoute] = useState(false);
 
-  // const { replyEntry } = useReplyEntry(props.entry.id, props.entry.postId);
+  const { replyEntry } = useReplyEntry(props.entry.id);
+
   // const { promoteEntry } = usePromoteEntry();
   // const { subPost } = useSubPost(props.post, () => {
   //   props.setIsLoading(false);
@@ -59,8 +61,8 @@ export default function EntryControls(props: EntryControlsProps) {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
   const handleReplyClick = (event: React.MouseEvent) => {
-    // event.stopPropagation();
-    // replyEntry();
+    event.stopPropagation();
+    replyEntry();
   }
 
   const handleLinkClick = (event: React.MouseEvent) => {

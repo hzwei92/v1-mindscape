@@ -22,6 +22,7 @@ import { v4 } from 'uuid';
 import { addEntry } from '../entry/entrySlice';
 import { searchPushSlice } from '../search/searchSlice';
 import { MenuMode } from '../menu/menu';
+import { Arrow } from '../arrow/arrow';
 //import useCenterTwig from './useCenterTwig';
 
 interface TwigControlsProps {
@@ -79,7 +80,8 @@ function TwigControls(props: TwigControlsProps) {
 
   const handleReplyClick = (event: React.MouseEvent) => {
     event.stopPropagation();
-    replyTwig(props.twig);
+    if (!arrow) return;
+    replyTwig(props.twig, arrow);
   }
 
   const handleLinkClick = (event: React.MouseEvent) => {

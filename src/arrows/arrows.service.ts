@@ -219,6 +219,68 @@ export class ArrowsService {
     return arrow1;
   }
 
+  async replyArrow(user: User, abstractId: string, sourceId: string, linkId: string, targetId: string, linkDraft: string, targetDraft: string) {
+    const abstract = await this.arrowsRepository.findOne({
+      where: {
+        id: abstractId,
+      },
+    });
+    if (!abstract) {
+      throw new BadRequestException('This abstract arrow does not exist');
+    }
+
+    const source = await this.arrowsRepository.findOne({
+      where: {
+        id: sourceId,
+      },
+    });
+    if (!source) {
+      throw new BadRequestException('This source arrow does not exist');
+    }
+
+    const targetSheaf = await this.sheafsService.createSheaf(null, null, null);
+
+    const linkSheaf = await this.sheafsService.createSheaf(source.sheafId, targetSheaf.id, null);
+
+    const { arrow: target } = await this.createArrow({
+      user, 
+      id: targetId,
+      sourceId: null,
+      targetId: null,
+      abstract,
+      sheaf: targetSheaf,
+      draft: targetDraft,
+      title: null,
+      url: null,
+      faviconUrl: null,
+    });
+
+    const { arrow: link } = await this.createArrow({
+      user,
+      id: linkId,
+      sourceId,
+      targetId,
+      abstract,
+      sheaf: linkSheaf,
+      draft: linkDraft,
+      title: null,
+      url: null,
+      faviconUrl: null,
+    });
+
+    const source1 = await this.arrowsRepository.findOne({
+      where:{
+        id: sourceId,
+      }
+    });
+
+    return {
+      source: source1,
+      target,
+      link,
+    }
+  }
+
   async linkArrows(user: User, abstract: Arrow, sourceId: string, targetId: string) {
     const source = await this.arrowsRepository.findOne({
       where: {

@@ -184,6 +184,7 @@ type Mutation {
   removeTab(twigId: String!): RemoveTabResult!
   removeTwig(sessionId: String!, shouldRemoveDescs: Boolean!, twigId: String!): RemoveTwigResult!
   removeWindow(twigId: String!): TabResult!
+  replyArrow(abstractId: String!, linkDraft: String!, linkId: String!, sessionId: String!, sourceId: String!, targetDraft: String!, targetId: String!): ReplyArrowResult!
   replyTwig(draft: String!, parentTwigId: String!, postId: String!, sessionId: String!, twigId: String!, x: Int!, y: Int!): ReplyTwigResult!
   requestRole(arrowId: String!, sessionId: String!): Role!
   resendUserVerification: User!
@@ -232,11 +233,18 @@ type RemoveTwigResult {
   twigs: [Twig!]!
 }
 
+type ReplyArrowResult {
+  link: Arrow!
+  source: Arrow!
+  target: Arrow!
+}
+
 type ReplyTwigResult {
   abstract: Arrow!
-  arrow: Arrow!
+  link: Twig!
   role: Role
-  twigs: [Twig!]!
+  source: Arrow!
+  target: Twig!
 }
 
 type Role {

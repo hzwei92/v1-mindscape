@@ -1,10 +1,10 @@
-import { gql, useApolloClient, useMutation } from '@apollo/client';
+import { gql, useMutation } from '@apollo/client';
 import { v4 } from 'uuid';
 import { useSnackbar } from 'notistack';
 import { FULL_TWIG_FIELDS } from './twigFragments';
 import { FULL_ROLE_FIELDS } from '../role/roleFragments';
 import { applyRole } from '../role/useApplyRole';
-import { createArrow } from '../arrow/arrow';
+import { Arrow, createArrow } from '../arrow/arrow';
 import { selectSessionId } from '../auth/authSlice';
 import useSelectTwig from './useSelectTwig';
 import useCenterTwig from './useCenterTwig';
@@ -18,7 +18,7 @@ import { getEmptyDraft } from '../../utils';
 import { DisplayMode } from '../../constants';
 import { SpaceType } from '../space/space';
 import { selectIdToPos, setSelectedTwigId } from '../space/spaceSlice';
-import { mergeArrows } from '../arrow/arrowSlice';
+import { mergeArrows, selectArrowById } from '../arrow/arrowSlice';
 
 const REPLY_TWIG = gql`
   mutation ReplyTwig(
@@ -45,11 +45,14 @@ const REPLY_TWIG = gql`
         twigN
         updateDate
       }
-      arrow {
+      source {
         id
         outCount
       }
-      twigs {
+      link {
+        ...FullTwigFields
+      }
+      target {
         ...FullTwigFields
       }
       role {
@@ -62,7 +65,6 @@ const REPLY_TWIG = gql`
 `;
 
 export default function useReplyTwig() {
-  const client = useApolloClient();
   const dispatch = useAppDispatch();
 
   const { user } = useContext(AppContext);
@@ -93,18 +95,29 @@ export default function useReplyTwig() {
     onCompleted: data => {
       console.log(data);
 
-      dispatch(mergeArrows([data.replyTwig.arrow]));
+      const {
+        source,
+        link,
+        target
+      } = data.replyTwig;
+      dispatch(mergeArrows([source]));
       
       dispatch(mergeTwigs({
         id: v4(),
         space,
-        twigs: data.replyTwig.twigs
+        twigs: [link, target]
       }));
     }
   });
 
-  const replyTwig = (parentTwig: Twig) => {
+  const replyTwig = (parentTwig: Twig, parentArrow: Arrow) => {
     if (!user) return;
+
+    const parentArrow1 = Object.assign({}, parentArrow, {
+      outCount: parentArrow.outCount + 1,
+    });
+    
+    dispatch(mergeArrows([parentArrow1]));
     
     const dx = Math.random() - 0.5;
     const dy = Math.random() - 0.5;

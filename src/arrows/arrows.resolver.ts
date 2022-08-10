@@ -16,6 +16,7 @@ import { Vote } from 'src/votes/vote.model';
 import { User as UserEntity } from 'src/users/user.entity';
 import { Sheaf } from 'src/sheafs/sheaf.model';
 import { SheafsService } from 'src/sheafs/sheafs.service';
+import { ReplyArrowResult } from './dto/reply-arrow-result.dto';
 
 @Resolver(() => Arrow)
 export class ArrowsResolver {
@@ -107,6 +108,34 @@ export class ArrowsResolver {
   ) {
     const arrow = await this.arrowsService.saveArrow(user, arrowId, draft);
     return arrow;
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => ReplyArrowResult, {name: 'replyArrow'})
+  async replyPost(
+    @CurrentUser() user: UserEntity,
+    @Args('sessionId') sessionId: string,
+    @Args('abstractId') abstractId: string,
+    @Args('sourceId') sourceId: string,
+    @Args('linkId') linkId: string,
+    @Args('targetId') targetId: string,
+    @Args('linkDraft') linkDraft: string,
+    @Args('targetDraft') targetDraft: string,
+  ) {
+    const { 
+      source,
+      link,
+      target,
+    } = await this.arrowsService.replyArrow(user, abstractId, sourceId, linkId, targetId, linkDraft, targetDraft);
+    this.pubSub.publish('linkPosts', {
+      sessionId,
+      linkPosts: link,
+    });
+    return {
+      source,
+      link,
+      target,
+    };
   }
 
   @UseGuards(GqlAuthGuard)
