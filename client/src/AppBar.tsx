@@ -17,6 +17,7 @@ import useAppRouter from './useAppRouter';
 import { useContext } from 'react';
 import { AppContext } from './App';
 import { MenuMode } from './features/menu/menu';
+import useSetUserPalette from './features/user/useSetUserPalette';
 //import useSavePostSub from './features/post/useSavePostSub';
 
 export default function AppBar() {
@@ -34,6 +35,8 @@ export default function AppBar() {
 
   useAuth();
   useAppRouter(user);
+
+  const { setUserPalette } = useSetUserPalette();
 
   const handleAboutClick = () => {
 
@@ -75,10 +78,7 @@ export default function AppBar() {
 
   }
   const handlePaletteClick = () => {
-    setPalette(palette === 'dark'
-      ? 'light'
-      : 'dark'
-    )
+    setUserPalette(palette === 'light' ? 'dark' : 'light');
   }
   return (
     <Box>

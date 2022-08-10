@@ -15,3 +15,8 @@ export enum DisplayMode {
   HORIZONTAL = 'HORIZONTAL',
   VERTICAL = 'VERTICAL',
 }
+
+export enum PaletteMode {
+  LIGHT = 'light',
+  DARK = 'dark',
+}

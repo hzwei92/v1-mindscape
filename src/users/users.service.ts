@@ -8,6 +8,7 @@ import { SearchService } from 'src/search/search.service';
 import { ArrowsService } from 'src/arrows/arrows.service';
 import { v4 } from 'uuid';
 import { SheafsService } from 'src/sheafs/sheafs.service';
+import { PaletteMode } from 'src/enums';
 
 const numbers = NumberDictionary.generate({ min: 100, max: 999 });
 
@@ -63,7 +64,7 @@ export class UsersService {
     return user;
   }
 
-  async initUser(): Promise<User> {
+  async initUser(palette: string): Promise<User> {
     let name = '';
     let existingUser = null;
 
@@ -81,6 +82,9 @@ export class UsersService {
     user0.lowercaseName = name.toLowerCase();
     user0.routeName = encodeURIComponent(user0.lowercaseName);
     user0.color = '#' + Math.round(Math.random() * Math.pow(16, 6)).toString(16).padStart(6, '0')
+    user0.palette = palette === 'dark'
+      ? PaletteMode.DARK
+      : PaletteMode.LIGHT;
     const user1 = await this.usersRepository.save(user0);
 
     const postId = v4();
@@ -183,6 +187,18 @@ export class UsersService {
 
     const user1 = await this.getUserById(user.id);
     
+    this.searchService.partialUpdateUsers([user1]);
+
+    return user1;
+  }
+
+  async setUserPalette(user: User, palette: string) {
+    user.palette = palette === 'dark'
+      ? PaletteMode.DARK
+      : PaletteMode.LIGHT;
+
+    const user1 = await this.usersRepository.save(user);
+
     this.searchService.partialUpdateUsers([user1]);
 
     return user1;

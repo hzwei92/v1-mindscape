@@ -172,6 +172,22 @@ export class UsersResolver {
   }
 
   @UseGuards(GqlAuthGuard)
+  @Mutation(() => User, {name: 'setUserPalette'})
+  async setUserPalette(
+    @CurrentUser() user: UserEntity,
+    @Args('sessionId') sessionId: string,
+    @Args('palette') palette: string,
+  ) {
+    const user1 = await this.usersService.setUserPalette(user, palette);
+    this.pubSub.publish('updateUser', {
+      sessionId,
+      userId: user1.id,
+      updateUser: user1,
+    });
+    return user1;
+  }
+
+  @UseGuards(GqlAuthGuard)
   @Mutation(() => User, {name: 'setUserName'})
   async setUserName(
     @CurrentUser() user: UserEntity,

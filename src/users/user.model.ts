@@ -36,6 +36,9 @@ export class User {
   @Field()
   color: string;
 
+  @Field()
+  palette: string;
+
   @Field(() => Float, { nullable: true })
   mapLng: number;
 

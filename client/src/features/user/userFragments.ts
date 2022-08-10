@@ -13,6 +13,7 @@ export const USER_FIELDS = gql`
     routeName
     email
     color
+    palette
     verifyEmailDate
     mapLng
     mapLat

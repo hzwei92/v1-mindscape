@@ -17,6 +17,7 @@ export type User = {
   routeName: string;
   description: string;
   color: string;
+  palette: string;
   lng: number | null;
   lat: number | null;
   mapLng: number | null;
@@ -29,8 +30,4 @@ export type User = {
   updateDate: Date;
   deleteDate: Date | null;
   __typename: string;
-};
-
-export type IdToTrueType = {
-  [id: string]: true;
 };

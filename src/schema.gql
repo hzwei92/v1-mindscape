@@ -165,7 +165,7 @@ type Mutation {
   getTwigs(abstractId: String!): [Twig!]!
   getUser(userId: String!): User!
   graftTwig(displayMode: String!, parentTwigId: String!, rank: Int!, sessionId: String!, twigId: String!): GraftTwigResult!
-  initUser(token: String): User!
+  initUser(palette: String!): User!
   inviteRole(arrowId: String!, sessionId: String!, userName: String!): Role!
   linkTwigs(abstractId: String!, sessionId: String!, sourceId: String!, targetId: String!): LinkTwigsResult!
   loginGoogleUser(token: String!): User!
@@ -195,6 +195,7 @@ type Mutation {
   setUserFocusByRouteName(arrowRouteName: String!, sessionId: String!): User!
   setUserMap(lat: Float!, lng: Float!, zoom: Float!): User!
   setUserName(name: String!, sessionId: String!): User!
+  setUserPalette(palette: String!, sessionId: String!): User!
   syncBookmarks(bookmarks: [BookmarkEntry!]!, twigId: String!): SyncBookmarksResult!
   syncTabState(groups: [GroupEntry!]!, tabs: [TabEntry!]!, twigId: String!, windows: [WindowEntry!]!): SyncTabStateResult!
   unfollowUser(userId: String!): Lead!
@@ -396,6 +397,7 @@ type User {
   mapLng: Float
   mapZoom: Float
   name: String!
+  palette: String!
   roles: [Role!]!
   routeName: String!
   updateDate: DateTime!

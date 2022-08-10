@@ -12,6 +12,7 @@ import {
 
 import { Exclude } from 'class-transformer';
 import { Arrow } from 'src/arrows/arrow.entity';
+import { PaletteMode } from 'src/enums';
 
 @Entity()
 export class User {
@@ -49,6 +50,13 @@ export class User {
   
   @Column()
   color: string;
+
+  @Column({
+    type: 'enum',
+    enum: PaletteMode,
+    default: PaletteMode.DARK,
+  })
+  palette: PaletteMode;
   
   @Column('double precision', { nullable: true })
   mapLng: number;

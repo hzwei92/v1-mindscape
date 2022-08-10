@@ -173,7 +173,7 @@ export class ArrowsService {
 
     const arrow2 = await this.arrowsRepository.save(arrow1);
 
-    this.searchService.saveArrows([arrow2]);
+    this.searchService.partialUpdateArrows([arrow2]);
 
     const [vote] = await this.votesService.createInitialVotes(user, [arrow2]);
     

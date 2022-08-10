@@ -23,22 +23,8 @@ export class AuthService {
   
   oauthClient: Auth.OAuth2Client;
 
-  async initUser(token: string | null) {
-    let user;
-    if (token) {
-      const email = await this.googleAuthenticate(token);
-      user = await this.usersService.getUserByEmail(email);
-      if (user) {
-        return this.loginGoogleUser(null, token);
-      }
-      else {
-        user = await this.usersService.initUser()
-        return this.registerGoogleUser(user.id, token);
-      }
-    }
-    else {
-      user = await this.usersService.initUser();
-    }
+  async initUser(palette: string) {
+    const user = await this.usersService.initUser(palette);
     const accessTokenCookie = this.getAccessTokenCookie(user.id);
     const refreshTokenCookie = await this.getRefreshTokenCookie(user.id, false);
     return {

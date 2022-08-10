@@ -123,6 +123,15 @@ function App() {
   }, [user?.color, palette]);
 
   useEffect(() => {
+    if (user?.palette && user?.palette !== palette) {
+      setPalette(user?.palette === 'light'
+        ? 'light'
+        : 'dark'
+      );
+    }
+  }, [user?.palette])
+
+  useEffect(() => {
     setMenuWidth(menuMode === MenuMode.NONE
       ? 0
       : latentMenuWidth

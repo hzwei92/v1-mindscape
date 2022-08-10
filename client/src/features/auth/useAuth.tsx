@@ -11,8 +11,8 @@ import { AppContext } from '../../App';
 import { selectAuthIsValid, selectAuthIsInit } from './authSlice';
 
 const INIT_USER = gql`
-  mutation InitUser {
-    initUser {
+  mutation InitUser($palette: String!) {
+    initUser(palette: $palette) {
       ...FullUserFields
     }
   }
@@ -32,6 +32,7 @@ export default function useAuth() {
   const dispatch = useAppDispatch();
 
   const {
+    palette,
     brightColor: color
   } = useContext(AppContext);
 
@@ -129,7 +130,11 @@ export default function useAuth() {
     }
     else {
       setIsLoading(true)
-      initUser();
+      initUser({
+        variables: {
+          palette,
+        }
+      });
     }
   }, [isInit, isValid]);
 }
