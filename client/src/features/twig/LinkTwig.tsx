@@ -115,130 +115,143 @@ export default function LinkTwig(props: LinkTwigProps) {
     pendingLink.targetId === props.twig.detailId
   );
 
-  if (!props.twig.isOpen) {
-    return (
-      <Box>
-        <Card elevation={5} onClick={handleOpenClick} sx={{
-          width: 30,
-          height: 30,
-          outline: isSelected
-            ? `5px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`
-            : `1px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`,
-          borderRadius: 2,
-          borderTopLeftRadius: 0,
-          display: 'flex',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          pointerEvents: 'auto',
-          opacity: .9,
-        }}>
-          <Box sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-          }}>
-              {props.twig.detail.weight}
-          </Box>
-        </Card>
-      </Box>
-    );
-  }
-
   return (
-    <Box ref={twigEl} sx={{
-      display: 'flex',
-      flexDirection: 'row',
-      position: 'relative',
-      pointerEvents: 'none',
-    }}>
-      <Box sx={{
-        display: 'flex',
-        flexDirection: 'column',
+    <Box>
+      <Card elevation={5} onClick={handleOpenClick} sx={{
+        width: 30,
+        height: 30,
+        outline: isSelected
+          ? `5px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`
+          : `1px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`,
+        borderRadius: 2,
+        borderTopLeftRadius: 0,
+        display: props.twig.isOpen
+          ? 'none'
+          : 'flex',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        pointerEvents: 'auto',
+        opacity: .9,
+      }}>
+        <Box sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+        }}>
+            {props.twig.detail.weight}
+        </Box>
+      </Card>
+      <Box ref={twigEl} sx={{
+        display: props.twig.isOpen
+          ? 'flex'
+          : 'none',
+        flexDirection: 'row',
         position: 'relative',
         pointerEvents: 'none',
       }}>
-        <Card 
-          elevation={isSelected? 15 : 5}
-          onMouseMove={handleMouseMove}
-          onMouseDown={handleMouseDown}
-          onClick={handleClick}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            width: TWIG_WIDTH - 40,
-            opacity: .8,
-            outline: isSelected
-              ? `10px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`
-              : `1px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`,
-            borderRadius: 3,
-            borderTopLeftRadius: 0,
-            backgroundColor: isLinking
-              ? palette === 'dark'
-                ? 'dimgrey'
-                : 'darkgrey'
-              : null,
-            cursor: pendingLink.sourceId
-              ? 'crosshair'
-              : 'default', 
-            pointerEvents: 'auto',
-          }}
-        >
-          <Box sx={{
-            display: 'flex',
-          }}>
+        <Box sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          position: 'relative',
+          pointerEvents: 'none',
+        }}>
+          <Card 
+            elevation={isSelected? 15 : 5}
+            onMouseMove={handleMouseMove}
+            onMouseDown={handleMouseDown}
+            onClick={handleClick}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              width: TWIG_WIDTH - 40,
+              opacity: .8,
+              outline: isSelected
+                ? `10px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`
+                : `1px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`,
+              borderRadius: 3,
+              borderTopLeftRadius: 0,
+              backgroundColor: isLinking
+                ? palette === 'dark'
+                  ? 'dimgrey'
+                  : 'darkgrey'
+                : null,
+              cursor: pendingLink.sourceId
+                ? 'crosshair'
+                : 'default', 
+              pointerEvents: 'auto',
+            }}
+          >
             <Box sx={{
-              padding: 0.5,
-              paddingLeft: 0,
+              display: 'flex',
             }}>
               <Box sx={{
-                marginRight: 0.5,
-                paddingLeft: 4,
-                position: 'relative',
+                padding: 0.5,
+                paddingLeft: 0,
               }}>
                 <Box sx={{
-                  position: 'absolute',
-                  left: TWIG_WIDTH - 75,
-                  top: -6,
-                  zIndex: 1,
+                  marginRight: 0.5,
+                  paddingLeft: 4,
+                  position: 'relative',
                 }}>
-                  <IconButton onClick={handleOpenClick} sx={{
-                    color: palette === 'dark'
-                      ? 'white'
-                      : 'black'
+                  <Box sx={{
+                    position: 'absolute',
+                    left: TWIG_WIDTH - 75,
+                    top: -6,
+                    zIndex: 1,
                   }}>
-                    <RemoveIcon color='inherit' sx={{
-                      fontSize: 12,
-                    }}/>
-                  </IconButton>
+                    <IconButton onClick={handleOpenClick} sx={{
+                      color: palette === 'dark'
+                        ? 'white'
+                        : 'black'
+                    }}>
+                      <RemoveIcon color='inherit' sx={{
+                        fontSize: 12,
+                      }}/>
+                    </IconButton>
+                  </Box>
+                  <ArrowComponent
+                    arrowId={props.twig.detailId}
+                    instanceId={props.twig.id}
+                    showLinkLeftIcon={false}
+                    showLinkRightIcon={false}
+                    showPostIcon={false}
+                    isTab={!!props.twig.tabId}
+                    isGroup={!props.twig.tabId && !!props.twig.groupId}
+                    isWindow={!props.twig.tabId && !props.twig.groupId && !!props.twig.windowId}
+                  />
+                  <TwigControls 
+                    twig={props.twig}
+                    isPost={false}
+                  />
                 </Box>
-                <ArrowComponent
-                  arrowId={props.twig.detailId}
-                  instanceId={props.twig.id}
-                  showLinkLeftIcon={false}
-                  showLinkRightIcon={false}
-                  showPostIcon={false}
-                  isTab={!!props.twig.tabId}
-                  isGroup={!props.twig.tabId && !!props.twig.groupId}
-                  isWindow={!props.twig.tabId && !props.twig.groupId && !!props.twig.windowId}
-                />
-                <TwigControls 
-                  twig={props.twig}
-                  isPost={false}
-                />
               </Box>
             </Box>
-          </Box>
-        </Card>
+          </Card>
+          {
+            verticalChildren
+              .sort((a, b) => a.rank < b.rank ? -1 : 1)
+              .map(twig => {
+                return (
+                  <Box key={`twig-${twig.id}`} sx={{
+                    marginTop: 3,
+                    marginLeft: 5,
+                  }}>
+                    <PostTwig twig={twig} />
+                  </Box>
+                )
+              })
+          }
+        </Box>
         {
-          verticalChildren
+          horizontalChildren
             .sort((a, b) => a.rank < b.rank ? -1 : 1)
             .map(twig => {
               return (
                 <Box key={`twig-${twig.id}`} sx={{
-                  marginTop: 3,
-                  marginLeft: 5,
+                  marginTop: 5,
+                  marginLeft: 3,
                 }}>
                   <PostTwig twig={twig} />
                 </Box>
@@ -246,20 +259,6 @@ export default function LinkTwig(props: LinkTwigProps) {
             })
         }
       </Box>
-      {
-        horizontalChildren
-          .sort((a, b) => a.rank < b.rank ? -1 : 1)
-          .map(twig => {
-            return (
-              <Box key={`twig-${twig.id}`} sx={{
-                marginTop: 5,
-                marginLeft: 3,
-              }}>
-                <PostTwig twig={twig} />
-              </Box>
-            )
-          })
-      }
     </Box>
   );
 }

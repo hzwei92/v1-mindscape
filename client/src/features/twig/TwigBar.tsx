@@ -131,11 +131,7 @@ function TwigBar(props: TwigBarProps) {
             fontSize: 12,
             color,
           }}>
-            {/* {props.twig.id}
-            <br/> */}
-            {props.twig.i}...
-            {props.twig.degree}:{props.twig.rank}
-            {/* ...{props.twig.tabId || props.twig.groupId || props.twig.windowId || props.twig.bookmarkId} */}
+            {props.twig.i}...{props.twig.degree}:{props.twig.rank}
           </Typography>
         </Box>
         </Box>
