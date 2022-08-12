@@ -15,6 +15,8 @@ import { AppContext } from '../../App';
 import { MenuMode } from '../menu/menu';
 
 export default function SearchComponent() {
+  const dispatch = useAppDispatch();
+  
   const {
     menuIsResizing,
     menuMode,
@@ -27,10 +29,7 @@ export default function SearchComponent() {
   const index = useAppSelector(selectSearchIndex);
   const slice = useAppSelector(selectSearchSlice);
 
-  console.log('slice', slice)
-
   const shouldRefreshDraft = useAppSelector(selectSearchShouldRefresh);
-  const dispatch = useAppDispatch();
   const [searchClient, setSearchClient] = useState(null as SearchClient | null);
 
   const containerEl = useRef<HTMLElement>();

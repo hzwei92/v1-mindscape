@@ -182,6 +182,7 @@ export const spaceSlice = createSlice({
         ...state,
         [action.payload]: {
           ...initialState[action.payload],
+          isOpen: state[action.payload].isOpen,
         },
       };
     },

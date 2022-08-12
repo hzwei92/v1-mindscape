@@ -1,26 +1,25 @@
 import { Box, Card, createTheme, IconButton, Link, ThemeProvider } from '@mui/material';
 import React, { useContext, useEffect, useState } from 'react';
-import { FOCUS_WIDTH, MAX_Z_INDEX, SPACE_BAR_HEIGHT } from '../../constants';
+import { MAX_Z_INDEX, SPACE_BAR_HEIGHT } from '../../constants';
 import SpaceComponent from '../space/SpaceComponent';
 import CloseIcon from '@mui/icons-material/Close';
 import { AppContext } from '../../App';
 import { SpaceType } from '../space/space';
+import { selectIsOpen } from '../space/spaceSlice';
+import { useAppSelector } from '../../app/hooks';
 
 export default function FrameComponent() {
   const { 
     user,
-    width,
-    height,
     palette,
     dimColor: color,
-    appBarWidth,
-    menuWidth,
     menuIsResizing,
-    focusWidth,
+    frameWidth,
+    frameIsResizing,
+    setFrameIsResizing,
   } = useContext(AppContext);
 
-  const spaceIsResizing = false;
-  const frameWidth = width - appBarWidth - menuWidth - focusWidth;
+  const isOpen = useAppSelector(selectIsOpen(SpaceType.FRAME));
 
   const [theme, setTheme] = useState(createTheme({
     palette: {
@@ -44,7 +43,7 @@ export default function FrameComponent() {
     setTheme(createTheme({
       palette: {
         primary: {
-          main: user.frame?.color || '',
+          main: user.frame?.color || '#ffffff',
         },
         mode: palette,
       },
@@ -66,7 +65,7 @@ export default function FrameComponent() {
   };
 
   const handleResizeMouseDown = (event: React.MouseEvent) => {
-
+    setFrameIsResizing(true);
   };
 
   const handleCloseClick = (event: React.MouseEvent) => {
@@ -79,7 +78,7 @@ export default function FrameComponent() {
         position: 'relative',
         width: frameWidth - 1,
         height: '100%',
-        transition: menuIsResizing || spaceIsResizing
+        transition: menuIsResizing || frameIsResizing
           ? 'none'
           : 'width 0.5s',
         display: 'flex',
@@ -98,9 +97,9 @@ export default function FrameComponent() {
             justifyContent: 'space-between',
             borderTopLeftRadius: 0,
             borderTopRightRadius: 0,
-            width: frameWidth,
+            width: frameWidth - 5,
             height: `${SPACE_BAR_HEIGHT - 2}px`,
-            transition: menuIsResizing || spaceIsResizing
+            transition: menuIsResizing || frameIsResizing
               ? 'none'
               : 'width 0.5s',
           }}>
@@ -129,7 +128,7 @@ export default function FrameComponent() {
               flexDirection: 'column',
               justifyContent: 'center',
               margin: 1,
-              display: focusWidth > 0
+              display: isOpen && false
                 ? 'flex'
                 : 'none',
             }}>
@@ -153,7 +152,7 @@ export default function FrameComponent() {
               ? 'primary.main'
               : color,
             cursor: 'col-resize',
-            display: focusWidth > 0
+            display: frameWidth > 0
               ? 'block'
               : 'none'
           }}

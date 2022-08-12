@@ -9,7 +9,7 @@ import useCenterTwig from './features/twig/useCenterTwig';
 import useSelectTwig from './features/twig/useSelectTwig';
 import { SpaceType } from './features/space/space';
 import { selectIdToTwig, selectIToTwigId } from './features/twig/twigSlice';
-import { selectIdToPos, selectIsOpen, selectSelectedTwigId, setIsOpen, setSelectedSpace } from './features/space/spaceSlice';
+import { selectIdToPos, selectIsOpen, selectSelectedTwigId, setIsOpen, setSelectedSpace, setSelectedTwigId } from './features/space/spaceSlice';
 
 export default function useAppRouter(user: User | null) {
   const dispatch = useAppDispatch();
@@ -44,7 +44,7 @@ export default function useAppRouter(user: User | null) {
   const { selectTwig: frameSelectTwig } = useSelectTwig(SpaceType.FRAME, true);
   const { selectTwig: focusSelectTwig } = useSelectTwig(SpaceType.FOCUS, canEditFocus);
 
-  const { setUserFocusByRouteName } = useSetUserFocus(user);
+  const { setUserFocusByRouteName } = useSetUserFocus();
 
   useEffect(() => {
     if (!user?.frame) return;
@@ -65,6 +65,18 @@ export default function useAppRouter(user: User | null) {
     }
     else if (path[2].toLowerCase() === user.frame.routeName) {
       console.log('frame routing');
+
+      if (user.focus) {
+        if (!focusSelectedTwigId && user?.focus?.rootTwigId) {
+          console.log('hello')
+          dispatch(setSelectedTwigId({
+            space: SpaceType.FOCUS,
+            selectedTwigId: user.focus.rootTwigId,
+          }));
+
+          focusCenterTwig(user.focus.rootTwigId, true, 0);
+        }
+      }
 
       setSelectedSpace(SpaceType.FRAME);
 
@@ -132,7 +144,7 @@ export default function useAppRouter(user: User | null) {
         const focusTwig = focusIdToTwig[focusSelectedTwigId]
 
         if (path[3] !== (focusTwig?.i ?? -1).toString()) {
-          const twigId = focusIToTwigId[path[3] || (focusTwig.i ?? -1)];
+          const twigId = focusIToTwigId[path[3] || (focusTwig?.i ?? -1)];
           const twig = focusIdToTwig[twigId];
 
           if (twig?.id && !twig?.deleteDate) {

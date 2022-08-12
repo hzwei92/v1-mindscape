@@ -1,16 +1,18 @@
 import { gql, useApolloClient, useMutation, useReactiveVar } from '@apollo/client';
 import { useSnackbar } from 'notistack';
+import { useContext } from 'react';
+import { AppContext } from '../../App';
 import { useAppDispatch } from '../../app/hooks';
 import { sessionVar } from '../../cache';
 import { ABSTRACT_ARROW_FIELDS } from '../arrow/arrowFragments';
 import { SpaceType } from '../space/space';
 import { resetTwigs } from '../twig/twigSlice';
 import { User } from './user';
-import { resetUsers } from './userSlice';
+import { mergeUsers, resetUsers, setCurrentUser } from './userSlice';
 
 const SET_USER_FOCUS_BY_ID = gql`
-  mutation RefocusUserById($sessionId: String!, $postId: String) {
-    setUserFocusById(sessionId: $sessionId, postId: $postId) {
+  mutation SetUserFocusById($sessionId: String!, $arrowId: String) {
+    setUserFocusById(sessionId: $sessionId, arrowId: $arrowId) {
       id
       focusId
       focus {
@@ -22,7 +24,7 @@ const SET_USER_FOCUS_BY_ID = gql`
 `;
 
 const SET_USER_FOCUS_BY_ROUTE_NAME = gql`
-  mutation RefocusUserByRouteName($sessionId: String!, $arrowRouteName: String!) {
+  mutation SetUserFocusByRouteName($sessionId: String!, $arrowRouteName: String!) {
     setUserFocusByRouteName(sessionId: $sessionId, arrowRouteName: $arrowRouteName) {
       id
       focusId
@@ -34,8 +36,9 @@ const SET_USER_FOCUS_BY_ROUTE_NAME = gql`
   ${ABSTRACT_ARROW_FIELDS}
 `;
 
-export default function useSetUserFocus(user: User | null) {
-  const client = useApolloClient();
+export default function useSetUserFocus() {
+  const { user } = useContext(AppContext);
+
   const sessionDetail = useReactiveVar(sessionVar);
 
   const dispatch = useAppDispatch();
@@ -50,6 +53,7 @@ export default function useSetUserFocus(user: User | null) {
     },
     onCompleted: data => {
       console.log(data);
+      dispatch(mergeUsers([data.setUserFocusById]));
     },
   });
 
@@ -61,17 +65,26 @@ export default function useSetUserFocus(user: User | null) {
     },
     onCompleted: data => {
       console.log(data);
+      dispatch(mergeUsers([data.setUserFocusByRouteName]));
     },
   });
 
 
-  const setUserFocusById = (postId: string | null) => {
+  const setUserFocusById = (arrowId: string | null) => {
     setFocusById({
       variables: {
         sessionId: sessionDetail.id,
-        postId,
+        arrowId,
       },
     });
+
+    if (!arrowId) {
+      const user1 = Object.assign({}, user, {
+        focusId: null,
+        focus: null,
+      });
+      dispatch(mergeUsers([user1]));
+    }
 
     dispatch(resetTwigs(SpaceType.FOCUS));
     dispatch(resetUsers(SpaceType.FOCUS));

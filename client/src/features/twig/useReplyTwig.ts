@@ -103,7 +103,6 @@ export default function useReplyTwig() {
       dispatch(mergeArrows([source]));
       
       dispatch(mergeTwigs({
-        id: v4(),
         space,
         twigs: [link, target]
       }));
@@ -180,8 +179,7 @@ export default function useReplyTwig() {
     });
 
     dispatch(mergeTwigs({
-      id: v4(),
-      space: SpaceType.FRAME,
+      space,
       twigs: [twig],
     }))
 

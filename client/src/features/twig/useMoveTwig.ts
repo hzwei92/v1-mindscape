@@ -48,7 +48,6 @@ export default function useMoveTwig(space: SpaceType) {
         return Object.assign({}, idToTwig[twig.id], twig);
       })
       dispatch(mergeTwigs({
-        id: v4(),
         space,
         twigs,
       }))

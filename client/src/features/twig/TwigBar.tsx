@@ -46,7 +46,6 @@ function TwigBar(props: TwigBarProps) {
       });
 
       dispatch(mergeTwigs({
-        id: v4(),
         space: space,
         twigs: [twig]
       }));

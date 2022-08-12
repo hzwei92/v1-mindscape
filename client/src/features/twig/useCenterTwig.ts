@@ -8,7 +8,19 @@ import { SpaceState, SpaceType } from '../space/space';
 import { selectIdToPos, selectScale } from '../space/spaceSlice';
 
 export default function useCenterTwig(space: SpaceType) {
-  const { user } = useContext(AppContext);
+  const { 
+    user,
+    width,
+    appBarWidth,
+    menuWidth,
+    frameWidth,
+  } = useContext(AppContext);
+
+  const focusWidth = width - appBarWidth - menuWidth - frameWidth;
+
+  const spaceWidth = space === SpaceType.FRAME 
+    ? frameWidth 
+    : focusWidth;
 
   const spaceEl = useReactiveVar(space === SpaceType.FRAME
     ? frameSpaceElVar
@@ -30,7 +42,7 @@ export default function useCenterTwig(space: SpaceType) {
       console.log('centerTwig', scale);
 
       spaceEl.current.scrollTo({
-        left: (x1 - spaceEl.current.clientWidth / 2),
+        left: (x1 - (spaceWidth / 2)),
         top: (y1 - spaceEl.current.clientHeight / 2),
         behavior: isSmooth 
           ? 'smooth'

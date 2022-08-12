@@ -18,20 +18,23 @@ import { useContext } from 'react';
 import { AppContext } from './App';
 import { MenuMode } from './features/menu/menu';
 import useSetUserPalette from './features/user/useSetUserPalette';
+import { selectSelectedSpace } from './features/space/spaceSlice';
+import { SpaceType } from './features/space/space';
 //import useSavePostSub from './features/post/useSavePostSub';
 
 export default function AppBar() {
-  const dispatch = useAppDispatch();
-
   const { 
     user,
     width, 
     palette,
     brightColor: color,
-    setPalette,
     menuMode, 
     setMenuMode
   } = useContext(AppContext);
+
+  const isMobile = width < MOBILE_WIDTH;
+
+  const selectedSpace = useAppSelector(selectSelectedSpace);
 
   useAuth();
   useAppRouter(user);
@@ -94,94 +97,129 @@ export default function AppBar() {
         zIndex: MAX_Z_INDEX + 100,
       }}>
         <Box>
-          <Box sx={{
-            padding: '5px',
-            paddingTop: 1,
-          }}>
-            <IconButton title='About' size='small' onClick={handleAboutClick} sx={{
-              border: menuMode === 'ABOUT'
-                ? `1px solid ${user?.color}`
-                : 'none',
-              fontSize: width < MOBILE_WIDTH
-                ? 16
-                : 28,
+          <Box>
+            <Box sx={{
+              padding: '5px',
+              paddingTop: 1,
             }}>
-              <Icon fontSize='inherit'>
-                👁‍🗨
-              </Icon>
-            </IconButton>
+              <IconButton title='About' size='small' onClick={handleAboutClick} sx={{
+                border: menuMode === 'ABOUT'
+                  ? `1px solid ${user?.color}`
+                  : 'none',
+                fontSize: width < MOBILE_WIDTH
+                  ? 16
+                  : 28,
+              }}>
+                <Icon fontSize='inherit'>
+                  👁‍🗨
+                </Icon>
+              </IconButton>
+            </Box>
+            <Box title='Account' sx={{paddingTop: 1}}>
+              <IconButton onClick={handleAccountClick} sx={{
+                border: menuMode === 'ACCOUNT'
+                  ? `1px solid ${user?.color}`
+                  : 'none',
+                color: menuMode === 'ACCOUNT'
+                  ? 'primary.main'
+                  : color,
+              }}>
+                <AccountCircle/>
+              </IconButton>
+            </Box>
+            <Box title='Signal' sx={{paddingTop: 1}}>
+              <IconButton onClick={handleSignalClick} sx={{
+                border: menuMode === 'SIGNAL'
+                  ? `1px solid ${user?.color}`
+                  : 'none',
+                color: menuMode === 'SIGNAL'
+                  ? 'primary.main'
+                  : color,
+              }}>
+                <PodcastsIcon/>
+              </IconButton>
+            </Box>
+            <Box title='Graphs' sx={{paddingTop: 1}}>
+              <IconButton onClick={handleGraphClick} sx={{
+                border: menuMode === 'GRAPH'
+                  ? `1px solid ${user?.color}`
+                  : 'none',
+                color: menuMode === 'GRAPH'
+                  ? 'primary.main'
+                  : color,
+              }}>
+                <HubIcon/>
+              </IconButton>
+            </Box>
+            <Box title='Search' sx={{paddingTop: 1}}>
+              <IconButton onClick={handleSearchClick} sx={{
+                border: menuMode === 'SEARCH'
+                  ? `1px solid ${user?.color}`
+                  : 'none',
+                color: menuMode === 'SEARCH'
+                  ? 'primary.main'
+                  : color,
+              }}>
+                <SearchIcon/>
+              </IconButton>
+            </Box>
+            <Box title='Map' sx={{paddingTop: 1}}>
+              <IconButton onClick={handleMapClick} sx={{
+                border: menuMode === 'MAP'
+                  ? `1px solid ${user?.color}`
+                  : 'none',
+                color: menuMode === 'MAP'
+                  ? 'primary.main'
+                  : color,
+              }}>
+                <MapIcon/>
+              </IconButton>
+            </Box>
+            <Box title='Feed' sx={{paddingTop: 1}}>
+              <IconButton onClick={handleFeedClick} sx={{
+                border: menuMode === 'FEED'
+                  ? `1px solid ${user?.color}`
+                  : 'none',
+                color: menuMode === 'FEED'
+                  ? 'primary.main'
+                  : color,
+              }}>
+                <DynamicFeedIcon/>
+              </IconButton>
+            </Box>
           </Box>
-          <Box title='Account' sx={{paddingTop: 1}}>
-            <IconButton onClick={handleAccountClick} sx={{
-              border: menuMode === 'ACCOUNT'
-                ? `1px solid ${user?.color}`
-                : 'none',
-              color: menuMode === 'ACCOUNT'
-                ? 'primary.main'
-                : color,
-            }}>
-              <AccountCircle/>
-            </IconButton>
-          </Box>
-          <Box title='Signal' sx={{paddingTop: 1}}>
-            <IconButton onClick={handleSignalClick} sx={{
-              border: menuMode === 'SIGNAL'
-                ? `1px solid ${user?.color}`
-                : 'none',
-              color: menuMode === 'SIGNAL'
-                ? 'primary.main'
-                : color,
-            }}>
-              <PodcastsIcon/>
-            </IconButton>
-          </Box>
-          <Box title='Graphs' sx={{paddingTop: 1}}>
-            <IconButton onClick={handleGraphClick} sx={{
-              border: menuMode === 'GRAPH'
-                ? `1px solid ${user?.color}`
-                : 'none',
-              color: menuMode === 'GRAPH'
-                ? 'primary.main'
-                : color,
-            }}>
-              <HubIcon/>
-            </IconButton>
-          </Box>
-          <Box title='Search' sx={{paddingTop: 1}}>
-            <IconButton onClick={handleSearchClick} sx={{
-              border: menuMode === 'SEARCH'
-                ? `1px solid ${user?.color}`
-                : 'none',
-              color: menuMode === 'SEARCH'
-                ? 'primary.main'
-                : color,
-            }}>
-              <SearchIcon/>
-            </IconButton>
-          </Box>
-          <Box title='Map' sx={{paddingTop: 1}}>
-            <IconButton onClick={handleMapClick} sx={{
-              border: menuMode === 'MAP'
-                ? `1px solid ${user?.color}`
-                : 'none',
-              color: menuMode === 'MAP'
-                ? 'primary.main'
-                : color,
-            }}>
-              <MapIcon/>
-            </IconButton>
-          </Box>
-          <Box title='Feed' sx={{paddingTop: 1}}>
-            <IconButton onClick={handleFeedClick} sx={{
-              border: menuMode === 'FEED'
-                ? `1px solid ${user?.color}`
-                : 'none',
-              color: menuMode === 'FEED'
-                ? 'primary.main'
-                : color,
-            }}>
-              <DynamicFeedIcon/>
-            </IconButton>
+          <Box>
+            <Divider variant='fullWidth' sx={{
+              margin: 1,
+              marginTop: 2,
+            }}/>
+            <Box title='Frame' sx={{paddingTop: 1}}>
+              <IconButton onClick={handleFrameClick} sx={{
+                border: (!isMobile || menuMode === MenuMode.NONE) && selectedSpace === SpaceType.FRAME
+                  ? `1px solid ${user?.color}`
+                  : 'none',
+                color: (!isMobile || menuMode === MenuMode.NONE) && selectedSpace === SpaceType.FRAME
+                  ? 'primary.main'
+                  : color,
+              }}>
+                <CropDinIcon/>
+              </IconButton>
+            </Box>
+            {
+              user?.focusId
+                ? <Box title='Focus' sx={{paddingTop: 1}}>
+                    <IconButton onClick={handleFocusClick} sx={{
+                      border: (!isMobile || menuMode === MenuMode.NONE) && selectedSpace === SpaceType.FOCUS
+                        ? `1px solid ${user?.focus?.color}`
+                        : 'none',
+                      color: (!isMobile || menuMode === MenuMode.NONE) && selectedSpace === SpaceType.FOCUS                      ? user?.focus?.color
+                        : color,
+                    }}>
+                      <CropFreeIcon/>
+                    </IconButton>
+                  </Box>
+                : null
+            }
           </Box>
         </Box>
         <Box sx={{

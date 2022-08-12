@@ -13,7 +13,7 @@ import useSelectTwig from '../twig/useSelectTwig';
 import { Twig } from '../twig/twig';
 import { MAX_Z_INDEX } from '../../constants';
 import { getTwigColor } from '../../utils';
-import { selectSelectedTwigId } from './spaceSlice';
+import { selectIsOpen, selectSelectedSpace, selectSelectedTwigId } from './spaceSlice';
 
 export default function SpaceNav() {
   const { 
@@ -22,14 +22,13 @@ export default function SpaceNav() {
     canEdit
   } = useContext(SpaceContext);
 
+  const selectedSpace = useAppSelector(selectSelectedSpace);
   const selectedTwigId = useAppSelector(selectSelectedTwigId(space));
 
-  const frameIsOpen = true;
-  const focusIsOpen = false;
+  const isOpen = useAppSelector(selectIsOpen(space));
 
-  const idToTwig = useAppSelector(selectIdToTwig(space))
-  
-  const [isInit, setIsInit] = useState(false);
+  const idToTwig = useAppSelector(selectIdToTwig(space));
+
   const [twigs, setTwigs] = useState([] as Twig[]);
   const [index, setIndex] = useState(0);
   const hasEarlier = index > 0;
@@ -58,8 +57,7 @@ export default function SpaceNav() {
     });
   }, [selectedTwigId]);
 
-  if (space === 'FOCUS' && !focusIsOpen) return null;
-  if (space === 'FRAME' && !frameIsOpen) return null;
+  if (!isOpen) return null;
 
   const select = (twig: Twig, isInstant?: boolean) => {
     if (selectedTwigId !== twig.id) {
@@ -136,7 +134,7 @@ export default function SpaceNav() {
       <Fab title='Selected' size='small' disabled={!selectedTwigId} onClick={handleNavFocus} sx={{
         margin: 1,
         color:  getTwigColor(twigs[index]?.color) || twigs[index]?.user?.color || 'dimgrey',
-        border: space === space
+        border: space === selectedSpace
           ? '3px solid'
           : 'none'
       }}>

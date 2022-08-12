@@ -48,7 +48,6 @@ const useOpenTwig = () => {
     });
 
     dispatch(mergeTwigs({
-      id: v4(),
       space: SpaceType.FRAME,
       twigs: [twig1],
     }));

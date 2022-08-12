@@ -12,7 +12,7 @@ import { DisplayMode, TWIG_WIDTH } from '../../constants';
 import useLinkTwigs from './useLinkTwigs';
 import { getTwigColor } from '../../utils';
 import ArrowComponent from '../arrow/ArrowComponent';
-import { selectIdToPos, selectIdToHeight, selectSelectedTwigId } from '../space/spaceSlice';
+import { selectIdToPos, selectIdToHeight, selectSelectedTwigId, setSelectedSpace } from '../space/spaceSlice';
 
 interface PostTwigProps {
   twig: Twig;
@@ -86,14 +86,17 @@ export default function PostTwig(props: PostTwigProps) {
     }
   }, [parentPos, pos, props.twig.displayMode, twigEl.current?.offsetLeft, twigEl.current?.offsetTop]);
 
-  if (cardEl.current?.clientHeight && cardEl.current.clientHeight !== idToHeight[props.twig.id]) {
-    dispatch({
-      type: 'mergeIdToHeight',
-      idToHeight: {
-        [props.twig.id]:  cardEl.current.clientHeight,
-      }
-    });
-  }
+  useEffect(() => {
+    if (cardEl.current?.clientHeight && cardEl.current.clientHeight !== idToHeight[props.twig.id]) {
+      dispatch({
+        type: 'mergeIdToHeight',
+        idToHeight: {
+          [props.twig.id]:  cardEl.current.clientHeight,
+        }
+      });
+    }
+  }, [cardEl.current?.clientHeight])
+
   
   const { selectTwig } = useSelectTwig(space, canEdit);
   const { linkTwigs } = useLinkTwigs();
@@ -115,8 +118,10 @@ export default function PostTwig(props: PostTwigProps) {
   const handleMouseMove = (event: React.MouseEvent) => {
 
   }
+  
   const handleMouseDown = (event: React.MouseEvent) => {
     event.stopPropagation();
+    dispatch(setSelectedSpace(space));
     if (!isSelected) {
       selectTwig(abstract, props.twig);
     }

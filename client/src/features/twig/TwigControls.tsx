@@ -23,6 +23,10 @@ import { addEntry } from '../entry/entrySlice';
 import { searchPushSlice } from '../search/searchSlice';
 import { MenuMode } from '../menu/menu';
 import { Arrow } from '../arrow/arrow';
+import useSetUserFocus from '../user/useSetUserFocus';
+import { setIsOpen } from '../space/spaceSlice';
+import { SpaceType } from '../space/space';
+import { useNavigate } from 'react-router-dom';
 //import useCenterTwig from './useCenterTwig';
 
 interface TwigControlsProps {
@@ -31,6 +35,7 @@ interface TwigControlsProps {
 }
 function TwigControls(props: TwigControlsProps) {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
   const {
     user,
@@ -58,6 +63,7 @@ function TwigControls(props: TwigControlsProps) {
 
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
+  const { setUserFocusById } = useSetUserFocus();
   const { replyTwig } = useReplyTwig();
   
   // const { sub } = useSubArrow(props.twig.post, () => {
@@ -76,6 +82,12 @@ function TwigControls(props: TwigControlsProps) {
 
   const handleMouseDown = (event: React.MouseEvent) => {
     event.stopPropagation();
+  }
+
+  const handleOpenClick = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (!arrow) return;
+    navigate(`/m/${arrow.routeName}/0`);
   }
 
   const handleReplyClick = (event: React.MouseEvent) => {
@@ -323,6 +335,17 @@ function TwigControls(props: TwigControlsProps) {
       marginTop: 0,
       marginLeft: 0,
     }}>
+      <Button
+        variant={abstract.id === arrow?.id ? 'outlined' : 'text'}
+        onMouseDown={handleMouseDown}
+        onClick={handleOpenClick}
+        sx={{
+          color,
+          fontSize: 12,
+        }}
+      >
+        Open {arrow?.twigN ? `(${arrow.twigN})` : ''}
+      </Button>
       <Button
         disabled={!canPost}
         onMouseDown={handleMouseDown} 

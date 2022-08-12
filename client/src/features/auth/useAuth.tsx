@@ -9,6 +9,8 @@ import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { setCurrentUser } from '../user/userSlice';
 import { AppContext } from '../../App';
 import { selectAuthIsValid, selectAuthIsInit } from './authSlice';
+import { setIsOpen } from '../space/spaceSlice';
+import { SpaceType } from '../space/space';
 
 const INIT_USER = gql`
   mutation InitUser($palette: String!) {
@@ -58,6 +60,13 @@ export default function useAuth() {
       refreshTokenInterval();
 
       dispatch(setCurrentUser(data.getCurrentUser));
+
+      if (data.getCurrentUser.focus) {
+        dispatch(setIsOpen({
+          space: SpaceType.FOCUS,
+          isOpen: true,
+        }));
+      }
       
       const handleDismissClick = (event: React.MouseEvent) => {
         closeSnackbar(data.getCurrentUser.id);
@@ -69,7 +78,9 @@ export default function useAuth() {
           return (
             <Box>
               <IconButton onClick={handleDismissClick} sx={{
-                color,
+                color: palette === 'dark'
+                  ? '#000000'
+                  : '#ffffff',
               }}>
                 <CloseIcon sx={{
                   fontSize: 14,

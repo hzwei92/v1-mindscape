@@ -83,7 +83,6 @@ export default function useRemoveTwig() {
     }
 
     dispatch(mergeTwigs({
-      id: v4(),
       space,
       twigs,
     }));

@@ -1,37 +1,59 @@
 import { Box, Card, createTheme, IconButton, Link, Theme, ThemeProvider } from '@mui/material';
 import React, { useContext, useEffect, useState } from 'react';
-import { useAppDispatch } from '../../app/hooks';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { MAX_Z_INDEX, SPACE_BAR_HEIGHT } from '../../constants';
-import { useNavigate } from 'react-router-dom';
 import SpaceComponent from '../space/SpaceComponent';
 import CloseIcon from '@mui/icons-material/Close';
 import { AppContext } from '../../App';
 import { SpaceType } from '../space/space';
+import { selectIsOpen, selectSelectedTwigId, setIsOpen } from '../space/spaceSlice';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { selectIdToTwig } from '../twig/twigSlice';
+import useSetUserFocus from '../user/useSetUserFocus';
 
 export default function FocusComponent() {
-  const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
   const { 
     user,
     width,
-    height,
     palette,
     dimColor: color,
+    appBarWidth,
     menuIsResizing,
-    focusWidth,
+    menuWidth,
+    frameIsResizing,
+    frameWidth,
   } = useContext(AppContext);
 
-  const spaceIsResizing = false;
+  const focusWidth = width - appBarWidth - menuWidth - frameWidth;
 
-  const [theme, setTheme] = useState(null as Theme | null);
+  const isOpen = useAppSelector(selectIsOpen(SpaceType.FOCUS));
+  const frameSelectedTwigId = useAppSelector(selectSelectedTwigId(SpaceType.FRAME));
+  const frameIdToTwig = useAppSelector(selectIdToTwig(SpaceType.FRAME));
+
+  const [theme, setTheme] = useState(createTheme({
+    palette: {
+      primary: {
+        main: palette === 'dark'
+          ? '#000000'
+          : '#ffffff',
+      },
+      mode: palette,
+    },
+    zIndex: {
+      modal: MAX_Z_INDEX + 1000,
+      snackbar: MAX_Z_INDEX + 10000
+    },
+  }));
 
   useEffect(() => {
-    if (!user?.focusId) return;
+    if (!user?.frameId) return;
     setTheme(createTheme({
       palette: {
         primary: {
-          main: user.focus?.color || '',
+          main: user.focus?.color || '#ffffff',
         },
         mode: palette,
       },
@@ -42,14 +64,23 @@ export default function FocusComponent() {
     }));
   }, [user?.focus?.color, palette]);
 
-  if (!theme || !user) return null;
+  const { setUserFocusById } = useSetUserFocus();
+
+  if (!user) return null;
 
   const handleClick = () => {
     console.log('focus');
   }
 
   const handleCloseClick = (event: React.MouseEvent) => {
-    
+    const frameTwig = frameIdToTwig[frameSelectedTwigId];
+    const route = `/m/${user.frameId}/${frameTwig.i}`;
+    navigate(route);
+    dispatch(setIsOpen({
+      space: SpaceType.FOCUS,
+      isOpen: false,
+    }));
+    setUserFocusById(null);
   };
 
   return (
@@ -58,7 +89,7 @@ export default function FocusComponent() {
         position: 'relative',
         width: focusWidth,
         height: '100%',
-        transition: menuIsResizing || spaceIsResizing
+        transition: menuIsResizing || frameIsResizing
           ? 'none'
           : 'width 0.5s',
         display: 'flex',
@@ -79,7 +110,7 @@ export default function FocusComponent() {
             borderTopRightRadius: 0,
             width: focusWidth,
             height: `${SPACE_BAR_HEIGHT - 2}px`,
-            transition: menuIsResizing || spaceIsResizing
+            transition: menuIsResizing || frameIsResizing
               ? 'none'
               : 'width 0.5s',
           }}>
@@ -108,7 +139,7 @@ export default function FocusComponent() {
               flexDirection: 'column',
               justifyContent: 'center',
               margin: 1,
-              display: false
+              display: isOpen
                 ? 'flex'
                 : 'none',
             }}>

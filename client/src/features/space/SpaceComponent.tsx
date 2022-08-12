@@ -2,7 +2,7 @@ import { Box } from '@mui/material';
 import React, { Dispatch, SetStateAction, useContext, useEffect, useRef, useState } from 'react';
 import { VIEW_RADIUS, SPACE_BAR_HEIGHT, DisplayMode, MAX_Z_INDEX, TWIG_WIDTH } from '../../constants';
 import { checkPermit, getTwigColor } from '../../utils';
-import { DirectionType, PendingLinkType, PosType, ScrollState, SpaceType } from './space';
+import { DirectionType, PosType, SpaceType } from './space';
 import useInitSpace from './useInitSpace';
 import { Arrow } from '../arrow/arrow';
 import { Role } from '../role/role';
@@ -35,8 +35,9 @@ import {
   setScale, 
   setScroll,
 } from './spaceSlice';
-import { focusSpaceElVar, frameSpaceElVar } from '../../cache';
+import { focusAdjustIdToPosVar, focusSpaceElVar, frameAdjustIdToPosVar, frameSpaceElVar } from '../../cache';
 import useTwigTree from '../twig/useTwigTree';
+import { useReactiveVar } from '@apollo/client';
 
 export const SpaceContext = React.createContext({} as {
   abstract: Arrow;
@@ -60,12 +61,16 @@ export default function SpaceComponent(props: SpaceComponentProps) {
     user,
     appBarWidth,
     menuWidth,
-    focusWidth,
+    frameWidth,
     brightColor: color,
   } = useContext(AppContext);
 
   const offsetLeft = appBarWidth + menuWidth;
   const offsetTop = SPACE_BAR_HEIGHT;
+
+  const adjustIdToPosDetail = useReactiveVar(props.space === SpaceType.FRAME
+    ? frameAdjustIdToPosVar
+    : focusAdjustIdToPosVar)
 
   const scale = useAppSelector(selectScale(props.space));
   const scroll = useAppSelector(selectScroll(props.space));
@@ -118,6 +123,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   //useAddTwigSub(props.user, props.space, abstract);
 
   const { moveTwig } = useMoveTwig(props.space);
+
   useEffect(() => {
     if (Object.keys(idToTwig).length === 0) {
       dispatch(resetSpace(props.space));
@@ -145,7 +151,6 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   
   useEffect(() => {
     if (!spaceEl?.current) return;
-
 
     if (props.space === SpaceType.FRAME) {
       frameSpaceElVar(spaceEl);
@@ -175,6 +180,14 @@ export default function SpaceComponent(props: SpaceComponentProps) {
     }
   }, [scroll, spaceEl.current])
 
+  useEffect(() => {
+    if (Object.keys(adjustIdToPosDetail).length) {
+      dispatch(mergeIdToPos({
+        space: props.space,
+        idToPos: adjustIdToPosDetail,
+      }));
+    }
+  }, [adjustIdToPosDetail])
 
   useEffect(() => {
     if (!moveEvent || !spaceEl?.current) return;
@@ -225,8 +238,8 @@ export default function SpaceComponent(props: SpaceComponentProps) {
       const scale1 = Math.min(Math.max(.03125, scale + event.deltaY * -0.004), 4)
 
       const left = props.space === 'FRAME'
-        ? Math.round((center.x * scale1) - (event.clientX - appBarWidth - menuWidth - focusWidth))
-        : Math.round((center.x * scale1) - (event.clientX - appBarWidth - menuWidth));
+        ? Math.round((center.x * scale1) - (event.clientX - appBarWidth - menuWidth))
+        : Math.round((center.x * scale1) - (event.clientX - appBarWidth - menuWidth - frameWidth));
       const top = Math.round(center.y * scale1 - (event.clientY - SPACE_BAR_HEIGHT));
       
       spaceEl.current.scrollTo({
@@ -522,6 +535,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   const dropTargets: JSX.Element[] = [];
 
   const idToPos1: IdToType<PosType> = {};
+
   Object.keys(idToPos).forEach(twigId => {
     const twig = idToTwig[twigId];
     const pos = idToPos[twigId];
@@ -788,10 +802,12 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   });
 
   if (Object.keys(idToPos1).length) {
-    dispatch(mergeIdToPos({
-      space: props.space,
-      idToPos: idToPos1,
-    }));
+    if (props.space === SpaceType.FRAME) {
+      frameAdjustIdToPosVar(idToPos1);
+    }
+    else {
+      focusAdjustIdToPosVar(idToPos1);
+    }
   }
 
   const w = 2 * VIEW_RADIUS;

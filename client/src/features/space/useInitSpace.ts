@@ -6,7 +6,7 @@ import { FULL_TWIG_FIELDS } from '../twig/twigFragments';
 import { mergeTwigs, resetTwigs } from '../twig/twigSlice';
 import { v4 } from 'uuid';
 import { resetUsers } from '../user/userSlice';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const GET_DETAILS = gql`
   mutation GetTwigs($abstractId: String!) {
@@ -26,9 +26,7 @@ export default function useInitSpace(space: SpaceType, abstract: Arrow | null, c
     },
     onCompleted: data => {
       console.log(data);
-
       dispatch(mergeTwigs({
-        id: v4(),
         space,
         twigs: data.getTwigs,
       }));
@@ -36,11 +34,9 @@ export default function useInitSpace(space: SpaceType, abstract: Arrow | null, c
   });
 
   useEffect(() => {
-    console.log(abstract?.id);
     if (!abstract?.id) return;
-    // TODO fire only once
-    dispatch(resetTwigs(space));
-    dispatch(resetUsers(space));
+    // dispatch(resetTwigs(space));
+    // dispatch(resetUsers(space));
 
     getTwigs({
       variables: {

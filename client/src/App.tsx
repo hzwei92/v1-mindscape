@@ -1,7 +1,7 @@
 import { createTheme, PaletteMode, Paper, ThemeProvider } from '@mui/material';
 import React, { Dispatch, SetStateAction, useEffect, useReducer, useState } from 'react';
 import { useAppSelector } from './app/hooks';
-import { FOCUS_MIN_WIDTH, FOCUS_WIDTH, MAX_Z_INDEX, MENU_MIN_WIDTH, MENU_WIDTH } from './constants';
+import { FRAME_MIN_WIDTH, FRAME_WIDTH, MAX_Z_INDEX, MENU_MIN_WIDTH, MENU_WIDTH } from './constants';
 import { selectCurrentUser } from './features/user/userSlice';
 import { SnackbarProvider } from 'notistack';
 import AppBar from './AppBar';
@@ -11,8 +11,7 @@ import FrameComponent from './features/frame/FrameComponent';
 import FocusComponent from './features/focus/FocusComponent';
 import { User } from './features/user/user';
 import { MenuMode } from './features/menu/menu';
-import { DirectionType, PendingLinkType, PosType, SpaceState, SpaceType } from './features/space/space';
-import { IdToType } from './types';
+import { PendingLinkType, SpaceType } from './features/space/space';
 import { selectIsOpen } from './features/space/spaceSlice';
 
 export const AppContext = React.createContext({} as {
@@ -34,7 +33,9 @@ export const AppContext = React.createContext({} as {
   setMenuIsResizing: Dispatch<SetStateAction<boolean>>;
   menuWidth: number;
 
-  focusWidth: number;
+  frameIsResizing: boolean;
+  setFrameIsResizing: Dispatch<SetStateAction<boolean>>;
+  frameWidth: number;
 
   pendingLink: PendingLinkType;
   setPendingLink: Dispatch<SetStateAction<PendingLinkType>>;
@@ -61,9 +62,9 @@ function App() {
   const [menuWidth, setMenuWidth] = useState(0); 
   const [menuIsResizing, setMenuIsResizing] = useState(false);
   
-  const [latentFocusWidth, setLatentFocusWidth] = useState(FOCUS_WIDTH);
-  const [focusWidth, setFocusWidth] = useState(0);
-  const [focusIsResizing, setFocusIsResizing] = useState(false);
+  const [latentFrameWidth, setLatentFrameWidth] = useState((width - appBarWidth - menuWidth) / 2);
+  const [frameWidth, setFrameWidth] = useState(width - appBarWidth - menuWidth);
+  const [frameIsResizing, setFrameIsResizing] = useState(false);
 
   const [pendingLink, setPendingLink] = useState({
     sourceId: '',
@@ -144,30 +145,30 @@ function App() {
   }, [palette]);
 
   useEffect(() => {
-    if (focusIsOpen) {
-      if (frameIsOpen) {
-        setFocusWidth(latentFocusWidth);
+    if (frameIsOpen) {
+      if (focusIsOpen) {
+        setFrameWidth(latentFrameWidth);
       }
       else {
-        setFocusWidth(width - appBarWidth - menuWidth);
+        setFrameWidth(width - appBarWidth - menuWidth);
       }
     }
     else {
-      setFocusWidth(0);
+      setFrameWidth(0);
     }
   }, [focusIsOpen, frameIsOpen]);
 
   const handleMouseMove = (event: React.MouseEvent) => {
     if (menuIsResizing) {
       event.preventDefault();
-      setMenuWidth(
-        Math.max(event.clientX - appBarWidth, MENU_MIN_WIDTH)
-      );
+      const width = Math.max(event.clientX - appBarWidth, MENU_MIN_WIDTH)
+      setMenuWidth(width);
+      setLatentMenuWidth(width)
     }
-    else if (focusIsResizing) {
+    else if (frameIsResizing) {
       event.preventDefault();
-      setFocusWidth(
-        Math.max(event.clientX - appBarWidth - menuWidth, FOCUS_MIN_WIDTH)
+      setFrameWidth(
+        Math.max(event.clientX - appBarWidth - menuWidth, FRAME_MIN_WIDTH)
       );
     }
   }
@@ -177,9 +178,9 @@ function App() {
       event.preventDefault();
       setMenuIsResizing(false);
     }
-    else if (focusIsResizing) {
+    else if (frameIsResizing) {
       event.preventDefault();
-      setFocusIsResizing(false);
+      setFrameIsResizing(false);
     }
   }
 
@@ -203,7 +204,9 @@ function App() {
       setMenuIsResizing,
       menuWidth,
 
-      focusWidth,
+      frameIsResizing,
+      setFrameIsResizing,
+      frameWidth,
 
       pendingLink,
       setPendingLink,
@@ -228,8 +231,8 @@ function App() {
           }}>
             <AppBar />
             <MenuComponent />
-            <FocusComponent />
             <FrameComponent />
+            <FocusComponent />
           </Paper>
         </SnackbarProvider>
       </ThemeProvider>

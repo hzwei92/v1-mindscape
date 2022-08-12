@@ -57,7 +57,7 @@ const twigSlice = createSlice({
   name: 'twig',
   initialState,
   reducers: {
-    mergeTwigs: (state, action: PayloadAction<{id: string, space: SpaceType, twigs: Twig[]}>) => {
+    mergeTwigs: (state, action: PayloadAction<{space: SpaceType, twigs: Twig[]}>) => {
       const removalTwigs = [...state.removalTwigs];
 
       const {

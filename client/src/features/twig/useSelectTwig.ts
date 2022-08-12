@@ -94,7 +94,6 @@ export default function useSelectTwig(space: SpaceType, canEdit: boolean) {
     twigs.push(twig1);
 
     dispatch(mergeTwigs({
-      id: v4(),
       space,
       twigs,
     }));

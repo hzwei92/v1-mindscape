@@ -75,7 +75,6 @@ export default function useLinkTwigs() {
       });
 
       dispatch(mergeTwigs({
-        id: v4(),
         space,
         twigs: data.linkTwigs.twigs
       }));
