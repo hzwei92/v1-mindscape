@@ -20,7 +20,7 @@ export default function FrameComponent() {
     setFrameIsResizing,
   } = useContext(AppContext);
 
-  const isOpen = useAppSelector(selectIsOpen(SpaceType.FRAME));
+  const frameIsOpen = useAppSelector(selectIsOpen(SpaceType.FRAME));
   const focusIsOpen = useAppSelector(selectIsOpen(SpaceType.FOCUS));
 
   const frameUser = useAppSelector(state => selectUserById(state, user?.frame?.userId));
@@ -85,7 +85,9 @@ export default function FrameComponent() {
         transition: menuIsResizing || frameIsResizing
           ? 'none'
           : 'width 0.5s',
-        display: 'flex',
+        display: frameIsOpen
+          ? 'flex'
+          : 'none',
         flexDirection: 'row',
       }}>
         <Box sx={{
@@ -132,7 +134,7 @@ export default function FrameComponent() {
               flexDirection: 'column',
               justifyContent: 'center',
               margin: 1,
-              display: isOpen && false
+              display: frameIsOpen && false
                 ? 'flex'
                 : 'none',
             }}>

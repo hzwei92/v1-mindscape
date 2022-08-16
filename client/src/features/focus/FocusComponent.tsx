@@ -30,7 +30,7 @@ export default function FocusComponent() {
 
   const focusWidth = width - appBarWidth - menuWidth - frameWidth;
 
-  const isOpen = useAppSelector(selectIsOpen(SpaceType.FOCUS));
+  const focusIsOpen = useAppSelector(selectIsOpen(SpaceType.FOCUS));
   const frameSelectedTwigId = useAppSelector(selectSelectedTwigId(SpaceType.FRAME));
   const frameIdToTwig = useAppSelector(selectIdToTwig(SpaceType.FRAME));
 
@@ -95,7 +95,9 @@ export default function FocusComponent() {
         transition: menuIsResizing || frameIsResizing
           ? 'none'
           : 'width 0.5s',
-        display: 'flex',
+        display: focusIsOpen 
+          ? 'flex'
+          : 'none',
         flexDirection: 'row',
       }}>
         <Box sx={{
@@ -142,7 +144,7 @@ export default function FocusComponent() {
               flexDirection: 'column',
               justifyContent: 'center',
               margin: 1,
-              display: isOpen
+              display: focusIsOpen
                 ? 'flex'
                 : 'none',
             }}>

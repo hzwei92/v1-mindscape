@@ -10,7 +10,6 @@ export const ARROW_FIELDS = gql`
     text
     title
     url
-    color
     userId
     inCount
     outCount

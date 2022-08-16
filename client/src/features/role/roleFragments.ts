@@ -24,7 +24,6 @@ export const FULL_ROLE_FIELDS = gql`
     arrow {
       id
       routeName
-      color
       updateDate
     }
   }

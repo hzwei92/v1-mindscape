@@ -17,7 +17,6 @@ export const TWIG_FIELDS = gql`
     degree
     rank
     displayMode
-    color
     windowId
     groupId
     tabId
