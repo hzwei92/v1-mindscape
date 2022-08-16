@@ -50,10 +50,9 @@ const authSlice = createSlice({
         isValid: true,
       };
     },
-    setLogout: (state, action: Action) => {
+    setLogout: (state) => {
       return {
         ...state,
-        isDone: false,
         isValid: false,
       };
     },
@@ -77,7 +76,7 @@ export const {
   setLogout,
 } = authSlice.actions;
 
-export const selectAuthIsDone = (state: RootState) => state.auth.interval;
+export const selectTokenInterval = (state: RootState) => state.auth.interval;
 export const selectAuthIsInit = (state: RootState) => state.auth.isInit;
 export const selectAuthIsValid = (state: RootState) => state.auth.isValid;
 export const selectSessionId = (state: RootState) => state.auth.sessionId;

@@ -19,7 +19,6 @@ type Arrow {
   canView: String!
   city: String
   clicks: Int!
-  color: String!
   commitDate: DateTime
   country: String
   createDate: DateTime!
@@ -351,7 +350,6 @@ type Twig {
   abstractId: String!
   bookmarkId: String
   children: [Twig!]!
-  color: String
   createDate: DateTime!
   degree: Int!
   deleteDate: DateTime

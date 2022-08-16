@@ -588,7 +588,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
               zIndex: MAX_Z_INDEX + twig.z,
               width: TWIG_WIDTH,
               height: idToHeight[twig.id],
-              backgroundColor: getTwigColor(twig.color || twig.user?.color),
+              backgroundColor: twig.user?.color,
               opacity: drag.targetTwigId === twig.id && drag.targetDirection === DirectionType.NONE
                 ? 0.4
                 : 0,
@@ -618,7 +618,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
                 zIndex: MAX_Z_INDEX + twig.z ,
                 width: 100,
                 height: idToHeight[twig.id],
-                backgroundColor: getTwigColor(twig.color || twig.user?.color),
+                backgroundColor: twig.user?.color,
                 opacity: drag.targetTwigId === twig.id && drag.targetDirection === DirectionType.LEFT
                   ? 0.4
                   : 0,
@@ -648,7 +648,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
                 zIndex:MAX_Z_INDEX + twig.z,
                 width: TWIG_WIDTH,
                 height: 100,
-                backgroundColor: getTwigColor(twig.color || twig.user?.color),
+                backgroundColor: twig.user?.color,
                 opacity: drag.targetTwigId === twig.id && drag.targetDirection === DirectionType.UP
                 ? 0.4
                 : 0,
@@ -680,7 +680,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
               zIndex: MAX_Z_INDEX + twig.z,
               width: 100,
               height: idToHeight[twig.id],
-              backgroundColor: getTwigColor(twig.color || twig.user?.color),
+              backgroundColor: twig.user?.color,
               opacity: drag.targetTwigId === twig.id && drag.targetDirection === DirectionType.RIGHT
                 ? 0.4
                 : 0,
@@ -711,7 +711,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
               zIndex: MAX_Z_INDEX + twig.z,
               width: TWIG_WIDTH,
               height: 100,
-              backgroundColor: getTwigColor(twig.color || twig.user?.color),
+              backgroundColor: twig.user?.color,
               opacity: drag.targetTwigId === twig.id && drag.targetDirection === DirectionType.DOWN
                 ? 0.4
                 : 0,

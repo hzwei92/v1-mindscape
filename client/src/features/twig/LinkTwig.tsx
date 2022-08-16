@@ -15,6 +15,7 @@ import ArrowComponent from '../arrow/ArrowComponent';
 import PostTwig from './PostTwig';
 import { selectSelectedTwigId } from '../space/spaceSlice';
 import TwigControls from './TwigControls';
+import { selectUserById } from '../user/userSlice';
 
 interface LinkTwigProps {
   twig: Twig;
@@ -32,6 +33,8 @@ export default function LinkTwig(props: LinkTwigProps) {
     space, 
     canEdit,
   } = useContext(SpaceContext);
+
+  const twigUser = useAppSelector(state => selectUserById(state, props.twig.userId));
 
   const selectedTwigId = useAppSelector(selectSelectedTwigId(space));
   const isSelected = props.twig.id === selectedTwigId;
@@ -121,8 +124,8 @@ export default function LinkTwig(props: LinkTwigProps) {
         width: 30,
         height: 30,
         outline: isSelected
-          ? `5px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`
-          : `1px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`,
+          ? `5px solid ${twigUser?.color}`
+          : `1px solid ${twigUser?.color}`,
         borderRadius: 2,
         borderTopLeftRadius: 0,
         display: props.twig.isOpen
@@ -168,8 +171,8 @@ export default function LinkTwig(props: LinkTwigProps) {
               width: TWIG_WIDTH,
               opacity: .8,
               outline: isSelected
-                ? `10px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`
-                : `1px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`,
+                ? `10px solid ${twigUser?.color}`
+                : `1px solid ${twigUser?.color}`,
               borderRadius: 3,
               borderTopLeftRadius: 0,
               backgroundColor: isLinking

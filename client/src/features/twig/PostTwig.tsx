@@ -13,6 +13,7 @@ import useLinkTwigs from './useLinkTwigs';
 import { getTwigColor } from '../../utils';
 import ArrowComponent from '../arrow/ArrowComponent';
 import { selectIdToPos, selectIdToHeight, selectSelectedTwigId, setSelectedSpace } from '../space/spaceSlice';
+import { selectUserById } from '../user/userSlice';
 
 interface PostTwigProps {
   twig: Twig;
@@ -32,6 +33,8 @@ export default function PostTwig(props: PostTwigProps) {
     abstract,
     canEdit,
   } = useContext(SpaceContext);
+
+  const twigUser = useAppSelector(state => selectUserById(state, props.twig.userId));
 
   const selectedTwigId = useAppSelector(selectSelectedTwigId(space));
   const idToPos = useAppSelector(selectIdToPos(space));
@@ -177,16 +180,8 @@ export default function PostTwig(props: PostTwigProps) {
               width: TWIG_WIDTH,
               opacity: .9,
               outline: isSelected
-                ? `10px solid ${props.twig.bookmarkId
-                  ? palette === 'dark'
-                    ? 'white'
-                    : 'black'
-                  : getTwigColor(props.twig.color) || props.twig.user?.color}`
-                : `1px solid ${props.twig.bookmarkId
-                  ? palette === 'dark'
-                    ? 'white'
-                    : 'black'
-                  : getTwigColor(props.twig.color) || props.twig.user?.color}`,
+                ? `10px solid ${twigUser?.color}`
+                : `1px solid ${twigUser?.color}`,
               borderRadius: 2,
               borderTopLeftRadius: 0,
               backgroundColor: isLinking
@@ -200,6 +195,7 @@ export default function PostTwig(props: PostTwigProps) {
           >
             <TwigBar
               twig={props.twig}
+              twigUser={twigUser}
               isSelected={isSelected}
             />
             <Box sx={{

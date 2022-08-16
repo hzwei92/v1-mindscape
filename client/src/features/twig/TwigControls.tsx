@@ -87,7 +87,7 @@ function TwigControls(props: TwigControlsProps) {
   const handleOpenClick = (event: React.MouseEvent) => {
     event.stopPropagation();
     if (!arrow) return;
-    navigate(`/m/${arrow.routeName}/0`);
+    navigate(`/g/${arrow.routeName}/0`);
   }
 
   const handleReplyClick = (event: React.MouseEvent) => {
@@ -126,7 +126,7 @@ function TwigControls(props: TwigControlsProps) {
 
   const handleCopyClick = (event: React.MouseEvent) => {
     event.stopPropagation();
-    navigator.clipboard.writeText(`https://mindscape.pub/m/${arrow?.routeName}`);
+    navigator.clipboard.writeText(`https://mindscape.pub/g/${arrow?.routeName}`);
     const handleDismissClick = (event: React.MouseEvent) => {
       closeSnackbar(props.twig.id);
     }
@@ -151,7 +151,7 @@ function TwigControls(props: TwigControlsProps) {
 
   const handleCopyRelativeClick = (event: React.MouseEvent) => {
     event.stopPropagation();
-    navigator.clipboard.writeText(`https://mindscape.pub/m/${abstract.routeName}/${props.twig.i}`);
+    navigator.clipboard.writeText(`https://mindscape.pub/g/${abstract.routeName}/${props.twig.i}`);
     const handleDismissClick = (event: React.MouseEvent) => {
       closeSnackbar(props.twig.id + 'context');
     }
@@ -499,7 +499,7 @@ function TwigControls(props: TwigControlsProps) {
                     marginLeft: '-5px',
                     marginBottom: '-5px',
                     fontSize: 14,
-                    color: frameTwig ? user?.frame?.color : null
+                    color: frameTwig ? user?.frame?.user.color : null
                   }}>
                     <CropDinIcon fontSize='inherit'/>
                   </Box>
@@ -513,7 +513,7 @@ function TwigControls(props: TwigControlsProps) {
                       marginLeft: '-5px',
                       marginBottom: '-5px',
                       fontSize: 14,
-                      color: focusTwig ? user?.focus?.color : null
+                      color: focusTwig ? user?.focus?.user.color : null
                     }}>
                       <CropFreeIcon fontSize='inherit'/>
                     </Box>

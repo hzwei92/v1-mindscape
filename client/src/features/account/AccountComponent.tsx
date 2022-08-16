@@ -86,25 +86,6 @@ export default function AccountComponent() {
             Login
           </Button>
         </Card>
-        {
-          user?.email
-            ? user?.verifyEmailDate
-              ? <Card elevation={5} sx={{
-                  padding: 1,
-                  margin: 1,
-                }}>
-                  <Typography variant='overline'>
-                    Email
-                  </Typography>
-                  <Box sx={{
-                    marginLeft: 1,
-                  }}>
-                    { user.email }
-                  </Box>
-                </Card>
-              : <Verify />
-            : <Register />
-        }
         <AccountSettings user={user} />
         {
           isLogout

@@ -36,6 +36,8 @@ export default function useCenterTwig(space: SpaceType) {
       
       const pos = idToPos[twigId];
 
+      console.log(pos, space, twigId, idToPos);
+
       const x1 = ((coords?.x ?? pos.x) + VIEW_RADIUS) * scale;
       const y1 = ((coords?.y ?? pos.y) + VIEW_RADIUS) * scale;
 

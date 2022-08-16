@@ -10,6 +10,7 @@ import { selectIsOpen, selectSelectedTwigId, setIsOpen } from '../space/spaceSli
 import { Navigate, useNavigate } from 'react-router-dom';
 import { selectIdToTwig } from '../twig/twigSlice';
 import useSetUserFocus from '../user/useSetUserFocus';
+import { selectUserById } from '../user/userSlice';
 
 export default function FocusComponent() {
   const dispatch = useAppDispatch();
@@ -33,6 +34,8 @@ export default function FocusComponent() {
   const frameSelectedTwigId = useAppSelector(selectSelectedTwigId(SpaceType.FRAME));
   const frameIdToTwig = useAppSelector(selectIdToTwig(SpaceType.FRAME));
 
+  const focusUser = useAppSelector(state => selectUserById(state, user?.focus?.userId));
+
   const [theme, setTheme] = useState(createTheme({
     palette: {
       primary: {
@@ -53,7 +56,7 @@ export default function FocusComponent() {
     setTheme(createTheme({
       palette: {
         primary: {
-          main: user.focus?.color || '#ffffff',
+          main: focusUser?.color || '#ffffff',
         },
         mode: palette,
       },
@@ -62,7 +65,7 @@ export default function FocusComponent() {
         snackbar: MAX_Z_INDEX + 10000
       },
     }));
-  }, [user?.focus?.color, palette]);
+  }, [focusUser?.color, palette]);
 
   const { setUserFocusById } = useSetUserFocus();
 
@@ -74,7 +77,7 @@ export default function FocusComponent() {
 
   const handleCloseClick = (event: React.MouseEvent) => {
     const frameTwig = frameIdToTwig[frameSelectedTwigId];
-    const route = `/m/${user.frameId}/${frameTwig.i}`;
+    const route = `/g/${user.frameId}/${frameTwig.i}`;
     navigate(route);
     dispatch(setIsOpen({
       space: SpaceType.FOCUS,

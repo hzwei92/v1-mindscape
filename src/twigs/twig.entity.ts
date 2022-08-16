@@ -89,9 +89,6 @@ export class Twig {
   @Column({ default: 0})
   z: number;
 
-  @Column({ nullable: true })
-  color: string;
-
   @Column({ default: true })
   isOpen: boolean;
 

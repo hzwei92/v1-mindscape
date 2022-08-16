@@ -5,7 +5,7 @@ export const EMAIL_REGEX = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^
 
 export const GOOGLE_CLIENT_ID = '320721321078-iu61jffh7000m848qjha76o0qdrl6h7o.apps.googleusercontent.com';
 
-export const REFRESH_ACCESS_TOKEN_TIME = 8 *60 * 1000;
+export const REFRESH_ACCESS_TOKEN_TIME = 8 * 60 * 1000;
 
 export const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoiamFtbnRjZyIsImEiOiJja3ZqMGk0bmRiZms0MnB0OXNpb2NneGo0In0.nDqGANM1cIwpqVLBl506Vw';
 

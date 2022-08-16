@@ -105,7 +105,7 @@ export default function useSelectTwig(space: SpaceType, canEdit: boolean) {
     dispatch(mergeArrows([abstract1]));
 
     if (!dontNav) {
-      const route = `/m/${abstract.routeName}/${twig.i}`;
+      const route = `/g/${abstract.routeName}/${twig.i}`;
       navigate(route);
     }
   };

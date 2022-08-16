@@ -14,6 +14,7 @@ import { Twig } from '../twig/twig';
 import { MAX_Z_INDEX } from '../../constants';
 import { getTwigColor } from '../../utils';
 import { selectIsOpen, selectSelectedSpace, selectSelectedTwigId } from './spaceSlice';
+import { selectIdToUser } from '../user/userSlice';
 
 export default function SpaceNav() {
   const { 
@@ -28,6 +29,7 @@ export default function SpaceNav() {
   const isOpen = useAppSelector(selectIsOpen(space));
 
   const idToTwig = useAppSelector(selectIdToTwig(space));
+  const idToUser = useAppSelector(selectIdToUser);
 
   const [twigs, setTwigs] = useState([] as Twig[]);
   const [index, setIndex] = useState(0);
@@ -118,7 +120,7 @@ export default function SpaceNav() {
       <Fab title='Earliest' size='small' disabled={!hasEarlier} onClick={handleNavEarliest}  sx={{
         margin: 1,
         color: hasEarlier 
-          ? (getTwigColor(twigs[0]?.color) || twigs[0]?.user?.color || 'dimgrey') 
+          ? (idToUser[twigs[0]?.userId]?.color || 'dimgrey') 
           : 'dimgrey',
       }}>
         <SkipPreviousIcon color='inherit' />
@@ -126,14 +128,14 @@ export default function SpaceNav() {
       <Fab title='Previous' size='small' disabled={!hasEarlier} onClick={handleNavPrev} sx={{
         margin: 1,
         color: hasEarlier 
-          ? (getTwigColor(twigs[index - 1]?.color) || twigs[index - 1]?.user?.color || 'dimgrey') 
+          ? (idToUser[twigs[index - 1]?.userId]?.color || 'dimgrey') 
           : 'dimgrey',
       }}>
         <FastRewindIcon color='inherit' />
       </Fab>
       <Fab title='Selected' size='small' disabled={!selectedTwigId} onClick={handleNavFocus} sx={{
         margin: 1,
-        color:  getTwigColor(twigs[index]?.color) || twigs[index]?.user?.color || 'dimgrey',
+        color: idToUser[twigs[index]?.userId]?.color || 'dimgrey',
         border: space === selectedSpace
           ? '3px solid'
           : 'none'
@@ -143,7 +145,7 @@ export default function SpaceNav() {
       <Fab title='Next' size='small' disabled={!hasLater} onClick={handleNavNext} sx={{
         margin: 1,
         color: hasLater 
-          ? (getTwigColor(twigs[index + 1]?.color) || twigs[index + 1]?.user?.color || 'dimgrey') 
+          ? (idToUser[twigs[index + 1]?.userId]?.color || 'dimgrey') 
           : 'dimgrey',
       }}>
         <FastForwardIcon color='inherit' />
@@ -151,7 +153,7 @@ export default function SpaceNav() {
       <Fab title='Latest' size='small' disabled={!hasLater} onClick={handleNavLatest} sx={{
         margin: 1,
         color: hasLater 
-          ? (getTwigColor(twigs[twigs.length - 1]?.color )|| twigs[twigs.length - 1]?.user?.color  || 'dimgrey') 
+          ? (idToUser[twigs[twigs.length - 1]?.userId]?.color  || 'dimgrey') 
           : 'dimgrey',
       }}>
         <SkipNextIcon color='inherit' />

@@ -51,9 +51,6 @@ export class Twig {
 
   @Field(() => Int)
   z: number;
-  
-  @Field({ nullable: true })
-  color: string;
 
   @Field()
   isOpen: boolean;

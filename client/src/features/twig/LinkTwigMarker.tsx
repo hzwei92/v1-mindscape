@@ -1,4 +1,3 @@
-import zIndex from '@mui/material/styles/zIndex';
 import React, { useContext, useState } from 'react';
 import { useAppSelector } from '../../app/hooks';
 import { MAX_Z_INDEX, VIEW_RADIUS } from '../../constants';
@@ -7,8 +6,8 @@ import { selectArrowById } from '../arrow/arrowSlice';
 import { PosType } from '../space/space';
 import { SpaceContext } from '../space/SpaceComponent';
 import { selectSelectedTwigId } from '../space/spaceSlice';
+import { selectUserById } from '../user/userSlice';
 import type { Twig } from './twig';
-import twigSlice from './twigSlice';
 import useSelectTwig from './useSelectTwig';
 
 interface LinkTwigMarkerProps {
@@ -45,7 +44,8 @@ export default function LinkTwigMarker(props: LinkTwigMarkerProps) {
   // }, [links.length]);
 
   const link = useAppSelector(state => selectArrowById(state, props.twig.detailId))
-  
+  const linkUser = useAppSelector(state => selectUserById(state, link?.userId));
+
   const handleMouseDown = (event: React.MouseEvent) => {
     event.stopPropagation();
   }
@@ -87,7 +87,7 @@ export default function LinkTwigMarker(props: LinkTwigMarkerProps) {
         x2={(props.targetPos?.x ?? 0) + VIEW_RADIUS}
         y2={(props.targetPos?.y ?? 0) + VIEW_RADIUS}
         strokeWidth={10 * ((isSelected ? 4 : 2) + rating)}
-        stroke={link?.user.color}
+        stroke={linkUser?.color}
         strokeLinecap={'round'}
       />
     </g>

@@ -18,11 +18,19 @@ import { useContext } from 'react';
 import { AppContext } from './App';
 import { MenuMode } from './features/menu/menu';
 import useSetUserPalette from './features/user/useSetUserPalette';
-import { selectSelectedSpace } from './features/space/spaceSlice';
+import { selectSelectedSpace, selectSelectedTwigId, setIsOpen, setSelectedSpace } from './features/space/spaceSlice';
 import { SpaceType } from './features/space/space';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { selectIdToTwig } from './features/twig/twigSlice';
+import { selectIdToArrow } from './features/arrow/arrowSlice';
+import useCenterTwig from './features/twig/useCenterTwig';
 //import useSavePostSub from './features/post/useSavePostSub';
 
 export default function AppBar() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
   const { 
     user,
     width, 
@@ -35,9 +43,19 @@ export default function AppBar() {
   const isMobile = width < MOBILE_WIDTH;
 
   const selectedSpace = useAppSelector(selectSelectedSpace);
+  const frameSelectedTwigId = useAppSelector(selectSelectedTwigId(SpaceType.FRAME));
+  const focusSelectedTwigId = useAppSelector(selectSelectedTwigId(SpaceType.FOCUS));
+
+  const frameIdToTwig = useAppSelector(selectIdToTwig(SpaceType.FRAME));
+  const focusIdToTwig = useAppSelector(selectIdToTwig(SpaceType.FOCUS));
+
+  const idToArrow = useAppSelector(selectIdToArrow);
 
   useAuth();
   useAppRouter(user);
+
+  const { centerTwig: frameCenterTwig } = useCenterTwig(SpaceType.FRAME);
+  const { centerTwig: focusCenterTwig } = useCenterTwig(SpaceType.FOCUS);
 
   const { setUserPalette } = useSetUserPalette();
 
@@ -74,12 +92,35 @@ export default function AppBar() {
   const handleFeedClick = () => {
 
   };
+
   const handleFrameClick = () => {
-
+    const twig = frameIdToTwig[frameSelectedTwigId];
+    if (twig && user?.frame) {
+      const route = `/g/${user.frame.routeName}/${twig.i}`
+      if (location.pathname !== route) {
+        navigate(route);
+      }
+      else {
+        dispatch(setSelectedSpace(SpaceType.FRAME));
+      }
+      frameCenterTwig(twig.id, true, 0);
+    }
   }
+
   const handleFocusClick = () => {
-
+    const twig = focusIdToTwig[focusSelectedTwigId];
+    if (twig && user?.focus) {
+      const route = `/g/${user.focus.routeName}/${twig.i}`
+      if (location.pathname !== route) {
+        navigate(route);
+      }
+      else {
+        dispatch(setSelectedSpace(SpaceType.FOCUS));
+      }
+      focusCenterTwig(twig.id, true, 0);
+    }
   }
+  
   const handlePaletteClick = () => {
     setUserPalette(palette === 'light' ? 'dark' : 'light');
   }
@@ -210,9 +251,10 @@ export default function AppBar() {
                 ? <Box title='Focus' sx={{paddingTop: 1}}>
                     <IconButton onClick={handleFocusClick} sx={{
                       border: (!isMobile || menuMode === MenuMode.NONE) && selectedSpace === SpaceType.FOCUS
-                        ? `1px solid ${user?.focus?.color}`
+                        ? `1px solid ${user?.focus?.user.color}`
                         : 'none',
-                      color: (!isMobile || menuMode === MenuMode.NONE) && selectedSpace === SpaceType.FOCUS                      ? user?.focus?.color
+                      color: (!isMobile || menuMode === MenuMode.NONE) && selectedSpace === SpaceType.FOCUS
+                        ? user?.focus?.user.color
                         : color,
                     }}>
                       <CropFreeIcon/>

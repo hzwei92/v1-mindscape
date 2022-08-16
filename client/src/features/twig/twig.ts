@@ -24,7 +24,6 @@ export type Twig = {
   isRoot: boolean;
   degree: number;
   rank: number;
-  color: string | null;
   displayMode: string;
   bookmarkId: string | null,
   windowId: number | null;
@@ -49,7 +48,6 @@ export const createTwig = (p: {
   x: number,
   y: number,
   rank: number,
-  color: string | null,
   isOpen: boolean,
   bookmarkId: string | null,
   windowId: number | null,
@@ -76,7 +74,6 @@ export const createTwig = (p: {
     x: p.x,
     y: p.y,
     z: p.abstract.twigZ + 1,
-    color: p.color,
     degree: p.parent.degree + 1,
     rank: p.rank,
     tabId: p.tabId,

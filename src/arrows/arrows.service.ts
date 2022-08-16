@@ -158,7 +158,6 @@ export class ArrowsService {
     arrow0.url = url;
     arrow0.faviconUrl = faviconUrl;
     arrow0.routeName = arrow0.id;
-    arrow0.color = user.color;
     arrow0.saveDate = new Date();
     const arrow1 = await this.arrowsRepository.save(arrow0);
 
@@ -374,7 +373,6 @@ export class ArrowsService {
       arrow.abstractId = abstract.id;
       arrow.title = 'Window ' + entry.windowId;
       arrow.routeName = arrow.id;
-      arrow.color = user.color;
       arrows.push(arrow);
     });
     await this.sheafsService.saveSheafs(sheafs);
@@ -398,7 +396,6 @@ export class ArrowsService {
       arrow.abstractId = abstract.id;
       arrow.title = 'Group ' + entry.groupId.toString();
       arrow.routeName = arrow.id;
-      arrow.color = user.color;
       arrows.push(arrow);
     });
     await this.sheafsService.saveSheafs(sheafs);
@@ -454,7 +451,6 @@ export class ArrowsService {
         arrow.url = entry.url;
         arrow.faviconUrl = entry.faviconUrl
         arrow.routeName = arrow.id;
-        arrow.color = user.color;
         arrows.push(arrow);
 
         urlToArrow[arrow.url] = arrow;
@@ -500,7 +496,6 @@ export class ArrowsService {
       arrow.title = entry.title;
       arrow.url = entry.url;
       arrow.routeName = arrow.id;
-      arrow.color = user.color;
       arrows.push(arrow);
     });
 

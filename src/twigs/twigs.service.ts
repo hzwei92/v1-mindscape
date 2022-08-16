@@ -694,7 +694,6 @@ export class TwigsService {
     twig.displayMode = DisplayMode[displayMode];
 
     if (twig.tabId && parentTwig.groupId) {
-      twig.color = parentTwig.color;
       twig.groupId = parentTwig.groupId;
     }
     
@@ -794,7 +793,6 @@ export class TwigsService {
       twig0.rank = subTree.id === twigId
         ? rank
         : subTree.rank;
-      twig0.color = user.color;
       twig0.isOpen = subTree.isOpen;
       twig0.displayMode = subTree.id === twigId
         ? DisplayMode[displayMode]
@@ -990,7 +988,6 @@ export class TwigsService {
       twig.groupId = entry.groupId;
       twig.degree = parent.degree + 1;
       twig.rank = entry.rank;
-      twig.color = entry.color;
       twig.displayMode = DisplayMode.HORIZONTAL;
       return twig;
     });
@@ -1058,7 +1055,6 @@ export class TwigsService {
           twig.x = parent.x;
           twig.y = parent.y;
           twig.z = abstract.twigZ + j+ 1;
-          twig.color = entry.color;
           twig.windowId = entry.windowId;
           twig.groupId = entry.groupId;
           twig.tabId = entry.tabId;
@@ -1408,7 +1404,6 @@ export class TwigsService {
     tabTwig.parent = parentTwig;
     tabTwig.windowId = groupTwig.windowId;
     tabTwig.groupId = groupTwig.groupId;
-    tabTwig.color = groupTwig.color;
     tabTwig.degree = parentTwig.degree + 1;
     tabTwig.rank = 1;
     tabTwig = await this.twigsRepository.save(tabTwig);
@@ -1421,7 +1416,6 @@ export class TwigsService {
       if (desc.id !== tabTwig.id) {
         desc.windowId = groupTwig.windowId;
         desc.groupId = groupTwig.groupId;
-        desc.color = groupTwig.color;
         desc.degree += dDegree;
         descs1.push(desc);
       }
@@ -1656,7 +1650,6 @@ export class TwigsService {
           twig.x = parent.x;
           twig.y = parent.y;
           twig.z = abstract.twigZ + j + 1;
-          twig.color = null;
           twig.windowId = null;
           twig.groupId = null;
           twig.tabId = null;

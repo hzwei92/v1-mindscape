@@ -29,11 +29,8 @@ export class Arrow {
 
   @Field({ nullable: true })
   faviconUrl: string;
+
   
-  @Field()
-  color: string;
-
-
   @Field()
   userId: string;
 

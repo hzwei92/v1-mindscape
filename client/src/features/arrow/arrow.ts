@@ -12,7 +12,6 @@ export type Arrow = {
   title: string | null;
   url: string | null;
   faviconUrl: string | null;
-  color: string;
 
   userId: string;
   user: User;
@@ -105,7 +104,6 @@ export const createArrow = (params: {
     title,
     url,
     faviconUrl,
-    color: user.color,
 
     userId: user.id,
     user,

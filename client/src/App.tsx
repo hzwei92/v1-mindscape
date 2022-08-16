@@ -156,7 +156,7 @@ function App() {
     else {
       setFrameWidth(0);
     }
-  }, [focusIsOpen, frameIsOpen]);
+  }, [focusIsOpen, frameIsOpen, menuWidth]);
 
   const handleMouseMove = (event: React.MouseEvent) => {
     if (menuIsResizing) {

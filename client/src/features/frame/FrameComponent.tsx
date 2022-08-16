@@ -7,6 +7,7 @@ import { AppContext } from '../../App';
 import { SpaceType } from '../space/space';
 import { selectIsOpen } from '../space/spaceSlice';
 import { useAppSelector } from '../../app/hooks';
+import { selectUserById } from '../user/userSlice';
 
 export default function FrameComponent() {
   const { 
@@ -20,6 +21,9 @@ export default function FrameComponent() {
   } = useContext(AppContext);
 
   const isOpen = useAppSelector(selectIsOpen(SpaceType.FRAME));
+  const focusIsOpen = useAppSelector(selectIsOpen(SpaceType.FOCUS));
+
+  const frameUser = useAppSelector(state => selectUserById(state, user?.frame?.userId));
 
   const [theme, setTheme] = useState(createTheme({
     palette: {
@@ -43,7 +47,7 @@ export default function FrameComponent() {
     setTheme(createTheme({
       palette: {
         primary: {
-          main: user.frame?.color || '#ffffff',
+          main: frameUser?.color || '#ffffff',
         },
         mode: palette,
       },
@@ -52,7 +56,7 @@ export default function FrameComponent() {
         snackbar: MAX_Z_INDEX + 10000
       },
     }));
-  }, [user?.frame?.color, palette]);
+  }, [frameUser?.color, palette]);
 
   if (!theme || !user) return null;
 
@@ -97,7 +101,7 @@ export default function FrameComponent() {
             justifyContent: 'space-between',
             borderTopLeftRadius: 0,
             borderTopRightRadius: 0,
-            width: frameWidth - 5,
+            width: frameWidth - (focusIsOpen ? 5 : 0),
             height: `${SPACE_BAR_HEIGHT - 2}px`,
             transition: menuIsResizing || frameIsResizing
               ? 'none'
@@ -152,7 +156,7 @@ export default function FrameComponent() {
               ? 'primary.main'
               : color,
             cursor: 'col-resize',
-            display: frameWidth > 0
+            display: focusIsOpen
               ? 'block'
               : 'none'
           }}

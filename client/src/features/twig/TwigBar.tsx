@@ -10,9 +10,11 @@ import { SpaceContext } from '../space/SpaceComponent';
 import { DisplayMode } from '../../constants';
 import { getTwigColor } from '../../utils';
 import { selectDrag, setDrag } from '../space/spaceSlice';
+import { User } from '../user/user';
 
 interface TwigBarProps {
   twig: Twig;
+  twigUser: User | null;
   isSelected: boolean;
 }
 
@@ -81,11 +83,7 @@ function TwigBar(props: TwigBarProps) {
       title={props.twig.id}
       onMouseDown={handleMouseDown}
       sx={{
-        backgroundColor: props.twig.bookmarkId 
-          ? palette === 'dark'
-            ? 'white'
-            : 'black'
-          : getTwigColor(props.twig.color) || props.twig.user.color,
+        backgroundColor: props.twigUser?.color,
         textAlign: 'left',
         cursor: abstract.id === props.twig.detailId
           ? pendingLink.sourceId
