@@ -15,10 +15,8 @@ import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { AppContext } from '../../App';
 import { SpaceContext } from '../space/SpaceComponent';
 import { getEmptyDraft } from '../../utils';
-import { DisplayMode } from '../../constants';
-import { SpaceType } from '../space/space';
 import { selectIdToPos, setSelectedTwigId } from '../space/spaceSlice';
-import { mergeArrows, selectArrowById } from '../arrow/arrowSlice';
+import { mergeArrows } from '../arrow/arrowSlice';
 
 const REPLY_TWIG = gql`
   mutation ReplyTwig(
@@ -166,13 +164,11 @@ export default function useReplyTwig() {
       parent: parentTwig, 
       x, 
       y, 
-      rank,
       isOpen: true, 
       windowId: null, 
       groupId: null, 
       tabId: null,
       bookmarkId: null, 
-      displayMode: DisplayMode.SCATTERED,
       source: null,
       target: null,
     });

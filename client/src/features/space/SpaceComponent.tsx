@@ -1,8 +1,8 @@
 import { Box } from '@mui/material';
 import React, { Dispatch, SetStateAction, useContext, useEffect, useRef, useState } from 'react';
-import { VIEW_RADIUS, SPACE_BAR_HEIGHT, DisplayMode, MAX_Z_INDEX, TWIG_WIDTH } from '../../constants';
-import { checkPermit, getTwigColor } from '../../utils';
-import { DirectionType, PosType, SpaceType } from './space';
+import { VIEW_RADIUS, SPACE_BAR_HEIGHT, MAX_Z_INDEX, TWIG_WIDTH } from '../../constants';
+import { checkPermit } from '../../utils';
+import { PosType, SpaceType } from './space';
 import useInitSpace from './useInitSpace';
 import { Arrow } from '../arrow/arrow';
 import { Role } from '../role/role';
@@ -38,6 +38,7 @@ import {
 import { focusAdjustIdToPosVar, focusSpaceElVar, frameAdjustIdToPosVar, frameSpaceElVar } from '../../cache';
 import useTwigTree from '../twig/useTwigTree';
 import { useReactiveVar } from '@apollo/client';
+import useGraftTwig from '../twig/useGraftTwig';
 
 export const SpaceContext = React.createContext({} as {
   abstract: Arrow;
@@ -123,6 +124,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   //useAddTwigSub(props.user, props.space, abstract);
 
   const { moveTwig } = useMoveTwig(props.space);
+  const { graftTwig } = useGraftTwig(props.space);
 
   useEffect(() => {
     if (Object.keys(idToTwig).length === 0) {
@@ -290,7 +292,6 @@ export default function SpaceComponent(props: SpaceComponentProps) {
         isScreen: false,
         twigId: '',
         targetTwigId: '',
-        targetDirection: DirectionType.NONE,
       }
     }));
 
@@ -298,123 +299,11 @@ export default function SpaceComponent(props: SpaceComponentProps) {
 
     if (canEdit) {
       if (drag.targetTwigId) {
-        // const dragTwig = idToTwig[drag.twigId];
-        // const target = idToTwig[drag.targetTwigId];
-
-        // let parentTwigId;
-        // let rank;
-        // let displayMode;
-
-        // if (drag.targetDirection === DirectionType.NONE) {
-        //   parentTwigId = target.id;
-        //   rank = 1;
-        //   displayMode = target.displayMode;
-        // }
-        // else if (drag.targetDirection === DirectionType.DOWN) {
-        //   console.log('down');
-        //   if (target.displayMode === DisplayMode.VERTICAL) {
-        //     console.log('vertical');
-        //     parentTwigId = target.parent.id;
-        //     if (dragTwig.parent.id === parentTwigId && dragTwig.rank < target.rank) {
-        //       console.log('rank', target)
-        //       rank = target.rank;
-        //     }
-        //     else {
-        //       console.log('rank + 1')
-        //       rank = target.rank + 1;
-        //     }
-        //   }
-        //   else {
-        //     parentTwigId = target.id;
-        //     rank = 1;
-        //   }
-        //   displayMode = DisplayMode.VERTICAL;
-        // }
-        // else if (drag.targetDirection === DirectionType.RIGHT) {
-        //   if (target.displayMode === DisplayMode.HORIZONTAL) {
-        //     parentTwigId = target.parent.id;
-        //     if (dragTwig.parent.id === parentTwigId && dragTwig.rank < target.rank) {
-        //       rank = target.rank;
-        //     }
-        //     else {
-        //       rank = target.rank + 1;
-        //     }
-        //   }
-        //   else {
-        //     parentTwigId = target.id;
-        //     rank = 1;
-        //   }
-        //   displayMode = DisplayMode.HORIZONTAL;
-        // }
-        // else if (drag.targetDirection === DirectionType.UP) { 
-        //   parentTwigId = target.parent.id;
-        //   if (dragTwig.parent.id === parentTwigId && dragTwig.rank < target.rank) {
-        //     rank = target.rank - 1;
-        //   }
-        //   else {
-        //     rank = target.rank;
-        //   }
-        //   displayMode = DisplayMode.VERTICAL;
-        // }
-        // else { // drag.targetDirection === DirectionType.LEFT
-        //   parentTwigId = target.parent.id;
-        //   if (dragTwig.parent.id === parentTwigId && dragTwig.rank < target.rank) {
-        //     rank = target.rank - 1;
-        //   }
-        //   else {
-        //     rank = target.rank;
-        //   }
-        //   displayMode = DisplayMode.HORIZONTAL;
-        // }
-    
-        // const parentTwig = idToTwig[parentTwigId];
-        // if (dragTwig.tabId) {
-        //   if (parentTwig.windowId) {
-        //     graftTwig(drag.twigId, parentTwigId, rank, displayMode);
-        //   }
-        //   else {
-        //     copyTwig(drag.twigId, parentTwigId, rank, displayMode);
-        //   }
-        // }
-        // else if (dragTwig.groupId) {
-        //   if (parentTwig.windowId && !parentTwig.groupId) {
-        //     graftTwig(drag.twigId, parentTwigId, rank, displayMode);
-        //   }
-        //   else {
-        //     copyTwig(drag.twigId, parentTwigId, rank, displayMode);
-        //   }
-        // }
-        // else if (dragTwig.windowId) {
-        //   if (parentTwig.id === dragTwig.parent.id) {
-        //     graftTwig(drag.twigId, parentTwigId, rank, displayMode);
-        //   }
-        //   else {
-        //     copyTwig(drag.twigId, parentTwigId, rank, displayMode);
-        //   }
-        // }
-        // else if (dragTwig.bookmarkId) {
-        //   if (parentTwig.bookmarkId) {
-        //     graftTwig(drag.twigId, parentTwigId, rank, displayMode);
-        //   }
-        //   else {
-        //     copyTwig(drag.twigId, parentTwigId, rank, displayMode);
-        //   }
-        // }
-        // else if (dragTwig.detail.url) {
-        //   if (parentTwig.windowId || parentTwig.bookmarkId) {
-        //     copyTwig(drag.twigId, parentTwigId, rank, displayMode);
-        //   }
-        //   else {
-        //     graftTwig(drag.twigId, parentTwigId, rank, displayMode);
-        //   }
-        // }
-        // else {
-        //   graftTwig(drag.twigId, parentTwigId, rank, displayMode);
-        // }
+        graftTwig(drag.twigId, drag.targetTwigId);
       }
       else {
         const pos = idToPos[drag.twigId]
-        moveTwig(drag.twigId, pos.x, pos.y, DisplayMode.SCATTERED);
+        moveTwig(drag.twigId, pos.x, pos.y);
       }
     }
     else {
@@ -432,7 +321,6 @@ export default function SpaceComponent(props: SpaceComponentProps) {
         drag: {
           ...drag,
           targetTwigId: '',
-          targetDirection: DirectionType.NONE,
         },
       }));
     }
@@ -508,20 +396,18 @@ export default function SpaceComponent(props: SpaceComponentProps) {
         isScreen: true,
         twigId: '',
         targetTwigId: '',
-        targetDirection: DirectionType.NONE,
       }
     }));
   }
 
-  const handleTargetMouseMove = (targetId: string, direction: DirectionType) => (event: React.MouseEvent) => {
+  const handleTargetMouseMove = (targetId: string) => (event: React.MouseEvent) => {
     event.stopPropagation();
-    if (drag.targetTwigId !== targetId || drag.targetDirection !== direction) {
+    if (drag.targetTwigId !== targetId) {
       dispatch(setDrag({
         space: props.space,
         drag: {
           ...drag,
           targetTwigId: targetId,
-          targetDirection: direction,
         },
       }));
     }
@@ -549,7 +435,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
 
       if (
         parentPos &&
-        (twig.displayMode === DisplayMode.SCATTERED || (pos.x !== 0 && pos.y !== 0))
+        (pos.x !== 0 && pos.y !== 0)
       ) {
         twigMarkers.push(
           <PostTwigMarker
@@ -566,164 +452,35 @@ export default function SpaceComponent(props: SpaceComponentProps) {
     if (
       drag.twigId &&
       twig.id !== drag.twigId && 
-      !Object.keys(idToDescIdToTrue[drag.twigId] || {}).some(descId => descId === twig.id)
+      !Object.keys(idToDescIdToTrue[drag.twigId] || {}).some(descId => descId === twig.id) &&
+      twig.sourceId !== drag.twigId &&
+      twig.targetId !== drag.twigId
     ) {
-      const dragTwig = idToTwig[drag.twigId];
-
-      if (
-        (!dragTwig.windowId && !dragTwig.bookmarkId) ||
-        (dragTwig.tabId && (!twig.bookmarkId || !idToArrow[twig.detailId].url)) ||
-        (dragTwig.groupId && !twig.groupId && (!twig.bookmarkId || !idToArrow[twig.detailId].url)) ||
-        (dragTwig.windowId && !twig.windowId && (!twig.bookmarkId || !idToArrow[twig.detailId].url)) ||
-        (dragTwig.bookmarkId && (!twig.bookmarkId || !idToArrow[twig.detailId].url))
-      ) {
-        dropTargets.push(
-          <Box 
-            key={'twig-main-droptarget-' + twig.id} 
-            onMouseMove={handleTargetMouseMove(twig.id, DirectionType.NONE)} 
-            sx={{
-              position: 'absolute',
-              left: pos.x + VIEW_RADIUS,
-              top: pos.y + VIEW_RADIUS,
-              zIndex: MAX_Z_INDEX + twig.z,
-              width: TWIG_WIDTH,
-              height: idToHeight[twig.id],
-              backgroundColor: twig.user?.color,
-              opacity: drag.targetTwigId === twig.id && drag.targetDirection === DirectionType.NONE
-                ? 0.4
-                : 0,
-              borderRadius: 2,
-              border: `2px solid ${color}`,
-            }}
-          />
-        )  
-      }
-
-      if (twig.displayMode === DisplayMode.HORIZONTAL) {
-        if (
-          (!dragTwig.windowId && !dragTwig.bookmarkId) ||
-          dragTwig.tabId ||
-          (dragTwig.groupId && !parentTwig.groupId) ||
-          (dragTwig.windowId && !parentTwig.windowId) ||
-          (dragTwig.bookmarkId && (!parentTwig.bookmarkId || !idToArrow[parentTwig.detailId].url))
-        ) {
-          dropTargets.push(
-            <Box 
-              key={'twig-left-droptarget-' + twig.id} 
-              onMouseMove={handleTargetMouseMove(twig.id, DirectionType.LEFT)} 
-              sx={{
-                position: 'absolute',
-                left: pos.x + VIEW_RADIUS - 50,
-                top: pos.y + VIEW_RADIUS,
-                zIndex: MAX_Z_INDEX + twig.z ,
-                width: 100,
-                height: idToHeight[twig.id],
-                backgroundColor: twig.user?.color,
-                opacity: drag.targetTwigId === twig.id && drag.targetDirection === DirectionType.LEFT
-                  ? 0.4
-                  : 0,
-                borderRadius: 2,
-                border: `2px solid ${color}`,
-              }}
-            />
-          );
-        }
-      }
-      if (twig.displayMode === DisplayMode.VERTICAL) {
-        if (
-          (!dragTwig.windowId && !dragTwig.bookmarkId) ||
-          (dragTwig.tabId && (!parentTwig.bookmarkId || !idToArrow[parentTwig.detailId].url)) ||
-          (dragTwig.groupId && !parentTwig.groupId && (!parentTwig.bookmarkId || !idToArrow[parentTwig.detailId].url)) ||
-          (dragTwig.windowId && !parentTwig.windowId && (!parentTwig.bookmarkId || !idToArrow[parentTwig.detailId].url)) ||
-          (dragTwig.bookmarkId && (!parentTwig.bookmarkId || !idToArrow[parentTwig.detailId].url))
-        ) {
-          dropTargets.push(
-            <Box 
-              key={'twig-up-droptarget-' + twig.id} 
-              onMouseMove={handleTargetMouseMove(twig.id, DirectionType.UP)} 
-              sx={{
-                position: 'absolute',
-                left: pos.x + VIEW_RADIUS,
-                top: pos.y + VIEW_RADIUS - 50,
-                zIndex:MAX_Z_INDEX + twig.z,
-                width: TWIG_WIDTH,
-                height: 100,
-                backgroundColor: twig.user?.color,
-                opacity: drag.targetTwigId === twig.id && drag.targetDirection === DirectionType.UP
-                ? 0.4
-                : 0,
-                borderRadius: 2,
-                border: `2px solid ${color}`,
-              }}
-            />
-          );
-        }
-      }
-      let rightParent = twig.displayMode === DisplayMode.HORIZONTAL 
-        ? parentTwig 
-        : twig;
-      if (
-        (!dragTwig.windowId && !dragTwig.bookmarkId) ||
-        (dragTwig.tabId && (!rightParent.bookmarkId || !idToArrow[rightParent.detailId].url)) ||
-        (dragTwig.groupId && !rightParent.groupId && (!rightParent.bookmarkId || !idToArrow[rightParent.detailId].url)) ||
-        (dragTwig.windowId && !rightParent.windowId && (!rightParent.bookmarkId || !idToArrow[rightParent.detailId].url)) ||
-        (dragTwig.bookmarkId && (!rightParent.bookmarkId || !idToArrow[rightParent.detailId].url))
-      ) {
-        dropTargets.push(
-          <Box 
-            key={'twig-right-droptarget-' + twig.id} 
-            onMouseMove={handleTargetMouseMove(twig.id, DirectionType.RIGHT)} 
-            sx={{
-              position: 'absolute',
-              left: pos.x + VIEW_RADIUS + TWIG_WIDTH - 50,
-              top: pos.y + VIEW_RADIUS,
-              zIndex: MAX_Z_INDEX + twig.z,
-              width: 100,
-              height: idToHeight[twig.id],
-              backgroundColor: twig.user?.color,
-              opacity: drag.targetTwigId === twig.id && drag.targetDirection === DirectionType.RIGHT
-                ? 0.4
-                : 0,
-              borderRadius: 2,
-              border: `2px solid ${color}`,
-            }}
-          />
-        );
-      }
-      let downParent = twig.displayMode === DisplayMode.VERTICAL
-        ? parentTwig
-        : twig;
-      if (
-        (!dragTwig.windowId && !dragTwig.bookmarkId) ||
-        (dragTwig.tabId && (!downParent.bookmarkId || !idToArrow[downParent.detailId].url)) ||
-        (dragTwig.groupId && !downParent.groupId && (!downParent.bookmarkId || !idToArrow[downParent.detailId].url)) ||
-        (dragTwig.windowId && !downParent.windowId && (!downParent.bookmarkId || !idToArrow[downParent.detailId].url)) ||
-        (dragTwig.bookmarkId && (!downParent.bookmarkId || !idToArrow[downParent.detailId].url))
-      ) {
-        dropTargets.push(
-          <Box 
-            key={'twig-down-droptarget-' + twig.id} 
-            onMouseMove={handleTargetMouseMove(twig.id, DirectionType.DOWN)} 
-            sx={{
-              position: 'absolute',
-              left: pos.x + VIEW_RADIUS,
-              top: pos.y + VIEW_RADIUS + idToHeight[twig.id] - 50,
-              zIndex: MAX_Z_INDEX + twig.z,
-              width: TWIG_WIDTH,
-              height: 100,
-              backgroundColor: twig.user?.color,
-              opacity: drag.targetTwigId === twig.id && drag.targetDirection === DirectionType.DOWN
-                ? 0.4
-                : 0,
-              borderRadius: 2,
-              border: `2px solid ${color}`,
-            }}
-          />
-        )
-      }
+      dropTargets.push(
+        <Box 
+          key={'twig-droptarget-' + twig.id} 
+          onMouseMove={handleTargetMouseMove(twig.id)} 
+          sx={{
+            position: 'absolute',
+            left: pos.x + VIEW_RADIUS,
+            top: pos.y + VIEW_RADIUS,
+            zIndex: MAX_Z_INDEX + twig.z,
+            width: twig.isOpen
+              ? TWIG_WIDTH
+              : 30,
+            height: twig.isOpen
+              ? idToHeight[twig.id]
+              : 30,
+            backgroundColor: twig.user?.color,
+            opacity: drag.targetTwigId === twig.id
+              ? 0.4
+              : 0,
+            borderRadius: 2,
+            border: `2px solid ${color}`,
+          }}
+        />
+      );
     }
-
-    if (twig.displayMode !== DisplayMode.SCATTERED) return;
 
     if (twig.sourceId !== twig.targetId) {
       const sourceTwig = twig.sourceId

@@ -10,12 +10,6 @@ export enum RoleType {
   OTHER = 'OTHER'
 }
 
-export enum DisplayMode {
-  SCATTERED = 'SCATTERED',
-  HORIZONTAL = 'HORIZONTAL',
-  VERTICAL = 'VERTICAL',
-}
-
 export enum PaletteMode {
   LIGHT = 'light',
   DARK = 'dark',

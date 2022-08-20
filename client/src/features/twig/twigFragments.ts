@@ -14,9 +14,6 @@ export const TWIG_FIELDS = gql`
     y
     z
     isRoot
-    degree
-    rank
-    displayMode
     windowId
     groupId
     tabId

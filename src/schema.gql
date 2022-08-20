@@ -148,7 +148,7 @@ type Mutation {
   changeBookmark(bookmarkId: String!, title: String!, url: String): Twig!
   copyToBookmark(entries: [BookmarkEntry!]!): [Twig!]!
   copyToTab(entries: [TabEntry!]!, groupEntry: GroupEntry): [Twig!]!
-  copyTwig(displayMode: String!, parentTwigId: String!, rank: Int!, twigId: String!): CopyTwigResult!
+  copyTwig(parentTwigId: String!, twigId: String!): CopyTwigResult!
   createBookmark(bookmark: BookmarkEntry): TabResult!
   createGroup(groupEntry: GroupEntry!): TabResult!
   createTab(tabEntry: TabEntry!): CreateTabResult!
@@ -162,16 +162,16 @@ type Mutation {
   getOuts(arrowId: String!, offset: Int!): [Arrow!]!
   getTwigs(abstractId: String!): [Twig!]!
   getUser(userId: String!): User!
-  graftTwig(displayMode: String!, parentTwigId: String!, rank: Int!, sessionId: String!, twigId: String!): GraftTwigResult!
+  graftTwig(parentTwigId: String!, sessionId: String!, twigId: String!): GraftTwigResult!
   initUser(palette: String!): User!
   inviteRole(arrowId: String!, sessionId: String!, userName: String!): Role!
   linkTwigs(abstractId: String!, sessionId: String!, sourceId: String!, targetId: String!): LinkTwigsResult!
   loginGoogleUser(token: String!): User!
   loginUser(email: String!, pass: String!): User!
   logoutUser: User!
-  moveBookmark(bookmarkId: String!, parentBookmarkId: String!, rank: Int!): MoveTabResult!
+  moveBookmark(bookmarkId: String!, parentBookmarkId: String!): MoveTabResult!
   moveTab(groupTwigId: String!, parentTwigId: String, twigId: String!): MoveTabResult!
-  moveTwig(displayMode: String!, sessionId: String!, twigId: String!, x: Int!, y: Int!): MoveTwigResult!
+  moveTwig(sessionId: String!, twigId: String!, x: Int!, y: Int!): MoveTwigResult!
   openTwig(sessionId: String!, shouldOpen: Boolean!, twigId: String!): OpenTwigResult!
   publishCursor(abstractId: String!, sessionId: String!, x: Int!, y: Int!): User!
   refreshToken: User!
@@ -351,18 +351,15 @@ type Twig {
   bookmarkId: String
   children: [Twig!]!
   createDate: DateTime!
-  degree: Int!
   deleteDate: DateTime
   detail: Arrow
   detailId: String!
-  displayMode: String!
   groupId: Int
   i: Int!
   id: String!
   isOpen: Boolean!
   isRoot: Boolean!
   parent: Twig
-  rank: Int!
   source: Twig
   sourceId: String
   tabId: Int

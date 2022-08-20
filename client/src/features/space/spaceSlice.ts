@@ -1,7 +1,7 @@
 import { createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../../app/store';
 import { IdToType } from '../../types';
-import { DirectionType, DragState, PosType, ScrollState, SpaceType } from '../space/space';
+import { DragState, PosType, ScrollState, SpaceType } from '../space/space';
 
 export interface SpaceState {
   selectedSpace: SpaceType;
@@ -45,7 +45,6 @@ const initialState: SpaceState = {
       isScreen: false,
       twigId: '',
       targetTwigId: '',
-      targetDirection: DirectionType.NONE,
     },
     idToPos: {},
     idToHeight: {},
@@ -66,7 +65,6 @@ const initialState: SpaceState = {
       isScreen: false,
       twigId: '',
       targetTwigId: '',
-      targetDirection: DirectionType.NONE,
     },
     idToPos: {},
     idToHeight: {},

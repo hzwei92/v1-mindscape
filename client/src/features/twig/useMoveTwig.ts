@@ -11,8 +11,8 @@ import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { Twig } from './twig';
 
 const MOVE_TWIG = gql`
-  mutation MoveTwig($sessionId: String!, $twigId: String!, $x: Int!, $y: Int!, $displayMode: String!) {
-    moveTwig(sessionId: $sessionId, twigId: $twigId, x: $x, y: $y, displayMode: $displayMode) {
+  mutation MoveTwig($sessionId: String!, $twigId: String!, $x: Int!, $y: Int!) {
+    moveTwig(sessionId: $sessionId, twigId: $twigId, x: $x, y: $y) {
       twigs {
         id
         x
@@ -54,14 +54,13 @@ export default function useMoveTwig(space: SpaceType) {
     },
   });
 
-  const moveTwig = (twigId: string, x: number, y: number, displayMode: string) => {
+  const moveTwig = (twigId: string, x: number, y: number) => {
     move({
       variables: {
         sessionId: sessionId,
         twigId,
         x,
         y,
-        displayMode,
       },
     });
   }

@@ -2,13 +2,9 @@ import { Box, IconButton, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import React, { useContext } from 'react';
 import type { Twig } from './twig';
-import { mergeTwigs } from './twigSlice';
-import { v4 } from 'uuid';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { AppContext } from '../../App';
 import { SpaceContext } from '../space/SpaceComponent';
-import { DisplayMode } from '../../constants';
-import { getTwigColor } from '../../utils';
 import { selectDrag, setDrag } from '../space/spaceSlice';
 import { User } from '../user/user';
 
@@ -41,18 +37,6 @@ function TwigBar(props: TwigBarProps) {
 
   const beginDrag = () => {
     if (!props.twig.parent) return;
-    if (props.twig.displayMode !== DisplayMode.SCATTERED) {
-
-      const twig = Object.assign({}, props.twig, {
-        displayMode: DisplayMode.SCATTERED,
-      });
-
-      dispatch(mergeTwigs({
-        space: space,
-        twigs: [twig]
-      }));
-    }
-
     dispatch(setDrag({
       space,
       drag: {
@@ -128,7 +112,7 @@ function TwigBar(props: TwigBarProps) {
             fontSize: 12,
             color,
           }}>
-            {props.twig.i}...{props.twig.degree}:{props.twig.rank}
+            {props.twig.i}
           </Typography>
         </Box>
         </Box>

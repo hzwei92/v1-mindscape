@@ -5,7 +5,7 @@ import { ArrowsService } from 'src/arrows/arrows.service';
 import { RolesService } from 'src/roles/roles.service';
 import { In, Repository } from 'typeorm';
 import { Twig } from './twig.entity';
-import { DisplayMode, RoleType } from '../enums';
+import { RoleType } from '../enums';
 import { Arrow } from 'src/arrows/arrow.entity';
 import { User } from 'src/users/user.entity';
 import { checkPermit, IdToType } from 'src/utils';
@@ -104,8 +104,6 @@ export class TwigsService {
       twig0.userId = user.id;
       twig0.abstractId = arrow.id;
       twig0.detailId = arrow.id;
-      twig0.degree = 0;
-      twig0.rank = 0;
       twig0.isRoot = true;
       return twig0;
     })
@@ -124,8 +122,6 @@ export class TwigsService {
     x: number,
     y: number,
     z: number,
-    degree: number,
-    rank: number,
     isOpen: boolean,
   }) {
     const {
@@ -140,8 +136,6 @@ export class TwigsService {
       x,
       y,
       z,
-      degree,
-      rank,
       isOpen,
     } = params;
 
@@ -157,8 +151,6 @@ export class TwigsService {
     twig0.x = x
     twig0.y = y
     twig0.z = z;
-    twig0.degree = degree;
-    twig0.rank = rank;
     twig0.isOpen = isOpen;
     return this.twigsRepository.save(twig0);
   }
@@ -229,8 +221,6 @@ export class TwigsService {
       x,
       y,
       z: parentTwig.abstract.twigZ + 1,
-      degree: parentTwig.degree + 1,
-      rank: parentTwig.children.length + 1,
       isOpen: true,
     });
 
@@ -261,8 +251,6 @@ export class TwigsService {
       x: Math.round((parentTwig.x + x) / 2),
       y: Math.round((parentTwig.y + y) / 2),
       z: parentTwig.abstract.twigZ + 2,
-      degree: 1,
-      rank: 1,
       isOpen: false,
     });
 
@@ -328,24 +316,12 @@ export class TwigsService {
     else {
       let children = (twig.children || []).map(child => {
         child.parent = twig.parent;
-        child.degree -= 1;
         return child;
       });
 
-      let descs = await this.twigsRepository.manager.getTreeRepository(Twig)
-        .findDescendants(twig);
-     
-      descs = descs.reduce((acc, desc) => {
-        if (desc.id !== twig.id && !children.some(child => child.id === desc.id)) {
-          desc.degree -= 1;
-          acc.push(desc);
-        }
-        return acc;
-      }, []);
-    
       twig.deleteDate = date;
 
-      const twigs = await this.twigsRepository.save([twig, ...children, ...descs]);
+      const twigs = await this.twigsRepository.save([twig, ...children]);
 
       return {
         parentTwig: twig.parent,
@@ -507,8 +483,6 @@ export class TwigsService {
         twig.x = x
         twig.y = y
         twig.z = abstract.twigZ + twigs.length + 1;
-        twig.degree = 1;
-        twig.rank = 1;
         twig.isOpen = false;
       
         twigs.push(twig);
@@ -538,7 +512,7 @@ export class TwigsService {
     }
   }
 
-  async moveTwig(user: User, twigId: string, x: number, y: number, displayMode: string) {
+  async moveTwig(user: User, twigId: string, x: number, y: number) {
     const twig = await this.getTwigById(twigId);
     if (!twig) {
       throw new BadRequestException('This twig does not exist');
@@ -557,27 +531,25 @@ export class TwigsService {
       throw new BadRequestException('Insufficient privileges');
     }
 
-    let twigs1 = []
-    if (displayMode === DisplayMode.SCATTERED) {
-      const dx = x - twig.x;
-      const dy = y - twig.y;
+    let twigs1 = [];
 
-      let descs = await this.twigsRepository.manager.getTreeRepository(Twig).findDescendants(twig);
+    const dx = x - twig.x;
+    const dy = y - twig.y;
 
-      descs = descs.map(desc => {
-        if (desc.id === twigId) {
-          desc.displayMode = DisplayMode[displayMode]
-          desc.x = x;
-          desc.y = y;
-        }
-        else {
-          desc.x += dx;
-          desc.y += dy;
-        }
-        return desc
-      })
-      twigs1 = await this.twigsRepository.save(descs);
-    }
+    let descs = await this.twigsRepository.manager.getTreeRepository(Twig).findDescendants(twig);
+
+    descs = descs.map(desc => {
+      if (desc.id === twigId) {
+        desc.x = x;
+        desc.y = y;
+      }
+      else {
+        desc.x += dx;
+        desc.y += dy;
+      }
+      return desc
+    })
+    twigs1 = await this.twigsRepository.save(descs);
 
     return {
       twigs: twigs1,
@@ -585,7 +557,7 @@ export class TwigsService {
     }
   }
 
-  async graftTwig(user: User, twigId: string, parentTwigId: string, rank: number, displayMode: string) {
+  async graftTwig(user: User, twigId: string, parentTwigId: string) {
     let twig = await this.twigsRepository.findOne({
       where: {
         id: twigId
@@ -627,71 +599,8 @@ export class TwigsService {
       throw new BadRequestException('Insufficient privileges');
     }
 
-    let prevSibs = [];
-    let sibs = [];
-    if (twig.parent.id === parentTwigId) {
-      if (twig.rank > rank) {
-        sibs = (twig.parent.children || []).reduce((acc, sib) => {
-          if (rank <= sib.rank && sib.rank < twig.rank) {
-            sib.rank += 1;
-            acc.push(sib);
-          }
-          return acc;
-        }, []);
-      }
-      else if (twig.rank < rank) {
-        sibs = (twig.parent.children || []).reduce((acc, sib) => {
-          if (twig.rank < sib.rank && sib.rank <= rank) {
-            sib.rank -= 1;
-            acc.push(sib);
-          }
-          return acc;
-        }, []);
-      }
-    }
-    else {
-      prevSibs = (twig.parent.children || []).reduce((acc, sib) => {
-        if (sib.rank > twig.rank) {
-          sib.rank -= 1
-          acc.push(sib);
-        }
-        return acc;
-      }, []);
-
-      sibs = (parentTwig.children || []).reduce((acc, sib) => {
-        if (sib.rank >= rank) {
-          sib.rank += 1
-          acc.push(sib);
-        }
-        return acc;
-      }, []);
-    }
-
-    prevSibs = await this.twigsRepository.save(prevSibs);
-    sibs = await this.twigsRepository.save(sibs);
-
-    const dDegree = parentTwig.degree + 1 - twig.degree;
-
-    let descs = [];
-    if (dDegree !== 0) {
-      descs = await this.twigsRepository.manager.getTreeRepository(Twig)
-        .findDescendants(twig);
-      descs = descs.reduce((acc, desc) => {
-        if (desc.id !== twigId) {
-          desc.degree += dDegree
-          acc.push(desc);
-        }
-        return acc;
-      }, []);
-    }
-    descs = await this.twigsRepository.save(descs);
-    
-
     twig.id = twigId;
     twig.parent = parentTwig;
-    twig.degree = parentTwig.degree + 1;
-    twig.rank = rank;
-    twig.displayMode = DisplayMode[displayMode];
 
     if (twig.tabId && parentTwig.groupId) {
       twig.groupId = parentTwig.groupId;
@@ -701,14 +610,11 @@ export class TwigsService {
 
     return {
       twig,
-      prevSibs,
-      sibs,
-      descs,
       role: role1,
     }
   }
 
-  async copyTwig(user: User, twigId: string, parentTwigId: string, rank: number, displayMode: string) {
+  async copyTwig(user: User, twigId: string, parentTwigId: string) {
     let twig = await this.twigsRepository.findOne({
       where: {
         id: twigId
@@ -750,19 +656,6 @@ export class TwigsService {
       throw new BadRequestException('Insufficient privileges');
     }
 
-    let sibs = [];
-    sibs = (parentTwig.children || []).reduce((acc, sib) => {
-      if (sib.rank >= rank) {
-        sib.rank += 1
-        acc.push(sib);
-      }
-      return acc;
-    }, []);
-
-    sibs = await this.twigsRepository.save(sibs);
-
-    const dDegree = parentTwig.degree + 1 - twig.degree;
-
     const descsTree = await this.twigsRepository.manager.getTreeRepository(Twig)
       .findDescendantsTree(twig);
 
@@ -789,15 +682,7 @@ export class TwigsService {
       twig0.x = subTree.x
       twig0.y = subTree.y
       twig0.z = subTree.z;
-      twig0.degree = subTree.degree + dDegree;
-      twig0.rank = subTree.id === twigId
-        ? rank
-        : subTree.rank;
       twig0.isOpen = subTree.isOpen;
-      twig0.displayMode = subTree.id === twigId
-        ? DisplayMode[displayMode]
-        : subTree.displayMode;
-
       twigs0.push(twig0);
 
       subTree.children.forEach(child => {
@@ -812,7 +697,6 @@ export class TwigsService {
 
     return {
       twigs: twigs1,
-      sibs,
       role: role1,
     }
   }
@@ -927,9 +811,6 @@ export class TwigsService {
       twig.y = parent.y;
       twig.z = abstract.twigZ + j + 1;
       twig.windowId = entry.windowId;
-      twig.degree = parent.degree + 1;
-      twig.rank = entry.rank;
-      twig.displayMode = DisplayMode.HORIZONTAL;
       return twig;
     });
 
@@ -986,9 +867,6 @@ export class TwigsService {
       twig.z = abstract.twigZ + i + 1;
       twig.windowId = entry.windowId;
       twig.groupId = entry.groupId;
-      twig.degree = parent.degree + 1;
-      twig.rank = entry.rank;
-      twig.displayMode = DisplayMode.HORIZONTAL;
       return twig;
     });
 
@@ -1058,9 +936,6 @@ export class TwigsService {
           twig.windowId = entry.windowId;
           twig.groupId = entry.groupId;
           twig.tabId = entry.tabId;
-          twig.degree = parent.degree + 1;
-          twig.rank = entry.rank;
-          twig.displayMode = DisplayMode.VERTICAL;
           twigs.push(twig);
           j++;
         }
@@ -1092,20 +967,10 @@ export class TwigsService {
       relations: ['children'],
     });
 
-    let sibs = parent.children;
-    sibs.filter(sib => sib.rank >= windowEntry.rank)
-      .map(sib => {
-        sib.rank += 1;
-        return sib;
-      });
-
-    sibs = await this.twigsRepository.save(sibs);
-
     const [twig] = await this.loadWindows(user, [windowEntry]);
 
     return {
       twig,
-      sibs,
     };
   }
 
@@ -1117,20 +982,10 @@ export class TwigsService {
       relations: ['children'],
     });
 
-    let sibs = parent.children;
-    sibs.filter(sib => sib.rank >= groupEntry.rank)
-      .map(sib => {
-        sib.rank += 1;
-        return sib;
-      });
-
-    sibs = await this.twigsRepository.save(sibs);
-
     const [twig] = await this.loadGroups(user, [groupEntry]);
 
     return {
       twig,
-      sibs,
     };
   }
 
@@ -1142,16 +997,7 @@ export class TwigsService {
       relations: ['children', 'detail'],
     });
 
-    console.log('parent', parent)
-
-    let sibs = parent.children;
-    sibs.filter(sib => sib.rank >= tabEntry.rank)
-      .map(sib => {
-        sib.rank += 1;
-        return sib;
-      });
-
-    sibs = await this.twigsRepository.save(sibs);
+    console.log('parent', parent);
 
     const [twig] = await this.loadTabs(user, [tabEntry]);
 
@@ -1207,8 +1053,6 @@ export class TwigsService {
             twig.x = x
             twig.y = y
             twig.z = abstract.twigZ + linkTwigs.length + 1;
-            twig.degree = 1;
-            twig.rank = 1;
             twig.isOpen = false;
           
             linkTwigs.push(twig);
@@ -1233,7 +1077,6 @@ export class TwigsService {
 
     return {
       twigs,
-      sibs,
     };
   }
 
@@ -1311,8 +1154,6 @@ export class TwigsService {
           twig.x = x
           twig.y = y
           twig.z = abstract.twigZ + twigs.length + 1;
-          twig.degree = 1;
-          twig.rank = 1;
           twig.isOpen = false;
         
           twigs.push(twig);
@@ -1383,50 +1224,14 @@ export class TwigsService {
       parentTwig = groupTwig;
     }
 
-    let prevSibs = (tabTwig.parent?.children || [])
-      .filter(prevSib => prevSib.rank > tabTwig.rank)
-      .map(prevSib => {
-        prevSib.rank -= 1;
-        return prevSib;
-      });
-    prevSibs = await this.twigsRepository.save(prevSibs);
-
-    let sibs = (parentTwig.children || [])
-      .filter(sib => sib.id !== tabTwig.id)
-      .map(sib => {
-        sib.rank += 1;
-        return sib;
-      });
-    sibs = await this.twigsRepository.save(sibs);
-
-    const dDegree = parentTwig.degree + 1 - tabTwig.degree;
     // move tab
     tabTwig.parent = parentTwig;
     tabTwig.windowId = groupTwig.windowId;
     tabTwig.groupId = groupTwig.groupId;
-    tabTwig.degree = parentTwig.degree + 1;
-    tabTwig.rank = 1;
     tabTwig = await this.twigsRepository.save(tabTwig);
-
-    let descs = await this.twigsRepository.manager.getTreeRepository(Twig)
-      .findDescendants(tabTwig);
-    
-    const descs1 = [];
-    descs.forEach(desc => {
-      if (desc.id !== tabTwig.id) {
-        desc.windowId = groupTwig.windowId;
-        desc.groupId = groupTwig.groupId;
-        desc.degree += dDegree;
-        descs1.push(desc);
-      }
-    })
-    descs = await this.twigsRepository.save(descs1);
 
     return {
       twig: tabTwig,
-      prevSibs,
-      sibs,
-      descs,
     }
   }
 
@@ -1462,36 +1267,12 @@ export class TwigsService {
     twig = await this.twigsRepository.save(twig);
 
     let children = twig.children
-      .sort((a,b) => a.rank < b.rank ? -1 : 1)
       .map((child, i) => {
         child.parent = twig.parent;
-        child.degree = child.degree - 1;
-        child.rank = twig.rank + i;
         return child;
       });
 
     children = await this.twigsRepository.save(children);
-
-    let descs = await this.twigsRepository.manager.getTreeRepository(Twig)
-      .findDescendants(twig);
-    
-    const descs1 = [];
-    descs.forEach(desc => {
-      if (!children.some(child => child.id === desc.id)) {
-        desc.degree -= 1;
-        descs1.push(desc);
-      }
-    })
-
-    descs = await this.twigsRepository.save(descs1);
-
-    let sibs = (twig.parent?.children || []).filter(sib => sib.rank > twig.rank)
-      .map(sib => {
-        sib.rank += twig.children.length - 1;
-        return sib;
-      });
-
-    sibs = await this.twigsRepository.save(sibs);
 
     let links = [];
     await [...twig.ins, ...twig.outs].reduce(async (acc, sheaf) => {
@@ -1511,8 +1292,6 @@ export class TwigsService {
     return {
       twig,
       children,
-      descs,
-      sibs,
       links,
     }
   }
@@ -1530,16 +1309,8 @@ export class TwigsService {
     twig.deleteDate = new Date();
     const twig1 = await this.twigsRepository.save(twig);
 
-    const sibs0 = (twig.parent?.children || []).filter(sib => sib.rank > twig.rank)
-      .map(sib => {
-        sib.rank -= 1;
-        return sib;
-      })
-    const sibs1 = await this.twigsRepository.save(sibs0);
-
     return {
       twig: twig1,
-      sibs: sibs1,
     };
   }
 
@@ -1556,16 +1327,8 @@ export class TwigsService {
     twig.deleteDate = new Date();
     const twig1 = await  this.twigsRepository.save(twig);
 
-    const sibs0 = (twig.parent?.children || []).filter(sib => sib.rank > twig.rank)
-      .map(sib => {
-        sib.rank -= 1;
-        return sib;
-      })
-    const sibs1 = await this.twigsRepository.save(sibs0);
-
     return {
       twig: twig1,
-      sibs: sibs1,
     };
   }
 
@@ -1654,9 +1417,6 @@ export class TwigsService {
           twig.groupId = null;
           twig.tabId = null;
           twig.bookmarkId = entry.bookmarkId;
-          twig.degree = parent.degree + 1;
-          twig.rank = entry.rank;
-          twig.displayMode = DisplayMode.VERTICAL;
 
           twigs.push(twig);
           j++;
@@ -1726,29 +1486,18 @@ export class TwigsService {
     twig.detailId = arrow.id;
     twig.parent = parentTwig;
     twig.bookmarkId = entry.bookmarkId;
-    twig.degree = entry.degree;
-    twig.rank = entry.rank;
     twig.i = abstract.twigN + 1;
     twig.x = parentTwig.x;
     twig.y = parentTwig.y;
     twig.z = abstract.twigZ + 1;
-    twig.displayMode = DisplayMode.VERTICAL
 
     twig = await this.twigsRepository.save(twig);
 
     await this.arrowsService.incrementTwigN(abstract.id, 1);
     await this.arrowsService.incrementTwigZ(abstract.id, 1);
 
-    let sibs = (parentTwig.children || []).filter(sib => sib.rank > twig.rank)
-      .map(sib => {
-        sib.rank += 1;
-        return sib;
-      });
-    sibs = await this.twigsRepository.save(sibs);
-
     return {
       twig,
-      sibs,
     };
   }
 
@@ -1798,7 +1547,7 @@ export class TwigsService {
     return this.twigsRepository.save(twig);
   }
   
-  async moveBookmark(user: User, bookmarkId: string, parentBookmarkId: string, rank: number) {
+  async moveBookmark(user: User, bookmarkId: string, parentBookmarkId: string) {
     let twig = await this.twigsRepository.findOne({
       where: {
         userId: user.id,
@@ -1828,73 +1577,22 @@ export class TwigsService {
     let sibs = [];
     let dDegree = 0;
     if (parentTwig.id === twig.parent.id) {
-      if (rank > twig.rank) {
-        sibs = parentTwig.children.filter(sib => sib.rank > twig.rank && sib.rank <= rank)
-          .map(sib => {
-            sib.rank -= 1;
-            return sib;
-          });
-        sibs = await this.twigsRepository.save(sibs);
-      }
-      else if (rank < twig.rank) {
-        sibs = parentTwig.children.filter(sib => sib.rank < twig.rank && sib.rank >= rank)
-          .map(sib => {
-            sib.rank += 1;
-            return sib;
-          });
-        sibs = await this.twigsRepository.save(sibs);
-      }
-      else {
-        return {
-          twig,
-          prevSibs,
-          sibs,
-          descs: [],
-        }
-      }
+      return {
+        twig,
+        prevSibs,
+        sibs,
+        descs: [],
+      };
     }
-    else {
-      prevSibs = (twig.parent.children || []).filter(prevSib => prevSib.rank > twig.rank)
-        .map(prevSib => {
-          prevSib.rank -= 1;
-          return prevSib;
-        })
-      
-      prevSibs = await this.twigsRepository.save(prevSibs);
-
-      sibs = parentTwig.children.filter(sib => sib.rank >= rank)
-        .map(sib => {
-          sib.rank += 1;
-          return sib;
-        });
-
-      sibs = await this.twigsRepository.save(sibs);
-
-      dDegree = parentTwig.degree - twig.parent.degree;
-    }
-
-    twig.degree += dDegree;
-    twig.rank = rank;
+    
     twig.parent = parentTwig;
 
     twig = await this.twigsRepository.save(twig);
-
-    let descs = await this.twigsRepository.manager.getTreeRepository(Twig)
-      .findDescendants(twig);
-
-    descs = descs.filter(desc => desc.id !== twig.id)
-      .map(desc => {
-        desc.degree += dDegree;
-        return desc;
-      });
-
-    descs = await this.twigsRepository.save(descs);
 
     return {
       twig, 
       prevSibs,
       sibs,
-      descs,
     }
   }
 
@@ -1922,17 +1620,8 @@ export class TwigsService {
 
     twigs = await this.twigsRepository.save(twigs);
 
-    let sibs = twig.parent.children.filter(sib => sib.rank > twig.rank)
-      .map(sib => {
-        sib.rank -= 1;
-        return sib;
-      });
-
-    sibs = await this.twigsRepository.save(sibs);
-    
     return {
       twigs,
-      sibs,
     }
   }
 }

@@ -187,12 +187,11 @@ export class TwigsResolver {
     @Args('twigId') twigId: string,
     @Args('x', {type: () => Int}) x: number,
     @Args('y', {type: () => Int}) y: number,
-    @Args('displayMode') displayMode: string,
   ) {
     const {
       twigs, 
       role,
-    } = await this.twigsService.moveTwig(user, twigId, x, y, displayMode);
+    } = await this.twigsService.moveTwig(user, twigId, x, y);
 
     return {
       twigs, 
@@ -207,10 +206,8 @@ export class TwigsResolver {
     @Args('sessionId') sessionId: string,
     @Args('parentTwigId') parentTwigId: string,
     @Args('twigId') twigId: string,
-    @Args('rank', {type: () => Int}) rank: number,
-    @Args('displayMode') displayMode: string,
   ) {
-    return this.twigsService.graftTwig(user, twigId, parentTwigId, rank, displayMode);
+    return this.twigsService.graftTwig(user, twigId, parentTwigId);
   }
 
   @UseGuards(GqlAuthGuard)
@@ -219,10 +216,8 @@ export class TwigsResolver {
     @CurrentUser() user: UserEntity,
     @Args('parentTwigId') parentTwigId: string,
     @Args('twigId') twigId: string,
-    @Args('rank', {type: () => Int}) rank: number,
-    @Args('displayMode') displayMode: string,
   ) {
-    return this.twigsService.copyTwig(user, twigId, parentTwigId, rank, displayMode);
+    return this.twigsService.copyTwig(user, twigId, parentTwigId);
   }
 
   @UseGuards(GqlAuthGuard)
@@ -381,9 +376,8 @@ export class TwigsResolver {
     @CurrentUser() user: UserEntity,
     @Args('bookmarkId') bookmarkId: string,
     @Args('parentBookmarkId') parentBookmarkId: string,
-    @Args('rank', {type: () => Int}) rank: number,
   ) {
-    return this.twigsService.moveBookmark(user, bookmarkId, parentBookmarkId, rank);
+    return this.twigsService.moveBookmark(user, bookmarkId, parentBookmarkId);
   }
 
   @UseGuards(GqlAuthGuard)

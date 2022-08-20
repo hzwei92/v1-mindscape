@@ -1,19 +1,16 @@
 import { Box, Card, IconButton } from '@mui/material';
-import React, { useContext, useRef } from 'react';
+import React, { useContext, useEffect, useRef } from 'react';
 import type { Twig } from './twig';
-import { selectChildIdToTrue, selectIdToTwig } from './twigSlice';
 import RemoveIcon from '@mui/icons-material/Remove';
 import useSelectTwig from './useSelectTwig';
 import { AppContext } from '../../App';
 import { SpaceContext } from '../space/SpaceComponent';
-import { useAppSelector } from '../../app/hooks';
-import { DisplayMode, TWIG_WIDTH } from '../../constants';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { TWIG_WIDTH } from '../../constants';
 import useOpenTwig from './useOpenTwig';
 import useLinkTwigs from './useLinkTwigs';
-import { getTwigColor } from '../../utils';
 import ArrowComponent from '../arrow/ArrowComponent';
-import PostTwig from './PostTwig';
-import { selectSelectedTwigId } from '../space/spaceSlice';
+import { mergeIdToHeight, selectIdToHeight, selectSelectedTwigId } from '../space/spaceSlice';
 import TwigControls from './TwigControls';
 import { selectUserById } from '../user/userSlice';
 
@@ -22,6 +19,7 @@ interface LinkTwigProps {
 }
 
 export default function LinkTwig(props: LinkTwigProps) {
+  const dispatch = useAppDispatch();
   const { 
     palette,
     pendingLink, 
@@ -36,28 +34,23 @@ export default function LinkTwig(props: LinkTwigProps) {
 
   const twigUser = useAppSelector(state => selectUserById(state, props.twig.userId));
 
+  const idToHeight = useAppSelector(selectIdToHeight(space));
+
   const selectedTwigId = useAppSelector(selectSelectedTwigId(space));
   const isSelected = props.twig.id === selectedTwigId;
-  
-  const idToTwig = useAppSelector(selectIdToTwig(space));
-  const childIdToTrue = useAppSelector(state => selectChildIdToTrue(state, space, props.twig.id));
-  const verticalChildren: Twig[] = [];
-  const horizontalChildren: Twig[] = [];
 
-  Object.keys(childIdToTrue || {}).forEach(id => {
-    const twig = idToTwig[id];
+  const cardEl = useRef<HTMLDivElement | undefined>();
 
-    if (twig && !twig.deleteDate) {
-      if (twig.displayMode === DisplayMode.VERTICAL) {
-        verticalChildren.push(twig);
-      }
-      else if (twig.displayMode === DisplayMode.HORIZONTAL) {
-        horizontalChildren.push(twig);
-      }
+  useEffect(() => {
+    if (cardEl.current?.clientHeight && cardEl.current.clientHeight !== idToHeight[props.twig.id]) {
+      dispatch(mergeIdToHeight({
+        space,
+        idToHeight: {
+          [props.twig.id]:  cardEl.current.clientHeight,
+        }
+      }));
     }
-  });
-
-  const twigEl = useRef<HTMLDivElement | undefined>();
+  }, [cardEl.current?.clientHeight])
 
   const { openTwig } = useOpenTwig();
   const { selectTwig } = useSelectTwig(space, canEdit);
@@ -144,7 +137,7 @@ export default function LinkTwig(props: LinkTwigProps) {
             {props.twig.detail.weight}
         </Box>
       </Card>
-      <Box ref={twigEl} sx={{
+      <Box ref={cardEl} sx={{
         display: props.twig.isOpen
           ? 'flex'
           : 'none',
@@ -232,35 +225,7 @@ export default function LinkTwig(props: LinkTwigProps) {
               </Box>
             </Box>
           </Card>
-          {
-            verticalChildren
-              .sort((a, b) => a.rank < b.rank ? -1 : 1)
-              .map(twig => {
-                return (
-                  <Box key={`twig-${twig.id}`} sx={{
-                    marginTop: 3,
-                    marginLeft: 5,
-                  }}>
-                    <PostTwig twig={twig} />
-                  </Box>
-                )
-              })
-          }
         </Box>
-        {
-          horizontalChildren
-            .sort((a, b) => a.rank < b.rank ? -1 : 1)
-            .map(twig => {
-              return (
-                <Box key={`twig-${twig.id}`} sx={{
-                  marginTop: 5,
-                  marginLeft: 3,
-                }}>
-                  <PostTwig twig={twig} />
-                </Box>
-              )
-            })
-        }
       </Box>
     </Box>
   );

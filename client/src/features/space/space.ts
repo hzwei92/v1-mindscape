@@ -11,14 +11,6 @@ export type PosType = {
   y: number
 };
 
-export enum DirectionType {
-  NONE = 'NONE',
-  UP = 'UP',
-  DOWN = 'DOWN',
-  LEFT = 'LEFT',
-  RIGHT = 'RIGHT',
-};
-
 export type ScrollState = {
   left: number;
   top: number;
@@ -28,7 +20,6 @@ export type DragState = {
   isScreen: boolean;
   twigId: string;
   targetTwigId: string;
-  targetDirection: DirectionType;
 };
 
 

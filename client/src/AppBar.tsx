@@ -6,19 +6,18 @@ import AccountCircle from '@mui/icons-material/AccountCircle';
 import DynamicFeedIcon from '@mui/icons-material/DynamicFeed';
 import HubIcon from '@mui/icons-material/Hub';
 import PodcastsIcon from '@mui/icons-material/Podcasts';
-import CropDinIcon from '@mui/icons-material/CropDin';
-import CropFreeIcon from '@mui/icons-material/CropFree';
+import Filter1Icon from '@mui/icons-material/Filter1';
+import Filter2Icon from '@mui/icons-material/Filter2';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
-import { getAppbarWidth, getColor } from './utils';
+import { getAppbarWidth } from './utils';
 import { useAppDispatch, useAppSelector } from './app/hooks';
-import { User } from './features/user/user';
 import useAuth from './features/auth/useAuth';
 import useAppRouter from './useAppRouter';
 import { useContext } from 'react';
 import { AppContext } from './App';
 import { MenuMode } from './features/menu/menu';
 import useSetUserPalette from './features/user/useSetUserPalette';
-import { selectSelectedSpace, selectSelectedTwigId, setIsOpen, setSelectedSpace } from './features/space/spaceSlice';
+import { selectSelectedSpace, selectSelectedTwigId, setSelectedSpace } from './features/space/spaceSlice';
 import { SpaceType } from './features/space/space';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { selectIdToTwig } from './features/twig/twigSlice';
@@ -70,7 +69,7 @@ export default function AppBar() {
     );
   };
 
-  const handleSignalClick = () => {
+  const handleContactsClick = () => {
 
   };
 
@@ -168,8 +167,8 @@ export default function AppBar() {
                 <AccountCircle/>
               </IconButton>
             </Box>
-            <Box title='Signal' sx={{paddingTop: 1}}>
-              <IconButton onClick={handleSignalClick} sx={{
+            <Box title='Contacts' sx={{paddingTop: 1}}>
+              <IconButton onClick={handleContactsClick} sx={{
                 border: menuMode === 'SIGNAL'
                   ? `1px solid ${user?.color}`
                   : 'none',
@@ -243,7 +242,7 @@ export default function AppBar() {
                   ? 'primary.main'
                   : color,
               }}>
-                <CropDinIcon/>
+                <Filter1Icon/>
               </IconButton>
             </Box>
             {
@@ -257,7 +256,7 @@ export default function AppBar() {
                         ? user?.focus?.user.color
                         : color,
                     }}>
-                      <CropFreeIcon/>
+                      <Filter2Icon/>
                     </IconButton>
                   </Box>
                 : null

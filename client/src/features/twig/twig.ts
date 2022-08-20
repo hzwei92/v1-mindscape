@@ -1,4 +1,3 @@
-import { DisplayMode } from "../../constants";
 import { Arrow } from "../arrow/arrow";
 import { SpaceType } from "../space/space";
 import { User } from "../user/user";
@@ -22,9 +21,6 @@ export type Twig = {
   y: number;
   z: number;
   isRoot: boolean;
-  degree: number;
-  rank: number;
-  displayMode: string;
   bookmarkId: string | null,
   windowId: number | null;
   groupId: number | null;
@@ -47,13 +43,11 @@ export const createTwig = (p: {
   parent: Twig, 
   x: number,
   y: number,
-  rank: number,
   isOpen: boolean,
   bookmarkId: string | null,
   windowId: number | null,
   groupId: number | null,
   tabId: number | null,
-  displayMode: DisplayMode,
 }) => {
   const twig: Twig = {
     id: p.id,
@@ -74,14 +68,11 @@ export const createTwig = (p: {
     x: p.x,
     y: p.y,
     z: p.abstract.twigZ + 1,
-    degree: p.parent.degree + 1,
-    rank: p.rank,
     tabId: p.tabId,
     groupId: p.groupId,
     windowId: p.windowId,
     bookmarkId: p.bookmarkId,
     isOpen: p.isOpen,
-    displayMode: p.displayMode,
     createDate: null,
     updateDate: null,
     deleteDate: null,
@@ -95,6 +86,4 @@ export type CopyingTwigType = {
   space: SpaceType;
   twigId: string;
   parentTwigId: string;
-  rank: number;
-  displayMode: DisplayMode;
 }

@@ -61,15 +61,6 @@ export class Twig {
   @Field(() => [Twig])
   children: Twig[];
 
-  @Field(() => Int)
-  degree: number;
-
-  @Field(() => Int)
-  rank: number;
-
-  @Field()
-  displayMode: string;
-
   @Field(() => Int, { nullable: true })
   windowId: number;
 

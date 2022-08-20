@@ -1,6 +1,5 @@
-import { createSelector, createSlice, PayloadAction, Slice } from "@reduxjs/toolkit";
+import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../../app/store";
-import { DisplayMode } from "../../constants";
 import { IdToType } from "../../types";
 import { setInit, setLogin, setLogout } from "../auth/authSlice";
 import { SpaceType } from "../space/space";
@@ -33,8 +32,6 @@ const initialState: TwigState = {
     space: SpaceType.FRAME,
     twigId: '',
     parentTwigId: '',
-    rank: 0,
-    displayMode: DisplayMode.VERTICAL,
   },
   [SpaceType.FRAME]: {
     idToTwig: {},
@@ -132,8 +129,6 @@ const twigSlice = createSlice({
       space: SpaceType, 
       twigId: string, 
       parentTwigId: string, 
-      rank: number, 
-      displayMode: DisplayMode
     }>) => {
       return {
         ...state,
