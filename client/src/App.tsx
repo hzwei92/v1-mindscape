@@ -1,5 +1,5 @@
 import { createTheme, PaletteMode, Paper, ThemeProvider } from '@mui/material';
-import React, { Dispatch, SetStateAction, useEffect, useReducer, useState } from 'react';
+import React, { Dispatch, SetStateAction, useEffect, useMemo, useReducer, useState } from 'react';
 import { useAppSelector } from './app/hooks';
 import { FRAME_MIN_WIDTH, FRAME_WIDTH, MAX_Z_INDEX, MENU_MIN_WIDTH, MENU_WIDTH } from './constants';
 import { selectCurrentUser } from './features/user/userSlice';
@@ -158,6 +158,43 @@ function App() {
     }
   }, [focusIsOpen, frameIsOpen, menuWidth]);
 
+  const appContextValue = useMemo(() => {
+    return {
+      user,
+
+      width,
+      height,
+
+      palette,
+      setPalette,
+      dimColor,
+      brightColor,
+
+      appBarWidth,
+
+      menuMode,
+      setMenuMode,
+      menuIsResizing,
+      setMenuIsResizing,
+      menuWidth,
+
+      frameIsResizing,
+      setFrameIsResizing,
+      frameWidth,
+
+      pendingLink,
+      setPendingLink,
+    };
+  }, [
+    user, 
+    width, height, 
+    palette, setPalette, dimColor, brightColor, 
+    appBarWidth, 
+    menuMode, setMenuMode, menuIsResizing, setMenuIsResizing, menuWidth, 
+    frameIsResizing, setFrameIsResizing, frameWidth, 
+    pendingLink, setPendingLink
+  ]);
+
   const handleMouseMove = (event: React.MouseEvent) => {
     if (menuIsResizing) {
       event.preventDefault();
@@ -185,32 +222,7 @@ function App() {
   }
 
   return (
-    <AppContext.Provider value={{
-      user,
-
-      width,
-      height,
-
-      palette,
-      setPalette,
-      dimColor,
-      brightColor,
-
-      appBarWidth,
-
-      menuMode,
-      setMenuMode,
-      menuIsResizing,
-      setMenuIsResizing,
-      menuWidth,
-
-      frameIsResizing,
-      setFrameIsResizing,
-      frameWidth,
-
-      pendingLink,
-      setPendingLink,
-    }}>
+    <AppContext.Provider value={appContextValue}>
       <ThemeProvider theme={theme}>
         <SnackbarProvider
           maxSnack={3}

@@ -211,4 +211,12 @@ export const selectDrag = (space: SpaceType) => (state: RootState) => state.spac
 export const selectIdToPos = (space: SpaceType) => (state: RootState) => state.space[space].idToPos;
 export const selectIdToHeight = (space: SpaceType) => (state: RootState) => state.space[space].idToHeight;
 
+export const selectHeightByTwigId = createSelector(
+  [
+    (state: RootState, space: SpaceType, twigId: string) => selectIdToHeight(space)(state),
+    (state, space, twigId) => twigId,
+  ],
+  (idToHeight, twigId): number => idToHeight[twigId],
+)
+
 export default spaceSlice.reducer

@@ -151,7 +151,7 @@ function TwigControls(props: TwigControlsProps) {
 
   const handleCopyRelativeClick = (event: React.MouseEvent) => {
     event.stopPropagation();
-    navigator.clipboard.writeText(`https://mindscape.pub/g/${abstract.routeName}/${props.twig.i}`);
+    navigator.clipboard.writeText(`https://mindscape.pub/g/${abstract?.routeName}/${props.twig.i}`);
     const handleDismissClick = (event: React.MouseEvent) => {
       closeSnackbar(props.twig.id + 'context');
     }
@@ -336,7 +336,7 @@ function TwigControls(props: TwigControlsProps) {
       marginLeft: 0,
     }}>
       <Button
-        variant={abstract.id === arrow?.id ? 'outlined' : 'text'}
+        variant={abstract?.id === arrow?.id ? 'outlined' : 'text'}
         onMouseDown={handleMouseDown}
         onClick={handleOpenClick}
         sx={{
@@ -344,7 +344,7 @@ function TwigControls(props: TwigControlsProps) {
           fontSize: 12,
         }}
       >
-        Open {arrow?.twigN ? `(${arrow.twigN})` : ''}
+        Open {arrow?.twigN ? `(${arrow?.twigN})` : ''}
       </Button>
       <Button
         disabled={!canPost}

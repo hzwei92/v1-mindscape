@@ -4,7 +4,6 @@ import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { sessionVar } from '../../cache';
 import { FULL_ROLE_FIELDS } from '../role/roleFragments';
 import { SpaceType } from '../space/space';
-import { selectIdToPos } from '../space/spaceSlice';
 import { mergeTwigs, selectIdToTwig } from './twigSlice';
 
 const GRAFT = gql`

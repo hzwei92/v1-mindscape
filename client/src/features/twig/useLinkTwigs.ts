@@ -4,11 +4,11 @@ import { useSnackbar } from 'notistack';
 import { FULL_TWIG_FIELDS } from './twigFragments';
 import { ROLE_FIELDS } from '../role/roleFragments';
 import { mergeTwigs } from './twigSlice';
-import { v4 } from 'uuid';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { selectSessionId } from '../auth/authSlice';
 import { SpaceContext } from '../space/SpaceComponent';
 import { AppContext } from '../../App';
+import { PendingLinkType } from '../space/space';
 
 const LINK_TWIGS = gql`
   mutation LinkTwigs($sessionId: String!, $abstractId: String!, $sourceId: String!, $targetId: String!) {
@@ -50,7 +50,6 @@ export default function useLinkTwigs() {
   const sessionId = useAppSelector(selectSessionId);
 
   const {
-    pendingLink,
     setPendingLink,
   } = useContext(AppContext);
 
@@ -81,16 +80,18 @@ export default function useLinkTwigs() {
     }
   });
 
-  const linkTwigs = useCallback((detail?: any) => {
+  const linkTwigs = (pendingLink: PendingLinkType) => {
+    if (!abstract) return;
+
     link({
       variables: {
         sessionId,
         abstractId: abstract.id,
-        sourceId: detail?.sourceId || pendingLink.sourceId,
-        targetId: detail?.targetId || pendingLink.targetId,
+        sourceId: pendingLink.sourceId,
+        targetId: pendingLink.targetId,
       },
     });
-  }, [link, abstract.id, pendingLink.sourceId, pendingLink.targetId]);
+  }
 
   return { linkTwigs }
 }

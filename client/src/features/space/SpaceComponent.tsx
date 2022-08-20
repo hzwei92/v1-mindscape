@@ -1,5 +1,5 @@
 import { Box } from '@mui/material';
-import React, { Dispatch, SetStateAction, useContext, useEffect, useRef, useState } from 'react';
+import React, { Dispatch, SetStateAction, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { VIEW_RADIUS, SPACE_BAR_HEIGHT, MAX_Z_INDEX, TWIG_WIDTH } from '../../constants';
 import { checkPermit } from '../../utils';
 import { PosType, SpaceType } from './space';
@@ -41,7 +41,7 @@ import { useReactiveVar } from '@apollo/client';
 import useGraftTwig from '../twig/useGraftTwig';
 
 export const SpaceContext = React.createContext({} as {
-  abstract: Arrow;
+  abstract: Arrow | null;
   space: SpaceType;
   canView: boolean;
   canPost: boolean;
@@ -216,6 +216,23 @@ export default function SpaceComponent(props: SpaceComponentProps) {
 
     setMoveEvent(null);
   }, [moveEvent]);
+
+  useEffect(() => {
+    console.log('space context is changing');
+  }, [abstract, props.space, canView, canPost, canEdit, removalTwigId, setRemovalTwigId]);
+
+
+  const spaceContextValue = useMemo(() => {
+    return {
+      abstract,
+      space: props.space, 
+      canView,
+      canPost, 
+      canEdit,
+      removalTwigId, 
+      setRemovalTwigId,
+    };
+  }, [abstract, props.space, canView, canPost, canEdit, removalTwigId, setRemovalTwigId]);
 
   if (!abstract) return null;
 
@@ -530,7 +547,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
           zIndex: twig.z,
           pointerEvents: 'none',
         }}>
-          <LinkTwig twig={twig} />
+          <LinkTwig twigId={twig.id} />
         </Box>
       );
 
@@ -552,7 +569,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
           zIndex: twig.z,
           pointerEvents: 'none',
         }}>
-          <PostTwig twig={twig} />
+          <PostTwig twigId={twig.id} />
         </Box>
       );
     }
@@ -570,15 +587,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   const w = 2 * VIEW_RADIUS;
   const h = 2 * VIEW_RADIUS;
   return (
-    <SpaceContext.Provider value={{
-      abstract,
-      space: props.space,
-      canEdit,
-      canPost,
-      canView,
-      removalTwigId,
-      setRemovalTwigId,
-    }}>
+    <SpaceContext.Provider value={spaceContextValue}>
       <Box
         ref={spaceEl}
         onMouseDown={handleMouseDown}

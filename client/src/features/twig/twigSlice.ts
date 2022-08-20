@@ -182,6 +182,13 @@ export const selectShouldReloadTwigTree = (space: SpaceType) => (state: RootStat
 export const selectIdToChildIdToTrue = (space: SpaceType) => (state: RootState) => state.twig[space].idToChildIdToTrue;
 export const selectIdToDescIdToTrue = (space: SpaceType) => (state: RootState) => state.twig[space].idToDescIdToTrue;
 
+export const selectTwigById = createSelector(
+  [
+    (state, space, twigId) => selectIdToTwig(space)(state),
+    (state, space, twigId) => twigId,
+  ],
+  (idToTwig, twigId): Twig => idToTwig[twigId]
+)
 export const selectChildIdToTrue = createSelector(
   [
     (state, space, twigId) => selectIdToChildIdToTrue(space)(state),

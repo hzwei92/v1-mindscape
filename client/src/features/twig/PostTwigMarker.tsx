@@ -18,7 +18,7 @@ export default function PostTwigMarker(props: PostTwigMarkerProps) {
     !props.pos || 
     props.twig.deleteDate || 
     !props.parentPos || 
-    props.twig.id === abstract.rootTwigId
+    props.twig.id === abstract?.rootTwigId
   ) return null;
 
   return (

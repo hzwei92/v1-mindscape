@@ -69,7 +69,7 @@ function TwigBar(props: TwigBarProps) {
       sx={{
         backgroundColor: props.twigUser?.color,
         textAlign: 'left',
-        cursor: abstract.id === props.twig.detailId
+        cursor: abstract?.id === props.twig.detailId
           ? pendingLink.sourceId
             ? 'crosshair'
             : 'default'
@@ -119,7 +119,7 @@ function TwigBar(props: TwigBarProps) {
         <Box>
           <IconButton
             disabled={
-              abstract.id === props.twig.detailId || 
+              abstract?.id === props.twig.detailId || 
               !canEdit || 
               !!pendingLink.sourceId ||
               props.twig.bookmarkId === "1" ||

@@ -51,8 +51,8 @@ export default function useSelectTwig(space: SpaceType, canEdit: boolean) {
     },
   });
 
-  const selectTwig = (abstract: Arrow, twig: Twig, dontNav?: boolean) => {
-    if (!twig) return;
+  const selectTwig = (abstract: Arrow | null, twig: Twig, dontNav?: boolean) => {
+    if (!twig || !abstract) return;
     
     if (canEdit) {
       select({

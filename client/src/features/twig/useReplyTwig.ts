@@ -17,6 +17,7 @@ import { SpaceContext } from '../space/SpaceComponent';
 import { getEmptyDraft } from '../../utils';
 import { selectIdToPos, setSelectedTwigId } from '../space/spaceSlice';
 import { mergeArrows } from '../arrow/arrowSlice';
+import { useNavigate } from 'react-router-dom';
 
 const REPLY_TWIG = gql`
   mutation ReplyTwig(
@@ -64,6 +65,7 @@ const REPLY_TWIG = gql`
 
 export default function useReplyTwig() {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
   const { user } = useContext(AppContext);
   const { 
@@ -108,7 +110,7 @@ export default function useReplyTwig() {
   });
 
   const replyTwig = (parentTwig: Twig, parentArrow: Arrow) => {
-    if (!user) return;
+    if (!user || !abstract) return;
 
     const parentArrow1 = Object.assign({}, parentArrow, {
       outCount: parentArrow.outCount + 1,
@@ -154,8 +156,6 @@ export default function useReplyTwig() {
       target: null,
     });
 
-    const rank = Object.keys(idToChildIdToTrue[parentTwig.id] || {}).length + 1;
-
     const twig = createTwig({
       id: twigId,
       user,
@@ -178,10 +178,13 @@ export default function useReplyTwig() {
       twigs: [twig],
     }))
 
-    dispatch(setSelectedTwigId({
-      space,
-      selectedTwigId: twig.id,
-    }));
+    const abstract1 = Object.assign({}, abstract, {
+      twigN: abstract?.twigN + 2,
+    });
+
+    dispatch(mergeArrows([abstract1]));
+
+    navigate(`/g/${abstract.routeName}/${twig.i}`)
 
     centerTwig(twig.id, true, 0, {
       x: twig.x,

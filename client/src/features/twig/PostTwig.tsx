@@ -10,18 +10,19 @@ import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { TWIG_WIDTH } from '../../constants';
 import useLinkTwigs from './useLinkTwigs';
 import ArrowComponent from '../arrow/ArrowComponent';
-import { selectIdToPos, selectIdToHeight, selectSelectedTwigId, setSelectedSpace, mergeIdToPos, mergeIdToHeight } from '../space/spaceSlice';
+import { selectSelectedTwigId, setSelectedSpace, mergeIdToHeight, selectHeightByTwigId } from '../space/spaceSlice';
 import { selectUserById } from '../user/userSlice';
+import { SpaceType } from '../space/space';
+import { selectTwigById } from './twigSlice';
 
 interface PostTwigProps {
-  twig: Twig;
+  twigId: string;
 }
-export default function PostTwig(props: PostTwigProps) {
+function PostTwig(props: PostTwigProps) {
   const dispatch = useAppDispatch();
 
   const {
     dimColor,
-    palette,
     pendingLink,
     setPendingLink,
   } = useContext(AppContext);
@@ -32,23 +33,22 @@ export default function PostTwig(props: PostTwigProps) {
     canEdit,
   } = useContext(SpaceContext);
 
-  const twigUser = useAppSelector(state => selectUserById(state, props.twig.userId));
+  const twig = useAppSelector(state => selectTwigById(state, space, props.twigId));
+  const twigUser = useAppSelector(state => selectUserById(state, twig.userId));
+
+  const height = useAppSelector(state => selectHeightByTwigId(state, space, props.twigId));
 
   const selectedTwigId = useAppSelector(selectSelectedTwigId(space));
-  const idToPos = useAppSelector(selectIdToPos(space));
-  const idToHeight = useAppSelector(selectIdToHeight(space));
+  const isSelected = twig.id === selectedTwigId;
 
-  const isSelected = props.twig.id === selectedTwigId;
-
-  const twigEl = useRef<HTMLElement>();
   const cardEl = useRef<HTMLElement>();
 
   useEffect(() => {
-    if (cardEl.current?.clientHeight && cardEl.current.clientHeight !== idToHeight[props.twig.id]) {
+    if (cardEl.current?.clientHeight && cardEl.current.clientHeight !== height) {
       dispatch(mergeIdToHeight({
         space,
         idToHeight: {
-          [props.twig.id]:  cardEl.current.clientHeight,
+          [props.twigId]:  cardEl.current.clientHeight,
         }
       }));
     }
@@ -60,14 +60,14 @@ export default function PostTwig(props: PostTwigProps) {
   const handleClick = (event: React.MouseEvent) => {
     event.stopPropagation();
 
-    if (pendingLink.sourceId === props.twig.detailId) {
+    if (pendingLink.sourceId === twig.detailId) {
       setPendingLink({
         sourceId: '',
         targetId: '',
       });
     }
-    if (pendingLink.sourceId && pendingLink.targetId === props.twig.detailId) {
-      linkTwigs();
+    if (pendingLink.sourceId && pendingLink.targetId === twig.detailId) {
+      linkTwigs(pendingLink);
     }
   }
 
@@ -79,21 +79,21 @@ export default function PostTwig(props: PostTwigProps) {
     event.stopPropagation();
     dispatch(setSelectedSpace(space));
     if (!isSelected) {
-      selectTwig(abstract, props.twig);
+      selectTwig(abstract, twig);
     }
   }
 
   const handleMouseEnter = (event: React.MouseEvent) => {
-    if (pendingLink.sourceId && pendingLink.sourceId !== props.twig.detailId) {
+    if (pendingLink.sourceId && pendingLink.sourceId !== twig.detailId) {
       setPendingLink({
         sourceId: pendingLink.sourceId,
-        targetId: props.twig.detailId,
+        targetId: twig.detailId,
       });
     }
   }
 
   const handleMouseLeave = (event: React.MouseEvent) => {
-    if (pendingLink.sourceId && pendingLink.sourceId !== props.twig.detailId) {
+    if (pendingLink.sourceId && pendingLink.sourceId !== twig.detailId) {
       setPendingLink({
         sourceId: pendingLink.sourceId,
         targetId: '',
@@ -102,77 +102,65 @@ export default function PostTwig(props: PostTwigProps) {
   }
 
   const isLinking = (
-    pendingLink.sourceId === props.twig.detailId || 
-    pendingLink.targetId === props.twig.detailId
+    pendingLink.sourceId === twig.detailId || 
+    pendingLink.targetId === twig.detailId
   );
 
   return (
-    <Box ref={twigEl} sx={{
-      display: 'flex',
-      flexDirection: 'row',
-      position: 'relative',
-      pointerEvents: 'none',
-    }}>
-      <Box sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-        pointerEvents: 'none',
-      }}>
-        <Box ref={cardEl}>
-          <Card 
-            elevation={isSelected? 15 : 5}
-            onMouseMove={handleMouseMove}
-            onMouseDown={handleMouseDown}
-            onClick={handleClick}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              width: TWIG_WIDTH,
-              opacity: .9,
-              outline: isSelected
-                ? `10px solid ${twigUser?.color}`
-                : `1px solid ${twigUser?.color}`,
-              borderRadius: 2,
-              borderTopLeftRadius: 0,
-              backgroundColor: isLinking
-                ? dimColor
-                : null,
-              cursor: pendingLink.sourceId
-                ? 'crosshair'
-                : 'default', 
-              pointerEvents: 'auto',
-            }}
-          >
-            <TwigBar
-              twig={props.twig}
-              twigUser={twigUser}
-              isSelected={isSelected}
-            />
-            <Box sx={{
-              padding: 0.5,
-              paddingLeft: 4,
-            }}>
-              <ArrowComponent
-                arrowId={props.twig.detailId}
-                instanceId={props.twig.id}
-                showLinkLeftIcon={false}
-                showLinkRightIcon={false}
-                showPostIcon={false}
-                isTab={!!props.twig.tabId}
-                isGroup={!props.twig.tabId && !!props.twig.groupId}
-                isWindow={!props.twig.tabId && !props.twig.groupId && !!props.twig.windowId}
-              />
-              <TwigControls
-                twig={props.twig}
-                isPost={true}
-              />
-            </Box>
-          </Card>
+    <Box ref={cardEl}>
+      <Card 
+        elevation={isSelected? 15 : 5}
+        onMouseMove={handleMouseMove}
+        onMouseDown={handleMouseDown}
+        onClick={handleClick}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          width: TWIG_WIDTH,
+          opacity: .9,
+          outline: isSelected
+            ? `10px solid ${twigUser?.color}`
+            : `1px solid ${twigUser?.color}`,
+          borderRadius: 2,
+          borderTopLeftRadius: 0,
+          backgroundColor: isLinking
+            ? dimColor
+            : null,
+          cursor: pendingLink.sourceId
+            ? 'crosshair'
+            : 'default', 
+          pointerEvents: 'auto',
+        }}
+      >
+        <TwigBar
+          twig={twig}
+          twigUser={twigUser}
+          isSelected={isSelected}
+        />
+        <Box sx={{
+          padding: 0.5,
+          paddingLeft: 4,
+        }}>
+          <ArrowComponent
+            arrowId={twig.detailId}
+            instanceId={twig.id}
+            showLinkLeftIcon={false}
+            showLinkRightIcon={false}
+            showPostIcon={false}
+            isTab={!!twig.tabId}
+            isGroup={!twig.tabId && !!twig.groupId}
+            isWindow={!twig.tabId && !twig.groupId && !!twig.windowId}
+          />
+          <TwigControls
+            twig={twig}
+            isPost={true}
+          />
         </Box>
-      </Box>
+      </Card>
     </Box>
   );
 }
+
+export default React.memo(PostTwig);
