@@ -6,9 +6,7 @@ import { SpaceType } from "../space/space";
 import type { CopyingTwigType, Twig } from "./twig";
 
 export interface TwigState {
-  removalTwigs: Twig[];
-  graftedTwig: Twig | null;
-  copyingTwig: CopyingTwigType;
+  newTwigId: string;
   [SpaceType.FRAME]: {
     idToTwig: IdToType<Twig>;
     iToTwigId: IdToType<string>;
@@ -26,13 +24,7 @@ export interface TwigState {
 };
 
 const initialState: TwigState = {
-  removalTwigs: [],
-  graftedTwig: null,
-  copyingTwig: {
-    space: SpaceType.FRAME,
-    twigId: '',
-    parentTwigId: '',
-  },
+  newTwigId: '',
   [SpaceType.FRAME]: {
     idToTwig: {},
     iToTwigId: {},
@@ -55,8 +47,6 @@ const twigSlice = createSlice({
   initialState,
   reducers: {
     mergeTwigs: (state, action: PayloadAction<{space: SpaceType, twigs: Twig[]}>) => {
-      const removalTwigs = [...state.removalTwigs];
-
       const {
         idToTwig,
         iToTwigId,
@@ -66,7 +56,6 @@ const twigSlice = createSlice({
         if (twig.deleteDate) {
           delete acc.idToTwig[twig.id];
           delete acc.iToTwigId[twig.i];
-          removalTwigs.push(twig);
         }
         else {
           acc.idToTwig[twig.id] = Object.assign({}, acc.idToTwig[twig.id], twig);
@@ -80,7 +69,6 @@ const twigSlice = createSlice({
 
       return {
         ...state,
-        removalTwigs,
         [action.payload.space]: {
           ...state[action.payload.space],
           idToTwig,
@@ -113,27 +101,11 @@ const twigSlice = createSlice({
         },
       }
     },
-    clearRemovalTwigs: (state) => {
+    setNewTwigId: (state, action: PayloadAction<string>) => {
       return {
         ...state,
-        removalTwigs: [],
+        newTwigId: action.payload,
       }
-    },
-    setGraftedTwig: (state, action: PayloadAction<Twig | null>) => {
-      return {
-        ...state,
-        graftedTwig: action.payload,
-      }
-    },
-    setCopyingTwig: (state, action: PayloadAction<{
-      space: SpaceType, 
-      twigId: string, 
-      parentTwigId: string, 
-    }>) => {
-      return {
-        ...state,
-        copyingTwig: action.payload,
-      };
     },
     resetTwigs: (state, action: PayloadAction<SpaceType>) => {
       return {
@@ -168,14 +140,10 @@ export const {
   resetTwigs,
   setShouldReloadTwigTree,
   setTwigTree,
-  clearRemovalTwigs,
-  setGraftedTwig,
-  setCopyingTwig,
+  setNewTwigId,
 } = twigSlice.actions;
 
-export const selectRemovalTwigs = (state: RootState) => state.twig.removalTwigs;
-export const selectGraftedTwig = (state: RootState) => state.twig.graftedTwig;
-export const selectCopyingTwig = (state: RootState) => state.twig.copyingTwig;
+export const selectNewTwigId = (state: RootState) => state.twig.newTwigId;
 export const selectIdToTwig = (space: SpaceType) => (state: RootState) => state.twig[space].idToTwig;
 export const selectIToTwigId = (space: SpaceType) => (state: RootState) => state.twig[space].iToTwigId;
 export const selectShouldReloadTwigTree = (space: SpaceType) => (state: RootState) => state.twig[space].shouldReloadTwigTree;

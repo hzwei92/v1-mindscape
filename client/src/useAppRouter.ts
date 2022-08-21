@@ -8,8 +8,8 @@ import { checkPermit } from './utils';
 import useCenterTwig from './features/twig/useCenterTwig';
 import useSelectTwig from './features/twig/useSelectTwig';
 import { SpaceType } from './features/space/space';
-import { selectIdToTwig, selectIToTwigId } from './features/twig/twigSlice';
-import { selectIdToPos, selectSelectedTwigId, setIsOpen, setSelectedSpace } from './features/space/spaceSlice';
+import { selectIdToTwig, selectIToTwigId, selectNewTwigId } from './features/twig/twigSlice';
+import { selectIdToPos, selectSelectedTwigId, setIsOpen, setSelectedSpace, setSelectedTwigId } from './features/space/spaceSlice';
 
 export default function useAppRouter(user: User | null) {
   const dispatch = useAppDispatch();
@@ -27,6 +27,7 @@ export default function useAppRouter(user: User | null) {
 
   const canEditFocus = checkPermit(user?.focus?.canEdit, focusRole?.type);
 
+  const newTwigId = useAppSelector(selectNewTwigId);
   const frameSelectedTwigId = useAppSelector(selectSelectedTwigId(SpaceType.FRAME));
   const frameIdToTwig = useAppSelector(selectIdToTwig(SpaceType.FRAME));
   const frameIToTwigId = useAppSelector(selectIToTwigId(SpaceType.FRAME));
@@ -84,9 +85,19 @@ export default function useAppRouter(user: User | null) {
         const twig = frameIdToTwig[twigId];
   
         if (twig?.id && !twig?.deleteDate) {
-          console.log('frame, index select');
-          frameSelectTwig(user.frame, twig);
-          frameCenterTwig(twigId, true, 0);
+          if (twig.id === newTwigId) {
+            console.log('frame, index select new twig');
+            dispatch(setSelectedTwigId({
+              space: SpaceType.FRAME,
+              selectedTwigId: twig.id,
+            }));
+            frameCenterTwig(twig.id, true, 0);
+          }
+          else {
+            console.log('frame, index select');
+            frameSelectTwig(user.frame, twig);
+            frameCenterTwig(twigId, true, 0);
+          }
         }
         else {
           console.log('frame, index invalid');

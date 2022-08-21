@@ -10,14 +10,15 @@ import useSelectTwig from './useSelectTwig';
 import useCenterTwig from './useCenterTwig';
 import { useContext } from 'react';
 import { createTwig, Twig } from './twig';
-import { mergeTwigs, selectIdToChildIdToTrue } from './twigSlice';
+import { mergeTwigs, selectIdToChildIdToTrue, setNewTwigId } from './twigSlice';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { AppContext } from '../../App';
 import { SpaceContext } from '../space/SpaceComponent';
 import { getEmptyDraft } from '../../utils';
-import { selectIdToPos, setSelectedTwigId } from '../space/spaceSlice';
+import { mergeIdToPos, selectIdToPos } from '../space/spaceSlice';
 import { mergeArrows } from '../arrow/arrowSlice';
 import { useNavigate } from 'react-router-dom';
+import { VIEW_RADIUS } from '../../constants';
 
 const REPLY_TWIG = gql`
   mutation ReplyTwig(
@@ -118,16 +119,19 @@ export default function useReplyTwig() {
     
     dispatch(mergeArrows([parentArrow1]));
     
-    const dx = Math.random() - 0.5;
-    const dy = Math.random() - 0.5;
-    const dr = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-
     const pos = idToPos[parentTwig.id];
 
+    const dx = Math.round(pos.x) || (Math.random() - 0.5);
+    const dy = Math.round(pos.y) || (Math.random() - 0.5);
+    const dr = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+
+    console.log(dx, dy, dr);
     const postId = v4();
     const twigId = v4();
-    const x = Math.round(500 * (dx / dr) + pos.x);
-    const y = Math.round(500 * (dy / dr) + pos.y);
+    const x = Math.round((500 * dx / dr) + pos.x);
+    const y = Math.round((500 * dy / dr) + pos.y);
+
+    console.log(x, y)
 
     const draft = getEmptyDraft();
 
@@ -173,6 +177,18 @@ export default function useReplyTwig() {
       target: null,
     });
 
+    dispatch(setNewTwigId(twig.id));
+
+    dispatch(mergeIdToPos({
+      space,
+      idToPos: {
+        [twig.id]: {
+          x,
+          y,
+        },
+      },
+    }));
+
     dispatch(mergeTwigs({
       space,
       twigs: [twig],
@@ -185,11 +201,6 @@ export default function useReplyTwig() {
     dispatch(mergeArrows([abstract1]));
 
     navigate(`/g/${abstract.routeName}/${twig.i}`)
-
-    centerTwig(twig.id, true, 0, {
-      x: twig.x,
-      y: twig.y
-    });
   }
   return { replyTwig }
 }

@@ -4,7 +4,7 @@ import { AppContext } from '../../App';
 import { useAppSelector } from '../../app/hooks';
 import { focusSpaceElVar, frameSpaceElVar } from '../../cache';
 import { VIEW_RADIUS } from '../../constants';
-import { SpaceState, SpaceType } from '../space/space';
+import { SpaceType } from '../space/space';
 import { selectIdToPos, selectScale } from '../space/spaceSlice';
 
 export default function useCenterTwig(space: SpaceType) {
@@ -38,8 +38,8 @@ export default function useCenterTwig(space: SpaceType) {
 
       console.log(pos, space, twigId, idToPos);
 
-      const x1 = ((coords?.x ?? pos.x) + VIEW_RADIUS) * scale;
-      const y1 = ((coords?.y ?? pos.y) + VIEW_RADIUS) * scale;
+      const x1 = ((coords?.x ?? pos?.x) + VIEW_RADIUS) * scale;
+      const y1 = ((coords?.y ?? pos?.y) + VIEW_RADIUS) * scale;
 
       console.log('centerTwig', scale);
 

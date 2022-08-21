@@ -93,7 +93,6 @@ export default function ArrowEditor(props: ArrowEditorProps) {
       }));
     }
     if (instance?.shouldRefreshDraft && props.arrow.draft) {
-      console.log('refresh draft',instance, props.arrow.draft);
       const contentState = convertFromRaw(JSON.parse(props.arrow.draft));
       if (isFocused) {
         setEditorState(moveSelectionToEnd(EditorState.createWithContent(contentState)));

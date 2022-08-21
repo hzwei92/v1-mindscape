@@ -217,11 +217,6 @@ export default function SpaceComponent(props: SpaceComponentProps) {
     setMoveEvent(null);
   }, [moveEvent]);
 
-  useEffect(() => {
-    console.log('space context is changing');
-  }, [abstract, props.space, canView, canPost, canEdit, removalTwigId, setRemovalTwigId]);
-
-
   const spaceContextValue = useMemo(() => {
     return {
       abstract,
