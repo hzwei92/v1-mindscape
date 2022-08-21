@@ -7,6 +7,7 @@ import userReducer from '../features/user/userSlice';
 import sheafReducer from '../features/sheaf/sheafSlice';
 import spaceReducer from '../features/space/spaceSlice';
 import entryReducer from '../features/entry/entrySlice';
+import voteReducer from '../features/vote/voteSlice';
 
 export const store = configureStore({
   reducer: {
@@ -18,6 +19,7 @@ export const store = configureStore({
     space: spaceReducer,
     twig: twigReducer,
     user: userReducer,
+    vote: voteReducer,
   },
 });
 

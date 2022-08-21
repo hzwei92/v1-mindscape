@@ -7,6 +7,10 @@ import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrow
 import type { Arrow } from './arrow';
 import { Vote } from '../vote/vote';
 import { AppContext } from '../../App';
+import { useAppSelector } from '../../app/hooks';
+import { selectArrowIdToVoteIds, selectIdToVote, selectVotesByArrowId } from '../vote/voteSlice';
+import useVoteArrow from '../vote/useVoteArrow';
+import { SpaceContext } from '../space/SpaceComponent';
 
 interface ArrowVoterProps {
   arrow: Arrow;
@@ -19,20 +23,27 @@ export default function ArrowVoter(props: ArrowVoterProps) {
 
   const [isVoting, setIsVoting] = useState(false);
 
+  const votes = useAppSelector(state => selectVotesByArrowId(state, props.arrow.id));
+
   let userVote = null as Vote | null;
-  // (props.arrow.votes || []).some(vote => {
-  //   if (vote.userId === props.user?.id) {
-  //     userVote = vote;
-  //     return true;
-  //   }
-  //   return false;
-  // });
+  votes.some(vote => {
+    if (vote && !vote.deleteDate && vote.userId === user?.id) {
+      userVote = vote;
+    }
+    return !!userVote;
+  });
+
+  const { voteArrow } = useVoteArrow(() => {
+    setIsVoting(false);
+  });
 
 
   const handleVoteClick = (clicks: number) => (event: React.MouseEvent) => {
     event.stopPropagation();
     setIsVoting(true);
+    voteArrow(props.arrow.id, clicks);
   }
+
   const handleButtonMouseDown = (event: React.MouseEvent) => {
     event.stopPropagation();
   }
@@ -42,64 +53,76 @@ export default function ArrowVoter(props: ArrowVoterProps) {
       display: 'flex',
       flexDirection: 'column',
       paddingTop: '10px',
-      marginLeft: '2px',
-      marginRight: '-5px',
+      marginLeft: '-4px',
     }}>
-      <IconButton
-        disabled={isVoting}
-        size='small' 
-        onMouseDown={handleButtonMouseDown}
-        onClick={handleVoteClick(
-          userVote && userVote.weight === 1 
-            ? 0
-            : 1
-        )}
-        sx={{
-          color: (userVote?.weight || 0) > 0
-            ? user?.color
-            : color,
-        }}
-      >
-        { 
-          (userVote?.weight || 0) > 0
-            ? <KeyboardDoubleArrowUpIcon fontSize='inherit' />
-            : <KeyboardArrowUpIcon fontSize='inherit' />
-        }
-      </IconButton>
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'center',
+      }}>
+        <IconButton
+          disabled={isVoting || userVote?.weight === 10}
+          size='small' 
+          onMouseDown={handleButtonMouseDown}
+          onClick={handleVoteClick(
+            userVote
+              ? userVote?.weight + 1
+              : 1
+          )}
+          sx={{
+            color: (userVote?.weight || 0) > 0
+              ? user?.color
+              : color,
+          }}
+        >
+          { 
+            (userVote?.weight || 0) > 0
+              ? <KeyboardDoubleArrowUpIcon fontSize='inherit' />
+              : <KeyboardArrowUpIcon fontSize='inherit' />
+          }
+        </IconButton>
+      </Box>
+
       <Button
         disabled={isVoting}
         onMouseDown={handleButtonMouseDown}
         color='inherit'
         size='small'
+        title={`${(userVote?.weight || 0) > 0 ? '+' : ''}${userVote?.weight || 0}`}
         sx={{
-          minWidth: 0,
+          minWidth: '40px',
           color,
           fontSize: 14,
         }}
       >
-        &nbsp;{ props.arrow?.weight || 0 }&nbsp;
+        { props.arrow.weight }
       </Button>
-      <IconButton
-        onMouseDown={handleButtonMouseDown}
-        disabled={isVoting}
-        size='small' 
-        onClick={handleVoteClick(
-          userVote && userVote.weight === -1
-            ? 0
-            : -1
-        )}
-        sx={{
-          color: (userVote?.weight || 0) < 0
-            ? user?.color
-            : color,
-        }}
-      >
-        {
-          (userVote?.weight || 0) < 0
-            ? <KeyboardDoubleArrowDownIcon fontSize='inherit' />
-            : <KeyboardArrowDownIcon fontSize='inherit' />
-        }
-      </IconButton>
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'center',
+      }}>
+        <IconButton
+          onMouseDown={handleButtonMouseDown}
+          disabled={isVoting || userVote?.weight === -10}
+          size='small' 
+          onClick={handleVoteClick(
+            userVote
+              ? userVote?.weight - 1
+              : -1
+          )}
+          sx={{
+            color: (userVote?.weight || 0) < 0
+              ? user?.color
+              : color,
+          }}
+        >
+          {
+            (userVote?.weight || 0) < 0
+              ? <KeyboardDoubleArrowDownIcon fontSize='inherit' />
+              : <KeyboardArrowDownIcon fontSize='inherit' />
+          }
+        </IconButton>
+      </Box>
+
     </Box>
   )
 }

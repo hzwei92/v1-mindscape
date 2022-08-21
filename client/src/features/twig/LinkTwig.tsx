@@ -6,7 +6,7 @@ import useSelectTwig from './useSelectTwig';
 import { AppContext } from '../../App';
 import { SpaceContext } from '../space/SpaceComponent';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { TWIG_WIDTH } from '../../constants';
+import { CLOSED_LINK_TWIG_DIAMETER, TWIG_WIDTH } from '../../constants';
 import useOpenTwig from './useOpenTwig';
 import useLinkTwigs from './useLinkTwigs';
 import ArrowComponent from '../arrow/ArrowComponent';
@@ -118,8 +118,8 @@ function LinkTwig(props: LinkTwigProps) {
   return (
     <Box>
       <Card elevation={5} onClick={handleOpenClick} sx={{
-        width: 30,
-        height: 30,
+        width: CLOSED_LINK_TWIG_DIAMETER,
+        height: CLOSED_LINK_TWIG_DIAMETER,
         outline: isSelected
           ? `5px solid ${twigUser?.color}`
           : `1px solid ${twigUser?.color}`,

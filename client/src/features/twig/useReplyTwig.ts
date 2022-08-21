@@ -128,8 +128,8 @@ export default function useReplyTwig() {
     console.log(dx, dy, dr);
     const postId = v4();
     const twigId = v4();
-    const x = Math.round((500 * dx / dr) + pos.x);
-    const y = Math.round((500 * dy / dr) + pos.y);
+    const x = Math.round((600 * dx / dr) + pos.x);
+    const y = Math.round((600 * dy / dr) + pos.y);
 
     console.log(x, y)
 

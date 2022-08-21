@@ -186,6 +186,11 @@ export class ArrowsService {
     };
   }
 
+  async deleteArrow(arrow: Arrow) {
+    arrow.deleteDate = new Date();
+    return this.arrowsRepository.save(arrow);
+  }
+
   async saveArrows(arrows: Arrow[]) {
     return this.arrowsRepository.save(arrows);
   }
@@ -537,10 +542,26 @@ export class ArrowsService {
   }
 
   async incrementTwigN(id: string, value: number) {
-    await this.arrowsRepository.increment({id}, 'twigN', value);
+    await this.arrowsRepository.increment({ id }, 'twigN', value);
   }
 
   async incrementTwigZ(id: string, value: number) {
-    await this.arrowsRepository.increment({id}, 'twigZ', value);
+    await this.arrowsRepository.increment({ id }, 'twigZ', value);
+  }
+
+  async incrementWeight(id: string, clicks: number, tokens: number) {
+    if (clicks !== 0) {
+      await this.arrowsRepository.increment({ id }, 'clicks', clicks);
+    }
+    if (tokens !== 0) {
+      await this.arrowsRepository.increment({ id }, 'tokens', tokens)
+    }
+    const arrow = await this.getArrowById(id);
+    const weight = findDefaultWeight(arrow.clicks, arrow.tokens);
+    if (arrow.weight !== weight) {
+      arrow.weight = weight;
+      return this.arrowsRepository.save(arrow);
+    }
+    return arrow;
   }
 }

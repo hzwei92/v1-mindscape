@@ -1,6 +1,7 @@
 import { Role } from '../role/role';
 import { Sheaf } from '../sheaf/sheaf';
 import type { User } from '../user/user';
+import { Vote } from '../vote/vote';
 // import type { Vote } from '../vote/vote';
 // import type { Sub } from '../sub/sub';
 
@@ -45,7 +46,7 @@ export type Arrow = {
 
   roles: Role[];
   // subs: Sub[];
-  // votes: Vote[];
+  votes: Vote[];
 
   lng: number | null;
   lat: number | null;
@@ -136,7 +137,7 @@ export const createArrow = (params: {
 
     roles: [],
     // subs: [],
-    // votes: [],
+    votes: [],
 
     lng: null,
     lat: null,

@@ -200,6 +200,7 @@ type Mutation {
   unfollowUser(userId: String!): Lead!
   updateTab(faviconUrl: String, title: String!, twigId: String!, url: String!): UpdateTabResult!
   verifyUser(code: String!): User!
+  voteArrow(arrowId: String!, clicks: Int!, sessionId: String!): VoteArrowResult!
 }
 
 type OpenTwigResult {
@@ -426,6 +427,11 @@ type Vote {
   user: User!
   userId: String!
   weight: Int!
+}
+
+type VoteArrowResult {
+  arrow: Arrow!
+  votes: [Vote!]!
 }
 
 input WindowEntry {

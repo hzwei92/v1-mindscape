@@ -43,3 +43,5 @@ export const SPACE_BAR_HEIGHT = 50;
 export const VIEW_RADIUS = 30000;
 
 export const NOT_FOUND = 'NOT_FOUND';
+
+export const CLOSED_LINK_TWIG_DIAMETER = 40;

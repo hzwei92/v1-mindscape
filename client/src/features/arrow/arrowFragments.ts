@@ -1,6 +1,7 @@
 import { gql } from '@apollo/client';
 import { FULL_ROLE_FIELDS } from '../role/roleFragments';
 import { SHEAF_FIELDS } from '../sheaf/sheafFragments';
+import { VOTE_FIELDS } from '../vote/voteFragments';
 
 export const ARROW_FIELDS = gql`
   fragment ArrowFields on Arrow {
@@ -46,6 +47,9 @@ export const ARROW_FIELDS = gql`
 export const FULL_ARROW_FIELDS = gql`
   fragment FullArrowFields on Arrow {
     ...ArrowFields
+    votes {
+      ...VoteFields
+    }
     sheaf {
       ...SheafFields
     }
@@ -59,6 +63,7 @@ export const FULL_ARROW_FIELDS = gql`
   }
   ${ARROW_FIELDS}
   ${SHEAF_FIELDS}
+  ${VOTE_FIELDS}
 `;
 
 

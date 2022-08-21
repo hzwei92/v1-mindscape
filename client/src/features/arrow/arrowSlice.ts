@@ -29,16 +29,25 @@ const arrowSlice = createSlice({
         idToArrow,
         urlToArrowId,
       } = action.payload.reduce((acc, arrow) => {
-        if (arrow.id) {
-          acc.idToArrow[arrow.id] = {
-            ...acc.idToArrow[arrow.id],
-            ...arrow
-          };
-
-          if (arrow.url) {
-            acc.urlToArrowId[arrow.url] = arrow.id
+        if (arrow.deleteDate) {
+          if (arrow.id) {
+            delete acc.idToArrow[arrow.id];
+            if (arrow.url) {
+              delete acc.urlToArrowId[arrow.url];
+            }
           }
-        } 
+        }
+        else {
+          if (arrow.id) {
+            acc.idToArrow[arrow.id] = {
+              ...acc.idToArrow[arrow.id], 
+              ...arrow,
+            };
+            if (arrow.url) {
+              acc.urlToArrowId[arrow.url] = arrow.id;
+            }
+          }
+        }
         return acc;
       }, {
         idToArrow: { ...state.idToArrow },
@@ -163,20 +172,12 @@ const arrowSlice = createSlice({
           urlToArrowId,
         } = action.payload.twigs.reduce((acc, twig) => {
           if (twig.detail) {
-            if (twig.detail.deleteDate) {
-              delete acc.idToArrow[twig.detail.id];
-              if (twig.detail.url) {
-                delete acc.urlToArrowId[twig.detail.url];
-              }
-            }
-            else {
-              acc.idToArrow[twig.detail.id] = Object.assign({}, 
-                acc.idToArrow[twig.detail.id], 
-                twig.detail
-              );
-              if (twig.detail.url) {
-                acc.urlToArrowId[twig.detail.url] = twig.detail.id;
-              }
+            acc.idToArrow[twig.detail.id] = Object.assign({}, 
+              acc.idToArrow[twig.detail.id], 
+              twig.detail
+            );
+            if (twig.detail.url) {
+              acc.urlToArrowId[twig.detail.url] = twig.detail.id;
             }
           }
           return acc;

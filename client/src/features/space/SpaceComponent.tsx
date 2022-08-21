@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
 import React, { Dispatch, SetStateAction, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { VIEW_RADIUS, SPACE_BAR_HEIGHT, MAX_Z_INDEX, TWIG_WIDTH } from '../../constants';
+import { VIEW_RADIUS, SPACE_BAR_HEIGHT, MAX_Z_INDEX, TWIG_WIDTH, CLOSED_LINK_TWIG_DIAMETER } from '../../constants';
 import { checkPermit } from '../../utils';
 import { PosType, SpaceType } from './space';
 import useInitSpace from './useInitSpace';
@@ -466,7 +466,8 @@ export default function SpaceComponent(props: SpaceComponentProps) {
       twig.id !== drag.twigId && 
       !Object.keys(idToDescIdToTrue[drag.twigId] || {}).some(descId => descId === twig.id) &&
       twig.sourceId !== drag.twigId &&
-      twig.targetId !== drag.twigId
+      twig.targetId !== drag.twigId &&
+      twig.id !== idToTwig[drag.twigId].parent?.id
     ) {
       dropTargets.push(
         <Box 
@@ -479,10 +480,10 @@ export default function SpaceComponent(props: SpaceComponentProps) {
             zIndex: MAX_Z_INDEX + twig.z,
             width: twig.isOpen
               ? TWIG_WIDTH
-              : 30,
+              : CLOSED_LINK_TWIG_DIAMETER,
             height: twig.isOpen
               ? idToHeight[twig.id]
-              : 30,
+              : CLOSED_LINK_TWIG_DIAMETER,
             backgroundColor: twig.user?.color,
             opacity: drag.targetTwigId === twig.id
               ? 0.4
