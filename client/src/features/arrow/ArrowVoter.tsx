@@ -8,9 +8,8 @@ import type { Arrow } from './arrow';
 import { Vote } from '../vote/vote';
 import { AppContext } from '../../App';
 import { useAppSelector } from '../../app/hooks';
-import { selectArrowIdToVoteIds, selectIdToVote, selectVotesByArrowId } from '../vote/voteSlice';
+import { selectVotesByArrowId } from '../vote/voteSlice';
 import useVoteArrow from '../vote/useVoteArrow';
-import { SpaceContext } from '../space/SpaceComponent';
 
 interface ArrowVoterProps {
   arrow: Arrow;

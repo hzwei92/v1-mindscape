@@ -3,12 +3,9 @@ import { useSnackbar } from 'notistack';
 import { FULL_ROLE_FIELDS } from '../role/roleFragments';
 import { applyRole } from '../role/useApplyRole';
 import { selectSessionId } from '../auth/authSlice';
-import { mergeTwigs, selectIdToTwig } from './twigSlice';
-import { v4 } from 'uuid';
-import { useContext } from 'react';
+import { mergeTwigs } from './twigSlice';
 import { SpaceType } from '../space/space';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { Twig } from './twig';
 
 const MOVE_TWIG = gql`
   mutation MoveTwig($sessionId: String!, $twigId: String!, $x: Int!, $y: Int!) {
@@ -30,7 +27,6 @@ export default function useMoveTwig(space: SpaceType) {
   const dispatch = useAppDispatch();
 
   const sessionId = useAppSelector(selectSessionId);
-  const idToTwig = useAppSelector(selectIdToTwig(space));
 
   const { enqueueSnackbar } = useSnackbar();
   
@@ -44,12 +40,9 @@ export default function useMoveTwig(space: SpaceType) {
     },
     onCompleted: data => {
       console.log(data);
-      const twigs = data.moveTwig.twigs.map((twig: Twig) => {
-        return Object.assign({}, idToTwig[twig.id], twig);
-      })
       dispatch(mergeTwigs({
         space,
-        twigs,
+        twigs: data.moveTwig.twigs,
       }))
     },
   });

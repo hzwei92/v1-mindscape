@@ -5,7 +5,6 @@ import ArrowEditor from './ArrowEditor';
 import { AppContext } from '../../App';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { getTimeString } from '../../utils';
-import { TWIG_WIDTH } from '../../constants';
 import UserTag from '../user/UserTag';
 import ArrowVoter from './ArrowVoter';
 import AdjustIcon from '@mui/icons-material/Adjust';

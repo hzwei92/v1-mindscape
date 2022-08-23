@@ -172,10 +172,10 @@ const arrowSlice = createSlice({
           urlToArrowId,
         } = action.payload.twigs.reduce((acc, twig) => {
           if (twig.detail) {
-            acc.idToArrow[twig.detail.id] = Object.assign({}, 
-              acc.idToArrow[twig.detail.id], 
-              twig.detail
-            );
+            acc.idToArrow[twig.detail.id] = {
+              ...acc.idToArrow[twig.detail.id], 
+              ...twig.detail,
+            };
             if (twig.detail.url) {
               acc.urlToArrowId[twig.detail.url] = twig.detail.id;
             }
