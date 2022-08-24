@@ -4,7 +4,7 @@ import { useAppSelector } from './app/hooks';
 import { FRAME_MIN_WIDTH, FRAME_WIDTH, MAX_Z_INDEX, MENU_MIN_WIDTH, MENU_WIDTH } from './constants';
 import { selectCurrentUser } from './features/user/userSlice';
 import { SnackbarProvider } from 'notistack';
-import AppBar from './AppBar';
+import AppBar from './AppBar1';
 import MenuComponent from './features/menu/MenuComponent';
 import { getAppbarWidth, getColor } from './utils';
 import FrameComponent from './features/frame/FrameComponent';
@@ -188,11 +188,11 @@ function App() {
   }, [
     user, 
     width, height, 
-    palette, setPalette, dimColor, brightColor, 
+    palette, dimColor, brightColor, 
     appBarWidth, 
-    menuMode, setMenuMode, menuIsResizing, setMenuIsResizing, menuWidth, 
-    frameIsResizing, setFrameIsResizing, frameWidth, 
-    pendingLink, setPendingLink
+    menuMode, menuIsResizing, menuWidth, 
+    frameIsResizing, frameWidth, 
+    pendingLink,
   ]);
 
   const handleMouseMove = (event: React.MouseEvent) => {

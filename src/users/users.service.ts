@@ -87,21 +87,11 @@ export class UsersService {
       : PaletteMode.LIGHT;
     const user1 = await this.usersRepository.save(user0);
 
-    const postId = v4();
-    const sheaf = await this.sheafsService.createSheaf(null, null, null);
-    const { arrow } = await this.arrowsService.createArrow({
-      user: user1,
-      id: postId,
-      sourceId: null,
-      targetId: null,
-      abstract: null,
-      sheaf,
-      draft: null,
-      title: null,
-      url: null,
-      faviconUrl: null,
-    });
-    user1.frameId = arrow.id;
+    let startArrow = await this.arrowsService.getStartArrow();
+    if (!startArrow) {
+      startArrow = await this.arrowsService.createStartArrow(user1);
+    }
+    user1.frameId = startArrow.id;
 
     await this.usersRepository.save(user1);
     const user2 = await this.getUserById(user1.id);

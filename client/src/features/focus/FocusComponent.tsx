@@ -1,4 +1,4 @@
-import { Box, Card, createTheme, IconButton, Link, Theme, ThemeProvider } from '@mui/material';
+import { Box, Card, createTheme, Icon, IconButton, ThemeProvider } from '@mui/material';
 import React, { useContext, useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { MAX_Z_INDEX, SPACE_BAR_HEIGHT } from '../../constants';
@@ -7,10 +7,11 @@ import CloseIcon from '@mui/icons-material/Close';
 import { AppContext } from '../../App';
 import { SpaceType } from '../space/space';
 import { selectIsOpen, selectSelectedTwigId, setIsOpen } from '../space/spaceSlice';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { selectIdToTwig } from '../twig/twigSlice';
 import useSetUserFocus from '../user/useSetUserFocus';
 import { selectUserById } from '../user/userSlice';
+import Filter2Icon from '@mui/icons-material/Filter2';
 
 export default function FocusComponent() {
   const dispatch = useAppDispatch();
@@ -120,23 +121,28 @@ export default function FocusComponent() {
               : 'width 0.5s',
           }}>
             <Box sx={{
-              whiteSpace: 'nowrap',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              margin: 2,
-              fontSize: 14,
+              display: 'flex',
+              flexDirection: 'row',
             }}>
-              <Box>
-                Viewing&nbsp;
-                <Link
-                  component='span'
-                  sx={{
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  m/{user.focus?.routeName}
-                </Link>
+              <Box sx={{
+                whiteSpace: 'nowrap',
+                padding: 2,
+                paddingTop: 1.8,
+              }}>
+                <Icon sx={{
+                  color: focusUser?.color,
+                  fontSize: 20,
+                }}>
+                  <Filter2Icon fontSize='inherit'/>
+                </Icon>
+              </Box>
+              <Box sx={{
+                whiteSpace: 'nowrap',
+                paddingTop: 1.5,
+                fontSize: 18,
+                color: focusUser?.color,
+              }}>
+                  {user.focus?.title}
               </Box>
             </Box>
             <Box sx={{

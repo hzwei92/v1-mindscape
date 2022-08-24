@@ -33,7 +33,7 @@ export const REMOVED_ARROW_DRAFT = JSON.stringify({
 export const REMOVED_ARROW_TEXT = '<deleted>';
 
 
-export const START_ARROW_I = 1;
+export const START_ARROW_ID = '7402c3dd-36fd-4045-9dad-1d53ea987ad6';
 
 export const uuidRegexExp = /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i;
 

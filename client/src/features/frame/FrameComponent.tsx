@@ -1,4 +1,4 @@
-import { Box, Card, createTheme, IconButton, Link, ThemeProvider } from '@mui/material';
+import { Box, Card, createTheme, Icon, IconButton, Link, ThemeProvider } from '@mui/material';
 import React, { useContext, useEffect, useState } from 'react';
 import { MAX_Z_INDEX, SPACE_BAR_HEIGHT } from '../../constants';
 import SpaceComponent from '../space/SpaceComponent';
@@ -8,6 +8,7 @@ import { SpaceType } from '../space/space';
 import { selectIsOpen } from '../space/spaceSlice';
 import { useAppSelector } from '../../app/hooks';
 import { selectUserById } from '../user/userSlice';
+import Filter1Icon from '@mui/icons-material/Filter1';
 
 export default function FrameComponent() {
   const { 
@@ -110,23 +111,29 @@ export default function FrameComponent() {
               : 'width 0.5s',
           }}>
             <Box sx={{
-              whiteSpace: 'nowrap',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              margin: 2,
-              fontSize: 14,
+              display: 'flex',
+              flexDirection: 'row',
             }}>
-              <Box>
-                Logged in as&nbsp;
-                <Link
-                  component='span'
-                  sx={{
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  u/{user?.name}
-                </Link>
+              <Box sx={{
+                whiteSpace: 'nowrap',
+                padding: 2,
+                paddingTop: 1.8,
+                paddingRight: 1.5,
+              }}>
+                <Icon sx={{
+                  color: frameUser?.color,
+                  fontSize: 20,
+                }}>
+                  <Filter1Icon fontSize='inherit'/>
+                </Icon>
+              </Box>
+              <Box sx={{
+                whiteSpace: 'nowrap',
+                paddingTop: 2,
+                fontSize: 16,
+                color: frameUser?.color,
+              }}>
+                  {user.frame?.title}
               </Box>
             </Box>
             <Box sx={{

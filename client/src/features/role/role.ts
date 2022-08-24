@@ -7,7 +7,7 @@ export type Role = {
   user: User;
   arrowId: string;
   arrow: Arrow;
-  type: string;
+  type: RoleType;
   isInvited: boolean;
   isRequested: boolean;
   createDate: Date;
@@ -15,3 +15,10 @@ export type Role = {
   deleteDate: Date | null;
   __typename: string;
 }
+
+
+export enum RoleType {
+  ADMIN = 'ADMIN',
+  MEMBER = 'MEMBER',
+  OTHER = 'OTHER',
+};

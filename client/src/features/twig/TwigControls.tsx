@@ -336,17 +336,6 @@ function TwigControls(props: TwigControlsProps) {
       marginLeft: 0,
     }}>
       <Button
-        variant={abstract?.id === arrow?.id ? 'outlined' : 'text'}
-        onMouseDown={handleMouseDown}
-        onClick={handleOpenClick}
-        sx={{
-          color,
-          fontSize: 12,
-        }}
-      >
-        Open {arrow?.twigN ? `(${arrow?.twigN})` : ''}
-      </Button>
-      <Button
         disabled={!canPost}
         onMouseDown={handleMouseDown} 
         onClick={handleReplyClick}
@@ -533,6 +522,17 @@ function TwigControls(props: TwigControlsProps) {
         fontSize: 12,
       }}>
         {arrow?.outCount} OUT
+      </Button>
+      <Button
+        variant={abstract?.id === arrow?.id ? 'outlined' : 'text'}
+        onMouseDown={handleMouseDown}
+        onClick={handleOpenClick}
+        sx={{
+          color,
+          fontSize: 12,
+        }}
+      >
+        Open {arrow?.twigN ? `(${arrow?.twigN})` : ''}
       </Button>
     </Box>
   )

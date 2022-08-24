@@ -207,6 +207,7 @@ export class TwigsService {
       title: null,
       url: null,
       faviconUrl: null,
+      routeName: null,
     });
 
     const postTwig = await this.createTwig({
@@ -237,6 +238,7 @@ export class TwigsService {
       title: null,
       url: null,
       faviconUrl: null,
+      routeName: null,
     });
 
     const linkTwig = await this.createTwig({
@@ -440,6 +442,7 @@ export class TwigsService {
       title: null, 
       url: null,
       faviconUrl: null,
+      routeName: null,
     });
 
     const source1 = await this.arrowsService.getArrowById(source.id);
@@ -1476,6 +1479,7 @@ export class TwigsService {
         title: entry.title, 
         url: entry.url,
         faviconUrl: null,
+        routeName: null,
       }));
     }
 
@@ -1535,6 +1539,7 @@ export class TwigsService {
           title, 
           url,
           faviconUrl: null,
+          routeName: null,
         }));
       }
       twig.detailId = arrow.id;

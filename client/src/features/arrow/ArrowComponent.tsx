@@ -5,6 +5,7 @@ import ArrowEditor from './ArrowEditor';
 import { AppContext } from '../../App';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { getTimeString } from '../../utils';
+import { TWIG_WIDTH } from '../../constants';
 import UserTag from '../user/UserTag';
 import ArrowVoter from './ArrowVoter';
 import AdjustIcon from '@mui/icons-material/Adjust';
@@ -74,16 +75,20 @@ export default function ArrowComponent(props: ArrowProps) {
         }}>
             {
               props.showLinkRightIcon
-                ? <SouthEastIcon fontSize='inherit' />
+                ? <SouthEastIcon fontSize='inherit' sx={{
+                    paddingRight: 1,
+                  }}/>
                 : props.showLinkLeftIcon
-                  ? <NorthWestIcon fontSize='inherit' />
+                  ? <NorthWestIcon fontSize='inherit' sx={{
+                      paddingRight: 1,
+                    }}/>
                   : props.showPostIcon
-                    ? <AdjustIcon fontSize='inherit' />
+                    ? <AdjustIcon fontSize='inherit' sx={{
+                        paddingRight: 1,
+                      }}/>
                     : null
             }
         </Box>
-        &nbsp;
-        { ' ' }
         <UserTag user={arrowUser} />
         &nbsp;
         { ' ' }

@@ -45,3 +45,5 @@ export const VIEW_RADIUS = 30000;
 export const NOT_FOUND = 'NOT_FOUND';
 
 export const CLOSED_LINK_TWIG_DIAMETER = 40;
+
+export const ROLES_MENU_WIDTH = 300;

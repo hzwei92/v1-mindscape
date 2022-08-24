@@ -25,7 +25,7 @@ export class UsersResolver {
     private readonly pubSub: RedisPubSub,
   ) {}
 
-  @ResolveField(() => Arrow, {name: 'frame'})
+  @ResolveField(() => Arrow, {name: 'frame', nullable: true})
   async getUserFrame(
     @Parent() user: User,
   ) {

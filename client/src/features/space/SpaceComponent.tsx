@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
 import React, { Dispatch, SetStateAction, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { VIEW_RADIUS, SPACE_BAR_HEIGHT, MAX_Z_INDEX, TWIG_WIDTH, CLOSED_LINK_TWIG_DIAMETER } from '../../constants';
+import { VIEW_RADIUS, SPACE_BAR_HEIGHT, MAX_Z_INDEX, TWIG_WIDTH, CLOSED_LINK_TWIG_DIAMETER, ROLES_MENU_WIDTH } from '../../constants';
 import { checkPermit } from '../../utils';
 import { PosType, SpaceType } from './space';
 import useInitSpace from './useInitSpace';
@@ -39,6 +39,7 @@ import { focusAdjustIdToPosVar, focusSpaceElVar, frameAdjustIdToPosVar, frameSpa
 import useTwigTree from '../twig/useTwigTree';
 import { useReactiveVar } from '@apollo/client';
 import useGraftTwig from '../twig/useGraftTwig';
+import RolesMenu from './RolesMenu';
 
 export const SpaceContext = React.createContext({} as {
   abstract: Arrow | null;
@@ -227,7 +228,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
       removalTwigId, 
       setRemovalTwigId,
     };
-  }, [abstract, props.space, canView, canPost, canEdit, removalTwigId, setRemovalTwigId]);
+  }, [abstract, props.space, canView, canPost, canEdit, removalTwigId]);
 
   if (!abstract) return null;
 
@@ -595,7 +596,9 @@ export default function SpaceComponent(props: SpaceComponentProps) {
           position: 'relative',
           top: `${SPACE_BAR_HEIGHT}px`,
           height: `calc(100% - ${SPACE_BAR_HEIGHT}px)`,
-          width: '100%',
+          width: showRoles
+            ? `calc(100% - ${ROLES_MENU_WIDTH}px)`
+            : '100%',
           overflow: 'scroll',
         }}
       >
@@ -651,6 +654,11 @@ export default function SpaceComponent(props: SpaceComponentProps) {
         <SpaceNav />
         <RemoveTwigDialog />
       </Box>
+      <RolesMenu
+        isOpen={showRoles}
+        setIsOpen={setShowRoles}
+        role={role}
+      />
     </SpaceContext.Provider>
   );
 }

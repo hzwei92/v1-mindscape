@@ -73,7 +73,7 @@ export default function UserTag(props: UserTagProps) {
           cursor: 'pointer'
         }}
       >
-        u/{props.user?.name}
+        {props.user?.name}
       </Link>
       {
         props.user?.id === props.user?.id
@@ -98,7 +98,7 @@ export default function UserTag(props: UserTagProps) {
                     </IconButton>
                   : <IconButton 
                       onClick={handleFollowClick}
-                      title={`Follow u/${props.user?.name}`}
+                      title={`Follow ${props.user?.name}`}
                       size='small' 
                       sx={{
                         marginTop: '-1px',

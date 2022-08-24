@@ -74,7 +74,7 @@ export default function useAppRouter(user: User | null) {
         }
       }
 
-      document.title = `Mindscape | ${user.frame.text.split('\n')[0]}`;
+      document.title = `Mindscape | ${user.frame.title}`;
 
       const frameTwig = frameIdToTwig[frameSelectedTwigId];
 
@@ -138,7 +138,7 @@ export default function useAppRouter(user: User | null) {
       else {
         if (!Object.keys(focusIdToPos || {}).length) return;
 
-        document.title = `Mindscape | ${user.focus.text.split('\n')[0]}`
+        document.title = `Mindscape | ${user.focus.title}`
 
         const focusTwig = focusIdToTwig[focusSelectedTwigId]
 

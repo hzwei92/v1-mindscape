@@ -89,7 +89,7 @@ export class Arrow {
   @Field()
   twigZ: number;
 
-  @Field()
+  @Field({ nullable: true })
   rootTwigId: string;
 
   @Field()

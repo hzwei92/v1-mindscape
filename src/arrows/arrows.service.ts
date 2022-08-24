@@ -8,7 +8,7 @@ import { findDefaultWeight, getEmptyDraft, IdToType } from 'src/utils';
 import { SearchService } from 'src/search/search.service';
 import { SubsService } from 'src/subs/subs.service';
 import { RoleType } from 'src/enums';
-import { LOAD_LIMIT, PRIVATE_ARROW_DRAFT, PRIVATE_ARROW_TEXT } from 'src/constants';
+import { LOAD_LIMIT, PRIVATE_ARROW_DRAFT, PRIVATE_ARROW_TEXT, START_ARROW_ID } from 'src/constants';
 import { RolesService } from 'src/roles/roles.service';
 import { TwigsService } from 'src/twigs/twigs.service';
 import { VotesService } from 'src/votes/votes.service';
@@ -19,7 +19,6 @@ import { GroupEntry } from 'src/twigs/dto/group-entry.dto';
 import { Entry, TabEntry } from 'src/twigs/dto/tab-entry.dto';
 import { BookmarkEntry } from 'src/twigs/dto/bookmark-entry.dto';
 import { convertFromRaw } from 'draft-js';
-import { ABSTRACT_ARROW_FIELDS } from 'client/src/features/arrow/arrowFragments';
 
 @Injectable()
 export class ArrowsService {
@@ -122,6 +121,49 @@ export class ArrowsService {
       .getMany()
   }
 
+  async getStartArrow() {
+    return this.arrowsRepository.findOne({
+      where: {
+        id: START_ARROW_ID,
+      }
+    });
+  }
+
+  async createStartArrow(user: User) {
+    const sheaf = await this.sheafsService.createSheaf(null, null, null);
+
+    let { arrow } = await this.createArrow({
+      user,
+      id: START_ARROW_ID,
+      sourceId: null,
+      targetId: null,
+      abstract: null,
+      sheaf,
+      draft: getEmptyDraft(),
+      title: 'Mindscape.pub',
+      url: null,
+      faviconUrl: null,
+      routeName:'mindscape'
+    });
+
+    ({arrow} = await this.openArrow(user, arrow));
+
+    return arrow;
+  }
+
+  async openArrow(user: User, arrow: Arrow) {
+    const [rootTwig] = await this.twigsService.createRootTwigs(user, [arrow]);
+    arrow.rootTwigId = rootTwig.id;
+    arrow = await this.arrowsRepository.save(arrow);
+
+    const role = await this.rolesService.createRole(user, arrow, RoleType.ADMIN);
+
+    return {
+      arrow,
+      role,
+    }
+  }
+
   async createArrow(params: {
     user: User, 
     id: string | null, 
@@ -133,6 +175,7 @@ export class ArrowsService {
     title: string | null,
     url: string | null,
     faviconUrl: string | null,
+    routeName: string | null,
   }) {
     const {
       user,
@@ -145,6 +188,7 @@ export class ArrowsService {
       title,
       url,
       faviconUrl,
+      routeName,
     } = params;
     const arrow0 = new Arrow();
     arrow0.id = id || v4();
@@ -157,7 +201,7 @@ export class ArrowsService {
     arrow0.title = title;
     arrow0.url = url;
     arrow0.faviconUrl = faviconUrl;
-    arrow0.routeName = arrow0.id;
+    arrow0.routeName = routeName || arrow0.id;
     arrow0.saveDate = new Date();
     const arrow1 = await this.arrowsRepository.save(arrow0);
 
@@ -166,22 +210,15 @@ export class ArrowsService {
       await this.incrementInCount(targetId, 1);
     }
 
-    const [twig] = await this.twigsService.createRootTwigs(user, [arrow1]);
+    this.searchService.partialUpdateArrows([arrow1]);
 
-    arrow1.rootTwigId = twig.id;
-
-    const arrow2 = await this.arrowsRepository.save(arrow1);
-
-    this.searchService.partialUpdateArrows([arrow2]);
-
-    const [vote] = await this.votesService.createInitialVotes(user, [arrow2]);
+    const [vote] = await this.votesService.createInitialVotes(user, [arrow1]);
     
-    const [sub] = await this.subsService.createSubs(user, [arrow2]);
+    const [sub] = await this.subsService.createSubs(user, [arrow1]);
 
     return {
-      arrow: arrow2,
+      arrow: arrow1,
       vote,
-      twig,
       sub,
     };
   }
@@ -257,6 +294,7 @@ export class ArrowsService {
       title: null,
       url: null,
       faviconUrl: null,
+      routeName: null,
     });
 
     const { arrow: link } = await this.createArrow({
@@ -270,6 +308,7 @@ export class ArrowsService {
       title: null,
       url: null,
       faviconUrl: null,
+      routeName: null,
     });
 
     const source1 = await this.arrowsRepository.findOne({
@@ -352,6 +391,7 @@ export class ArrowsService {
         title: null, 
         url: null,
         faviconUrl: null,
+        routeName: null,
       }));
     }
     return {

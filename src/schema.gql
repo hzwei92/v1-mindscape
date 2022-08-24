@@ -36,7 +36,7 @@ type Arrow {
   outs: [Arrow!]!
   removeDate: DateTime
   roles: [Role!]!
-  rootTwigId: String!
+  rootTwigId: String
   routeName: String!
   saveDate: DateTime!
   sheaf: Sheaf!
@@ -390,7 +390,7 @@ type User {
   focus: Arrow
   focusId: String
   followers: [Lead!]!
-  frame: Arrow!
+  frame: Arrow
   frameId: String
   id: String!
   isAdmin: Boolean!
