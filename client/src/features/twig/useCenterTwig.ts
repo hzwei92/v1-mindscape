@@ -11,12 +11,11 @@ export default function useCenterTwig(space: SpaceType) {
   const { 
     user,
     width,
-    appBarWidth,
     menuWidth,
     frameWidth,
   } = useContext(AppContext);
 
-  const focusWidth = width - appBarWidth - menuWidth - frameWidth;
+  const focusWidth = width - menuWidth - frameWidth;
 
   const spaceWidth = space === SpaceType.FRAME 
     ? frameWidth 

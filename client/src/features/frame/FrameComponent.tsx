@@ -79,7 +79,7 @@ export default function FrameComponent() {
 
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{
+      <Box className='frame' sx={{
         position: 'relative',
         width: frameWidth - 1,
         height: '100%',
@@ -91,68 +91,6 @@ export default function FrameComponent() {
           : 'none',
         flexDirection: 'row',
       }}>
-        <Box sx={{
-          position: 'absolute',
-          left: 0,
-          top: 0,
-        }}>
-          <Card elevation={5} sx={{
-            position: 'fixed',
-            zIndex: MAX_Z_INDEX,
-            display: 'flex',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            borderTopLeftRadius: 0,
-            borderTopRightRadius: 0,
-            width: frameWidth - (focusIsOpen ? 5 : 0),
-            height: `${SPACE_BAR_HEIGHT - 2}px`,
-            transition: menuIsResizing || frameIsResizing
-              ? 'none'
-              : 'width 0.5s',
-          }}>
-            <Box sx={{
-              display: 'flex',
-              flexDirection: 'row',
-            }}>
-              <Box sx={{
-                whiteSpace: 'nowrap',
-                padding: 2,
-                paddingTop: 1.8,
-                paddingRight: 1.5,
-              }}>
-                <Icon sx={{
-                  color: frameUser?.color,
-                  fontSize: 20,
-                }}>
-                  <Filter1Icon fontSize='inherit'/>
-                </Icon>
-              </Box>
-              <Box sx={{
-                whiteSpace: 'nowrap',
-                paddingTop: 2,
-                fontSize: 16,
-                color: frameUser?.color,
-              }}>
-                  {user.frame?.title}
-              </Box>
-            </Box>
-            <Box sx={{
-              whiteSpace: 'nowrap',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              margin: 1,
-              display: frameIsOpen && false
-                ? 'flex'
-                : 'none',
-            }}>
-              <IconButton onClick={handleCloseClick} sx={{
-                fontSize: 16,
-              }}> 
-                <CloseIcon fontSize='inherit'/>
-              </IconButton>
-            </Box>
-          </Card>
-        </Box>
         <SpaceComponent space={SpaceType.FRAME}/>
         <Box 
           onMouseDown={handleResizeMouseDown}

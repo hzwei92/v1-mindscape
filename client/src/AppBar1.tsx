@@ -1,33 +1,40 @@
-import { Box, Card, IconButton, Icon, Divider } from '@mui/material';
-import { MAX_Z_INDEX, MOBILE_WIDTH } from './constants';
-import MapIcon from '@mui/icons-material/Map';
-import SearchIcon from '@mui/icons-material/Search';
-import AccountCircle from '@mui/icons-material/AccountCircle';
-import DynamicFeedIcon from '@mui/icons-material/DynamicFeed';
-import HubIcon from '@mui/icons-material/Hub';
-import PodcastsIcon from '@mui/icons-material/Podcasts';
-import Filter1Icon from '@mui/icons-material/Filter1';
-import Filter2Icon from '@mui/icons-material/Filter2';
-import Brightness4Icon from '@mui/icons-material/Brightness4';
-import { getAppbarWidth } from './utils';
-import { useAppDispatch, useAppSelector } from './app/hooks';
+import AppBar from '@mui/material/AppBar';
+import Box from '@mui/material/Box';
+import Toolbar from '@mui/material/Toolbar';
+import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
+import Menu from '@mui/material/Menu';
+import MenuIcon from '@mui/icons-material/Menu';
+import Container from '@mui/material/Container';
+import Avatar from '@mui/material/Avatar';
+import Button from '@mui/material/Button';
+import Tooltip from '@mui/material/Tooltip';
+import MenuItem from '@mui/material/MenuItem';
+import AdbIcon from '@mui/icons-material/Adb';
+import { useContext, useState } from 'react';
 import useAuth from './features/auth/useAuth';
 import useAppRouter from './useAppRouter';
-import { useContext } from 'react';
 import { AppContext } from './App';
-import { MenuMode } from './features/menu/menu';
-import useSetUserPalette from './features/user/useSetUserPalette';
+import Filter1 from '@mui/icons-material/Filter1';
+import Filter2 from '@mui/icons-material/Filter2';
+import { Icon } from '@mui/material';
+import { APP_BAR_HEIGHT, MOBILE_WIDTH } from './constants';
+import { useAppDispatch, useAppSelector } from './app/hooks';
 import { selectSelectedSpace, selectSelectedTwigId, setSelectedSpace } from './features/space/spaceSlice';
 import { SpaceType } from './features/space/space';
-import { useLocation, useNavigate } from 'react-router-dom';
 import { selectIdToTwig } from './features/twig/twigSlice';
-import { selectIdToArrow } from './features/arrow/arrowSlice';
 import useCenterTwig from './features/twig/useCenterTwig';
-//import useSavePostSub from './features/post/useSavePostSub';
+import { MenuMode } from './features/menu/menu';
+import Brightness4 from '@mui/icons-material/Brightness4';
+import { useLocation, useNavigate } from 'react-router-dom';
+import useSetUserPalette from './features/user/useSetUserPalette';
 
-export default function AppBar() {
-  const location = useLocation();
+const navItems = ['SEARCH', 'GRAPHS', 'CONTACTS', 'MAP', 'FEED'];
+const userItems = ['Profile', 'Account', 'Dashboard', 'Logout'];
+
+const ResponsiveAppBar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useAppDispatch();
 
   const { 
@@ -39,6 +46,9 @@ export default function AppBar() {
     setMenuMode
   } = useContext(AppContext);
 
+  const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
+  const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
+
   const isMobile = width < MOBILE_WIDTH;
 
   const selectedSpace = useAppSelector(selectSelectedSpace);
@@ -48,48 +58,41 @@ export default function AppBar() {
   const frameIdToTwig = useAppSelector(selectIdToTwig(SpaceType.FRAME));
   const focusIdToTwig = useAppSelector(selectIdToTwig(SpaceType.FOCUS));
 
-  const idToArrow = useAppSelector(selectIdToArrow);
-
   useAuth();
   useAppRouter(user);
+
+  const { setUserPalette } = useSetUserPalette();
 
   const { centerTwig: frameCenterTwig } = useCenterTwig(SpaceType.FRAME);
   const { centerTwig: focusCenterTwig } = useCenterTwig(SpaceType.FOCUS);
 
-  const { setUserPalette } = useSetUserPalette();
-
-  const handleAboutClick = () => {
-
+  const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorElNav(event.currentTarget);
+  };
+  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorElUser(event.currentTarget);
   };
 
-  const handleAccountClick = () => {
-    setMenuMode(menuMode === MenuMode.ACCOUNT 
-      ? MenuMode.NONE 
-      : MenuMode.ACCOUNT
-    );
+  const handleCloseNavMenu = () => {
+    setAnchorElNav(null);
   };
 
-  const handleContactsClick = () => {
-
+  const handleCloseUserMenu = () => {
+    setAnchorElUser(null);
   };
 
-  const handleGraphClick = () => {
-
+  const handleMenuItemClick = (item: string) => () => {
+    if (item === 'SEARCH') {
+      setMenuMode(menuMode === MenuMode.SEARCH 
+        ? MenuMode.NONE 
+        : MenuMode.SEARCH
+      );
+    }
+    handleCloseNavMenu();
   };
 
-  const handleMapClick = () => {
-
-  };
-
-  const handleSearchClick = () => {
-    setMenuMode(menuMode === MenuMode.SEARCH 
-      ? MenuMode.NONE 
-      : MenuMode.SEARCH
-    );
-  };
-
-  const handleFeedClick = () => {
-
+  const handlePaletteClick = () => {
+    setUserPalette(palette === 'light' ? 'dark' : 'light');
   };
 
   const handleFrameClick = () => {
@@ -119,169 +122,193 @@ export default function AppBar() {
       focusCenterTwig(twig.id, true, 0);
     }
   }
-  
-  const handlePaletteClick = () => {
-    setUserPalette(palette === 'light' ? 'dark' : 'light');
-  }
+
   return (
-    <Box>
-      <Card elevation={5} sx={{
-        position: 'fixed',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        textAlign: 'center',
-        minHeight: '100%',
-        width: getAppbarWidth(width),
-        marginRight: '1px',
-        zIndex: MAX_Z_INDEX + 100,
-      }}>
-        <Box>
-          <Box>
+    <Box sx={{
+      backgroundColor: palette === 'dark'
+        ? '#1e1e1e'
+        : '#f0f0f0',
+    }}>
+      <AppBar position="fixed" color='inherit' enableColorOnDark>
+        <Container maxWidth="xl">
+          <Toolbar variant='dense' disableGutters sx={{
+            height: APP_BAR_HEIGHT,
+            whiteSpace: 'nowrap',
+          }}>
             <Box sx={{
-              padding: '5px',
-              paddingTop: 1,
+              marginLeft: -1.5,
+              display: { xs: 'none', md: 'flex' },
             }}>
-              <IconButton title='About' size='small' onClick={handleAboutClick} sx={{
-                border: menuMode === 'ABOUT'
-                  ? `1px solid ${user?.color}`
-                  : 'none',
-                fontSize: width < MOBILE_WIDTH
-                  ? 16
-                  : 28,
-              }}>
-                <Icon fontSize='inherit'>
-                  👁‍🗨
-                </Icon>
+              👁‍🗨
+            <Typography
+              noWrap
+              component="a"
+              href="/"
+              sx={{
+                marginTop: -0.5,
+                marginRight: 2,
+                display: { xs: 'none', md: 'flex' },
+                fontWeight: 'bold',
+                fontSize: 24,
+                fontFamily: 'Alumni Sans Pinstripe',
+                color,
+                textDecoration: 'none',
+                verticalAlign: 'middle',
+              }}
+            >
+              &nbsp; MINDSCAPE.PUB
+            </Typography>
+
+            </Box> 
+            <Box sx={{ 
+              flexGrow: 1, 
+              display: { xs: 'flex', md: 'none' },
+              marginLeft: -1.5,
+            }}>
+              <IconButton
+                size="large"
+                aria-label="account of current user"
+                aria-controls="menu-appbar"
+                aria-haspopup="true"
+                onClick={handleOpenNavMenu}
+                color="inherit"
+              >
+                <MenuIcon />
               </IconButton>
+              <Menu
+                id="menu-appbar"
+                anchorEl={anchorElNav}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'left',
+                }}
+                keepMounted
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'left',
+                }}
+                open={Boolean(anchorElNav)}
+                onClose={handleCloseNavMenu}
+                sx={{
+                  display: { xs: 'block', md: 'none' },
+                }}
+              >
+                {navItems.map((item) => (
+                  <MenuItem key={item} onClick={handleMenuItemClick(item)}>
+                    <Typography textAlign="center">{item}</Typography>
+                  </MenuItem>
+                ))}
+              </Menu>
             </Box>
-            <Box title='Account' sx={{paddingTop: 1}}>
-              <IconButton onClick={handleAccountClick} sx={{
-                border: menuMode === 'ACCOUNT'
-                  ? `1px solid ${user?.color}`
+            <Box sx={{
+              marginTop: -0.5,
+              display: { xs: 'flex', md: 'none' },
+            }}>
+              👁‍🗨 
+            </Box>
+            <Typography
+              noWrap
+              component="a"
+              href=""
+              sx={{
+                mr: 2,
+                display: { xs: 'flex', md: 'none' },
+                flexGrow: 1,
+                fontWeight: 'bold',
+                fontSize: 24,
+                fontFamily: 'Alumni Sans Pinstripe',
+                color,
+                textDecoration: 'none',
+              }}
+            >
+              &nbsp; MINDSCAPE.PUB
+            </Typography>
+            <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
+              {navItems.map((item) => (
+                <Button
+                  key={item}
+                  onClick={handleMenuItemClick(item)}
+                  sx={{ 
+                    my: 2, 
+                    color: menuMode === item
+                      ? null
+                      : color, 
+                    display: 'block', 
+                    minWidth: 0, 
+                  }}
+                >
+                  {item}
+                </Button>
+              ))}
+            </Box>
+
+            <Box sx={{ flexGrow: 0 }}>
+              <IconButton onClick={handlePaletteClick} sx={{
+                fontSize: 20,
+              }}>
+                <Brightness4 fontSize='inherit' />
+              </IconButton>
+              <IconButton sx={{
+                fontSize: 20,
+                border: selectedSpace === SpaceType.FRAME
+                  ? '1px solid'
                   : 'none',
-                color: menuMode === 'ACCOUNT'
-                  ? 'primary.main'
+                color: user?.frame
+                  ? user.frame.user.color
                   : color,
               }}>
-                <AccountCircle/>
+                <Filter1 fontSize='inherit'/>
               </IconButton>
-            </Box>
-            <Box title='Contacts' sx={{paddingTop: 1}}>
-              <IconButton onClick={handleContactsClick} sx={{
-                border: menuMode === 'SIGNAL'
-                  ? `1px solid ${user?.color}`
+              <IconButton sx={{
+                fontSize: 20,
+                border: selectedSpace === SpaceType.FOCUS
+                  ? '1px solid'
                   : 'none',
-                color: menuMode === 'SIGNAL'
-                  ? 'primary.main'
+                color: user?.focus
+                  ? user.focus.user.color
                   : color,
               }}>
-                <PodcastsIcon/>
+                <Filter2 fontSize='inherit'/>
               </IconButton>
+              &nbsp;&nbsp;
+              <Tooltip title="Open user settings">
+                <IconButton onClick={handleOpenUserMenu} sx={{
+                  padding: 0,
+                }}>
+                  <Avatar alt={user?.name} src="/static/images/avatar/2.jpg" sx={{
+                    width: '32px',
+                    height: '32px',
+                    backgroundColor: 'primary.main',
+                  }}/>
+                </IconButton>
+              </Tooltip>
+              <Menu
+                sx={{ mt: '45px' }}
+                id="menu-appbar"
+                anchorEl={anchorElUser}
+                anchorOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                keepMounted
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                open={Boolean(anchorElUser)}
+                onClose={handleCloseUserMenu}
+              >
+                {userItems.map((setting) => (
+                  <MenuItem key={setting} onClick={handleCloseUserMenu}>
+                    <Typography textAlign="center">{setting}</Typography>
+                  </MenuItem>
+                ))}
+              </Menu>
             </Box>
-            <Box title='Graphs' sx={{paddingTop: 1}}>
-              <IconButton onClick={handleGraphClick} sx={{
-                border: menuMode === 'GRAPH'
-                  ? `1px solid ${user?.color}`
-                  : 'none',
-                color: menuMode === 'GRAPH'
-                  ? 'primary.main'
-                  : color,
-              }}>
-                <HubIcon/>
-              </IconButton>
-            </Box>
-            <Box title='Search' sx={{paddingTop: 1}}>
-              <IconButton onClick={handleSearchClick} sx={{
-                border: menuMode === 'SEARCH'
-                  ? `1px solid ${user?.color}`
-                  : 'none',
-                color: menuMode === 'SEARCH'
-                  ? 'primary.main'
-                  : color,
-              }}>
-                <SearchIcon/>
-              </IconButton>
-            </Box>
-            <Box title='Map' sx={{paddingTop: 1}}>
-              <IconButton onClick={handleMapClick} sx={{
-                border: menuMode === 'MAP'
-                  ? `1px solid ${user?.color}`
-                  : 'none',
-                color: menuMode === 'MAP'
-                  ? 'primary.main'
-                  : color,
-              }}>
-                <MapIcon/>
-              </IconButton>
-            </Box>
-            <Box title='Feed' sx={{paddingTop: 1}}>
-              <IconButton onClick={handleFeedClick} sx={{
-                border: menuMode === 'FEED'
-                  ? `1px solid ${user?.color}`
-                  : 'none',
-                color: menuMode === 'FEED'
-                  ? 'primary.main'
-                  : color,
-              }}>
-                <DynamicFeedIcon/>
-              </IconButton>
-            </Box>
-          </Box>
-          <Box>
-            <Divider variant='fullWidth' sx={{
-              margin: 1,
-              marginTop: 2,
-            }}/>
-            <Box title='Frame' sx={{paddingTop: 1}}>
-              <IconButton onClick={handleFrameClick} sx={{
-                border: (!isMobile || menuMode === MenuMode.NONE) && selectedSpace === SpaceType.FRAME
-                  ? `1px solid ${user?.color}`
-                  : 'none',
-                color: (!isMobile || menuMode === MenuMode.NONE) && selectedSpace === SpaceType.FRAME
-                  ? 'primary.main'
-                  : color,
-              }}>
-                <Filter1Icon/>
-              </IconButton>
-            </Box>
-            {
-              user?.focusId
-                ? <Box title='Focus' sx={{paddingTop: 1}}>
-                    <IconButton onClick={handleFocusClick} sx={{
-                      border: (!isMobile || menuMode === MenuMode.NONE) && selectedSpace === SpaceType.FOCUS
-                        ? `1px solid ${user?.focus?.user.color}`
-                        : 'none',
-                      color: (!isMobile || menuMode === MenuMode.NONE) && selectedSpace === SpaceType.FOCUS
-                        ? user?.focus?.user.color
-                        : color,
-                    }}>
-                      <Filter2Icon/>
-                    </IconButton>
-                  </Box>
-                : null
-            }
-          </Box>
-        </Box>
-        <Box sx={{
-          marginBottom: '5px',
-          padding: '5px',
-        }}>
-          <IconButton 
-            size='small' 
-            onClick={handlePaletteClick}
-            title='Toggle light/dark menuMode' 
-            sx={{
-              color,
-            }}
-          >
-            <Brightness4Icon/>
-          </IconButton>
-        </Box>
-      </Card>
-      <Box sx={{
-        width: getAppbarWidth(width) + 1,
-      }}/>
+          </Toolbar>
+        </Container>
+      </AppBar>
     </Box>
-  )
-}
+  );
+};
+export default ResponsiveAppBar;

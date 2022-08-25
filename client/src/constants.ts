@@ -1,3 +1,5 @@
+import e from "express";
+
 export const DEV_SERVER_URI = 'http://localhost:9000';
 export const DEV_WS_SERVER_URI = 'ws://localhost:9000';
 
@@ -47,3 +49,5 @@ export const NOT_FOUND = 'NOT_FOUND';
 export const CLOSED_LINK_TWIG_DIAMETER = 40;
 
 export const ROLES_MENU_WIDTH = 300;
+
+export const APP_BAR_HEIGHT = 48;

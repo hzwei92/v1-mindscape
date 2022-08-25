@@ -22,14 +22,13 @@ export default function FocusComponent() {
     width,
     palette,
     dimColor: color,
-    appBarWidth,
     menuIsResizing,
     menuWidth,
     frameIsResizing,
     frameWidth,
   } = useContext(AppContext);
 
-  const focusWidth = width - appBarWidth - menuWidth - frameWidth;
+  const focusWidth = width - menuWidth - frameWidth;
 
   const focusIsOpen = useAppSelector(selectIsOpen(SpaceType.FOCUS));
   const frameSelectedTwigId = useAppSelector(selectSelectedTwigId(SpaceType.FRAME));
@@ -101,67 +100,6 @@ export default function FocusComponent() {
           : 'none',
         flexDirection: 'row',
       }}>
-        <Box sx={{
-          position: 'absolute',
-          left: 0,
-          top: 0,
-        }}>
-          <Card elevation={5} sx={{
-            position: 'fixed',
-            zIndex: MAX_Z_INDEX,
-            display: 'flex',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            borderTopLeftRadius: 0,
-            borderTopRightRadius: 0,
-            width: focusWidth,
-            height: `${SPACE_BAR_HEIGHT - 2}px`,
-            transition: menuIsResizing || frameIsResizing
-              ? 'none'
-              : 'width 0.5s',
-          }}>
-            <Box sx={{
-              display: 'flex',
-              flexDirection: 'row',
-            }}>
-              <Box sx={{
-                whiteSpace: 'nowrap',
-                padding: 2,
-                paddingTop: 1.8,
-              }}>
-                <Icon sx={{
-                  color: focusUser?.color,
-                  fontSize: 20,
-                }}>
-                  <Filter2Icon fontSize='inherit'/>
-                </Icon>
-              </Box>
-              <Box sx={{
-                whiteSpace: 'nowrap',
-                paddingTop: 1.5,
-                fontSize: 18,
-                color: focusUser?.color,
-              }}>
-                  {user.focus?.title}
-              </Box>
-            </Box>
-            <Box sx={{
-              whiteSpace: 'nowrap',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              margin: 1,
-              display: focusIsOpen
-                ? 'flex'
-                : 'none',
-            }}>
-              <IconButton onClick={handleCloseClick} sx={{
-                fontSize: 16,
-              }}> 
-                <CloseIcon fontSize='inherit'/>
-              </IconButton>
-            </Box>
-          </Card>
-        </Box>
         <SpaceComponent space={SpaceType.FOCUS}/>
       </Box>
     </ThemeProvider>

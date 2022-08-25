@@ -36,7 +36,7 @@ export default function AppBar() {
     palette,
     brightColor: color,
     menuMode, 
-    setMenuMode
+    setMenuMode,
   } = useContext(AppContext);
 
   const isMobile = width < MOBILE_WIDTH;

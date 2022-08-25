@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
 import React, { Dispatch, SetStateAction, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { VIEW_RADIUS, SPACE_BAR_HEIGHT, MAX_Z_INDEX, TWIG_WIDTH, CLOSED_LINK_TWIG_DIAMETER, ROLES_MENU_WIDTH } from '../../constants';
+import { VIEW_RADIUS, SPACE_BAR_HEIGHT, MAX_Z_INDEX, TWIG_WIDTH, CLOSED_LINK_TWIG_DIAMETER, ROLES_MENU_WIDTH, APP_BAR_HEIGHT } from '../../constants';
 import { checkPermit } from '../../utils';
 import { PosType, SpaceType } from './space';
 import useInitSpace from './useInitSpace';
@@ -61,14 +61,13 @@ export default function SpaceComponent(props: SpaceComponentProps) {
 
   const { 
     user,
-    appBarWidth,
     menuWidth,
     frameWidth,
     brightColor: color,
   } = useContext(AppContext);
 
-  const offsetLeft = appBarWidth + menuWidth;
-  const offsetTop = SPACE_BAR_HEIGHT;
+  const offsetLeft = menuWidth;
+  const offsetTop = APP_BAR_HEIGHT;
 
   const adjustIdToPosDetail = useReactiveVar(props.space === SpaceType.FRAME
     ? frameAdjustIdToPosVar
@@ -253,9 +252,9 @@ export default function SpaceComponent(props: SpaceComponentProps) {
       const scale1 = Math.min(Math.max(.03125, scale + event.deltaY * -0.004), 4)
 
       const left = props.space === 'FRAME'
-        ? Math.round((center.x * scale1) - (event.clientX - appBarWidth - menuWidth))
-        : Math.round((center.x * scale1) - (event.clientX - appBarWidth - menuWidth - frameWidth));
-      const top = Math.round(center.y * scale1 - (event.clientY - SPACE_BAR_HEIGHT));
+        ? Math.round((center.x * scale1) - (event.clientX - menuWidth))
+        : Math.round((center.x * scale1) - (event.clientX - menuWidth - frameWidth));
+      const top = Math.round(center.y * scale1 - (event.clientY - APP_BAR_HEIGHT));
       
       spaceEl.current.scrollTo({
         left,

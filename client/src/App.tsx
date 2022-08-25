@@ -1,18 +1,20 @@
-import { createTheme, PaletteMode, Paper, ThemeProvider } from '@mui/material';
+import { Box, createTheme, Fab, IconButton, PaletteMode, Paper, ThemeProvider } from '@mui/material';
 import React, { Dispatch, SetStateAction, useEffect, useMemo, useReducer, useState } from 'react';
 import { useAppSelector } from './app/hooks';
-import { FRAME_MIN_WIDTH, FRAME_WIDTH, MAX_Z_INDEX, MENU_MIN_WIDTH, MENU_WIDTH } from './constants';
+import { APP_BAR_HEIGHT, FRAME_MIN_WIDTH, FRAME_WIDTH, MAX_Z_INDEX, MENU_MIN_WIDTH, MENU_WIDTH } from './constants';
 import { selectCurrentUser } from './features/user/userSlice';
 import { SnackbarProvider } from 'notistack';
 import AppBar from './AppBar1';
 import MenuComponent from './features/menu/MenuComponent';
-import { getAppbarWidth, getColor } from './utils';
+import { getColor } from './utils';
 import FrameComponent from './features/frame/FrameComponent';
 import FocusComponent from './features/focus/FocusComponent';
 import { User } from './features/user/user';
 import { MenuMode } from './features/menu/menu';
 import { PendingLinkType, SpaceType } from './features/space/space';
 import { selectIsOpen } from './features/space/spaceSlice';
+import Brightness4 from '@mui/icons-material/Brightness4';
+import useSetUserPalette from './features/user/useSetUserPalette';
 
 export const AppContext = React.createContext({} as {
   user: User | null;
@@ -24,8 +26,6 @@ export const AppContext = React.createContext({} as {
   setPalette: Dispatch<SetStateAction<PaletteMode>>;
   dimColor: string;
   brightColor: string;
-  
-  appBarWidth: number;
 
   menuMode: MenuMode;
   setMenuMode: Dispatch<SetStateAction<MenuMode>>;
@@ -51,8 +51,6 @@ function App() {
   const [width, setWidth] = useState(window.innerWidth);
   const [height, setHeight] = useState(window.innerHeight);
 
-  const [appBarWidth, setAppBarWidth] = useState(getAppbarWidth(width));
-
   const [palette, setPalette] = useState('dark' as PaletteMode);
   const [dimColor, setDimColor] = useState(getColor(palette, true));
   const [brightColor, setBrightColor] = useState(getColor(palette, false));
@@ -62,8 +60,8 @@ function App() {
   const [menuWidth, setMenuWidth] = useState(0); 
   const [menuIsResizing, setMenuIsResizing] = useState(false);
   
-  const [latentFrameWidth, setLatentFrameWidth] = useState((width - appBarWidth - menuWidth) / 2);
-  const [frameWidth, setFrameWidth] = useState(width - appBarWidth - menuWidth);
+  const [latentFrameWidth, setLatentFrameWidth] = useState((width - menuWidth) / 2);
+  const [frameWidth, setFrameWidth] = useState(width - menuWidth);
   const [frameIsResizing, setFrameIsResizing] = useState(false);
 
   const [pendingLink, setPendingLink] = useState({
@@ -88,7 +86,6 @@ function App() {
     const handleResize = () => {
       setWidth(window.innerWidth);
       setHeight(window.innerHeight);
-      setAppBarWidth(getAppbarWidth(window.innerWidth));
     };
     window.addEventListener('resize', handleResize);
 
@@ -150,7 +147,7 @@ function App() {
         setFrameWidth(latentFrameWidth);
       }
       else {
-        setFrameWidth(width - appBarWidth - menuWidth);
+        setFrameWidth(width - menuWidth);
       }
     }
     else {
@@ -170,8 +167,6 @@ function App() {
       dimColor,
       brightColor,
 
-      appBarWidth,
-
       menuMode,
       setMenuMode,
       menuIsResizing,
@@ -189,7 +184,6 @@ function App() {
     user, 
     width, height, 
     palette, dimColor, brightColor, 
-    appBarWidth, 
     menuMode, menuIsResizing, menuWidth, 
     frameIsResizing, frameWidth, 
     pendingLink,
@@ -198,14 +192,14 @@ function App() {
   const handleMouseMove = (event: React.MouseEvent) => {
     if (menuIsResizing) {
       event.preventDefault();
-      const width = Math.max(event.clientX - appBarWidth, MENU_MIN_WIDTH)
+      const width = Math.max(event.clientX, MENU_MIN_WIDTH)
       setMenuWidth(width);
       setLatentMenuWidth(width)
     }
     else if (frameIsResizing) {
       event.preventDefault();
       setFrameWidth(
-        Math.max(event.clientX - appBarWidth - menuWidth, FRAME_MIN_WIDTH)
+        Math.max(event.clientX - menuWidth, FRAME_MIN_WIDTH)
       );
     }
   }
@@ -234,6 +228,7 @@ function App() {
           dense={true}
           autoHideDuration={10000}
         >
+          <AppBar />
           <Paper onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} sx={{
             height: '100%',
             width: '100%',
@@ -241,7 +236,6 @@ function App() {
             display: 'flex',
             flexDirection: 'row',
           }}>
-            <AppBar />
             <MenuComponent />
             <FrameComponent />
             <FocusComponent />

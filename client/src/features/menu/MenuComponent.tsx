@@ -1,6 +1,7 @@
 import { Box, Paper } from '@mui/material';
 import { useContext, useState } from 'react';
 import { AppContext } from '../../App';
+import { APP_BAR_HEIGHT } from '../../constants';
 import AccountComponent from '../account/AccountComponent';
 import SearchComponent from '../search/SearchComponent';
 
@@ -28,7 +29,8 @@ export default function MenuComponent() {
 
   return (
     <Box sx={{
-      height: '100%',
+      height: `calc(100% - ${APP_BAR_HEIGHT}px)`,
+      marginTop: `${APP_BAR_HEIGHT}px`,
       display: 'flex',
       flexDirection: 'row',
       justifyContent: 'stretch',

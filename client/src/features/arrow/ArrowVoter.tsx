@@ -51,7 +51,7 @@ export default function ArrowVoter(props: ArrowVoterProps) {
     <Box sx={{
       display: 'flex',
       flexDirection: 'column',
-      paddingTop: '10px',
+      paddingTop: '7px',
       marginLeft: '-4px',
     }}>
       <Box sx={{
