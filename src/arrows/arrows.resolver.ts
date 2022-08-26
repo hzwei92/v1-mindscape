@@ -107,12 +107,18 @@ export class ArrowsResolver {
     @Args('draft') draft: string,
   ) {
     const arrow = await this.arrowsService.saveArrow(user, arrowId, draft);
+
+    this.pubSub.publish('saveArrow', {
+      sessionId,
+      saveArrow: arrow,
+    });
+
     return arrow;
   }
 
   @UseGuards(GqlAuthGuard)
   @Mutation(() => ReplyArrowResult, {name: 'replyArrow'})
-  async replyPost(
+  async replyArrow(
     @CurrentUser() user: UserEntity,
     @Args('sessionId') sessionId: string,
     @Args('abstractId') abstractId: string,
@@ -127,9 +133,9 @@ export class ArrowsResolver {
       link,
       target,
     } = await this.arrowsService.replyArrow(user, abstractId, sourceId, linkId, targetId, linkDraft, targetDraft);
-    this.pubSub.publish('linkPosts', {
+    this.pubSub.publish('linkArrows', {
       sessionId,
-      linkPosts: link,
+      linkArrows: link,
     });
     return {
       source,
@@ -155,4 +161,25 @@ export class ArrowsResolver {
   ) {
     return this.arrowsService.getArrowsBySourceId(arrowId, offset)
   }
+
+  @Subscription(() => Arrow, {name: 'saveArrow',
+    filter: (payload, variables) => {
+      if (payload.sessionId === variables.sessionId) return false;
+      return variables.arrowIds.some(id => id === payload.saveArrow.id);
+    },
+    async resolve(this: ArrowsResolver, value, variables) {
+      const arrow = await this.arrowsService.getArrowByIdWithPrivacy(variables.userId, value.saveArrow.id);
+      return arrow
+    },
+  })
+  saveArrowSub(
+    @Context() context: any,
+    @Args('sessionId') sessionId: string,
+    @Args('userId') userId: string,
+    @Args('arrowIds', {type: () => [String]}) arrowIds: string[]
+  ) {
+    console.log('saveArrowSub'); // TODO check userId === context.user.id
+    return this.pubSub.asyncIterator('saveArrow');
+  }
+
 }

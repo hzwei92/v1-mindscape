@@ -33,6 +33,7 @@ export default function ArrowComponent(props: ArrowProps) {
   useAppSelector(state => selectInstanceById(state, props.instanceId)); // rerender on instance change
 
   useEffect(() => {
+    console.log('hello')
     dispatch(addInstance({
       id: props.instanceId,
       arrowId: props.arrowId,

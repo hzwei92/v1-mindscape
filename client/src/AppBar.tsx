@@ -1,4 +1,4 @@
-import AppBar from '@mui/material/AppBar';
+import MUIAppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
@@ -8,7 +8,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
-import { useContext, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import useAuth from './features/auth/useAuth';
 import useAppRouter from './useAppRouter';
 import { AppContext } from './App';
@@ -27,11 +27,13 @@ import UserDialog from './features/user/UserDialog';
 import { Link } from '@mui/material';
 import LoginDialog from './features/auth/LoginDialog';
 import LogoutDialog from './features/auth/LogoutDialog';
+import useSaveArrowSub from './features/arrow/useSaveArrowSub';
 
 const navItems = ['SEARCH', 'GRAPHS', 'CONTACTS', 'MAP', 'FEED'];
 const userItems = ['SETTINGS', 'LOGIN', 'LOGOUT'];
 
-const ResponsiveAppBar = () => {
+function AppBar() {
+  //console.log('appbar'); TODO prevent rerenders due to useCenterTwig?
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
@@ -70,6 +72,8 @@ const ResponsiveAppBar = () => {
 
   const { centerTwig: frameCenterTwig } = useCenterTwig(SpaceType.FRAME);
   const { centerTwig: focusCenterTwig } = useCenterTwig(SpaceType.FOCUS);
+
+  useSaveArrowSub();
 
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget);
@@ -124,7 +128,7 @@ const ResponsiveAppBar = () => {
         space: SpaceType.FRAME,
         isOpen: !isFrameOpen,
       }))
-      frameCenterTwig(frameSelectedTwigId, false, 0);
+      //frameCenterTwig(frameSelectedTwigId, false, 0);
     }
     else {
       setCreateGraphArrowId(null);
@@ -139,7 +143,7 @@ const ResponsiveAppBar = () => {
         space: SpaceType.FOCUS,
         isOpen: !isFocusOpen,
       }));
-      focusCenterTwig(focusSelectedTwigId, false, 0);
+      //focusCenterTwig(focusSelectedTwigId, false, 0);
     }
     else {
       setCreateGraphArrowId(null);
@@ -154,7 +158,7 @@ const ResponsiveAppBar = () => {
         ? '#1e1e1e'
         : '#f0f0f0',
     }}>
-      <AppBar position="fixed" color='inherit' enableColorOnDark>
+      <MUIAppBar position="fixed" color='inherit' enableColorOnDark>
         <Toolbar variant='dense' sx={{
           height: APP_BAR_HEIGHT,
           whiteSpace: 'nowrap',
@@ -348,7 +352,7 @@ const ResponsiveAppBar = () => {
             </Menu>
           </Box>
         </Toolbar>
-      </AppBar>
+      </MUIAppBar>
       <UserDialog isOpen={showUserDialog} setIsOpen={setShowUserDialog} />
       <LoginDialog 
         isOpen={showLoginDialog} 
@@ -363,4 +367,4 @@ const ResponsiveAppBar = () => {
     </Box>
   );
 };
-export default ResponsiveAppBar;
+export default React.memo(AppBar);
