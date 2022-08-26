@@ -1,10 +1,8 @@
 export enum MenuMode {
   NONE = 'NONE',
-  ABOUT ='ABOUT',
-  ACCOUNT = 'ACCOUNT',
-  SIGNAL = 'SIGNAL',
-  GRAPH = 'GRAPH',
   SEARCH = 'SEARCH',
+  GRAPHS = 'GRAPHS',
+  CONTACTS = 'CONTACTS',
   MAP = 'MAP',
   FEED = 'FEED',
 };

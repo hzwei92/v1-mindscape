@@ -23,8 +23,14 @@ export const FULL_ROLE_FIELDS = gql`
     }
     arrow {
       id
+      title
       routeName
       updateDate
+      user {
+        id
+        name
+        color
+      }
     }
   }
   ${ROLE_FIELDS}

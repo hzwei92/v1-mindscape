@@ -1,14 +1,12 @@
-import { Box, Card, createTheme, Icon, IconButton, Link, ThemeProvider } from '@mui/material';
+import { Box, createTheme, ThemeProvider } from '@mui/material';
 import React, { useContext, useEffect, useState } from 'react';
-import { MAX_Z_INDEX, SPACE_BAR_HEIGHT } from '../../constants';
+import { MAX_Z_INDEX } from '../../constants';
 import SpaceComponent from '../space/SpaceComponent';
-import CloseIcon from '@mui/icons-material/Close';
 import { AppContext } from '../../App';
 import { SpaceType } from '../space/space';
 import { selectIsOpen } from '../space/spaceSlice';
 import { useAppSelector } from '../../app/hooks';
 import { selectUserById } from '../user/userSlice';
-import Filter1Icon from '@mui/icons-material/Filter1';
 
 export default function FrameComponent() {
   const { 
@@ -73,19 +71,15 @@ export default function FrameComponent() {
     setFrameIsResizing(true);
   };
 
-  const handleCloseClick = (event: React.MouseEvent) => {
-    
-  };
-
   return (
     <ThemeProvider theme={theme}>
       <Box className='frame' sx={{
         position: 'relative',
         width: frameWidth - 1,
         height: '100%',
-        transition: menuIsResizing || frameIsResizing
-          ? 'none'
-          : 'width 0.5s',
+        // transition: menuIsResizing || frameIsResizing
+        //   ? 'none'
+        //   : 'width 0.5s',
         display: frameIsOpen
           ? 'flex'
           : 'none',

@@ -30,9 +30,11 @@ const LOGIN_USER = gql`
 `;
 
 interface LoginProps {
-  setIsLogin: Dispatch<SetStateAction<boolean>>;
+  isOpen: boolean;
+  setIsOpen: Dispatch<SetStateAction<boolean>>;
+  closeMenu: () => void;
 }
-export default function Login(props: LoginProps) {
+export default function LoginDialog(props: LoginProps) {
   const client = useApolloClient();
   const dispatch = useAppDispatch();
 
@@ -59,7 +61,8 @@ export default function Login(props: LoginProps) {
 
       dispatch(setLogin(data.loginUser));
 
-      props.setIsLogin(false);
+      props.setIsOpen(false);
+      props.closeMenu()
     }
   });
 
@@ -92,13 +95,13 @@ export default function Login(props: LoginProps) {
   };
 
   const handleClose = (event: React.MouseEvent) => {
-    props.setIsLogin(false);
+    props.setIsOpen(false);
   }
 
   const isFormValid = email.length && pass.length;
 
   return (
-    <Dialog open={true} onClose={handleClose}>
+    <Dialog open={props.isOpen} onClose={handleClose}>
     <Card elevation={5} sx={{
       padding:2,
       width: '350px'
@@ -159,7 +162,7 @@ export default function Login(props: LoginProps) {
         paddingTop: 1,
         borderTop: '1px solid dimgrey',
       }}>
-        <GoogleButton isRegistration={false} onCompleted={() => props.setIsLogin(false)}/>
+        <GoogleButton isRegistration={false} onCompleted={() => props.setIsOpen(false)}/>
       </Box>
     </Card>
     </Dialog>

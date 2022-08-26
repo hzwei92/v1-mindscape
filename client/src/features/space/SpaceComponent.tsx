@@ -647,7 +647,9 @@ export default function SpaceComponent(props: SpaceComponentProps) {
           { dropTargets }
         </Box>
         <SpaceControls
+          showSettings={showSettings}
           setShowSettings={setShowSettings}
+          showRoles={showRoles}
           setShowRoles={setShowRoles}
         />
         <SpaceNav />

@@ -43,7 +43,7 @@ export default function useCenterTwig(space: SpaceType) {
       console.log('centerTwig', scale);
 
       spaceEl.current.scrollTo({
-        left: (x1 - (spaceWidth / 2)),
+        left: (x1 - (spaceEl.current.clientWidth / 2)),
         top: (y1 - spaceEl.current.clientHeight / 2),
         behavior: isSmooth 
           ? 'smooth'

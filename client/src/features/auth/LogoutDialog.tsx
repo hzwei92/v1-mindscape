@@ -4,27 +4,30 @@ import { AppContext } from '../../App';
 import useLogout from './useLogout';
 
 interface LogoutProps {
-  setIsLogout: Dispatch<SetStateAction<boolean>>;
+  isOpen: boolean;
+  setIsOpen: Dispatch<SetStateAction<boolean>>;
+  closeMenu: () => void;
 }
-export default function Logout(props: LogoutProps) {
+export default function LogoutDialog(props: LogoutProps) {
   const { brightColor } = useContext(AppContext);
 
   const { logoutUser } = useLogout();
 
   const handleLogoutClick = () => {
     logoutUser();
-    props.setIsLogout(false);
+    handleClose();
+    props.closeMenu();
   }
 
   const handleCancelClick = () => {
     handleClose();
   }
   const handleClose = () => {
-    props.setIsLogout(false);
+    props.setIsOpen(false);
   }
 
   return (
-    <Dialog open={true} onClose={handleClose}>
+    <Dialog open={props.isOpen} onClose={handleClose}>
       <Card elevation={5} sx={{
         padding: 2,
         width: 350,

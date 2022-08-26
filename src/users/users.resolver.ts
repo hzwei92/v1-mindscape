@@ -29,6 +29,7 @@ export class UsersResolver {
   async getUserFrame(
     @Parent() user: User,
   ) {
+    if (!user.frameId) return null;
     return this.arrowsService.getArrowById(user.frameId);
   }
 
@@ -125,6 +126,26 @@ export class UsersResolver {
   }
 
   @UseGuards(GqlAuthGuard)
+  @Mutation(() => User, {name: 'setUserFrameById'})
+  async setUserFrameById(
+    @CurrentUser() user: UserEntity,
+    @Args('sessionId') sessionId: string,
+    @Args('arrowId', {nullable: true}) arrowId: string,
+  ) {
+    return this.usersService.setUserFrameById(user, arrowId);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => User, {name: 'setUserFrameByRouteName'})
+  async setUserFrameByRouteName(
+    @CurrentUser() user: UserEntity,
+    @Args('sessionId') sessionId: string,
+    @Args('arrowRouteName') arrowRouteName: string,
+  ) {
+    return this.usersService.setUserFrameByRouteName(user, arrowRouteName);
+  }
+
+  @UseGuards(GqlAuthGuard)
   @Mutation(() => User, {name: 'setUserFocusById'})
   async setUserFocusById(
     @CurrentUser() user: UserEntity,
@@ -142,6 +163,28 @@ export class UsersResolver {
     @Args('arrowRouteName') arrowRouteName: string,
   ) {
     return this.usersService.setUserFocusByRouteName(user, arrowRouteName);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => User, {name: 'createFrameGraph'})
+  async createFrameGraph(
+    @CurrentUser() user: UserEntity,
+    @Args('title') title: string,
+    @Args('routeName') routeName: string,
+    @Args('arrowId', {nullable: true}) arrowId: string,
+  ) {
+    return this.usersService.createFrameGraph(user, title, routeName, arrowId);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => User, {name: 'createFocusGraph'})
+  async createFocusGraph(
+    @CurrentUser() user: UserEntity,
+    @Args('title') title: string,
+    @Args('routeName') routeName: string,
+    @Args('arrowId', {nullable: true}) arrowId: string,
+  ) {
+    return this.usersService.createFocusGraph(user, title, routeName, arrowId);
   }
 
   @UseGuards(GqlAuthGuard)

@@ -1,8 +1,7 @@
-import { gql, useApolloClient, useMutation, useReactiveVar } from '@apollo/client';
+import { gql, useMutation, useReactiveVar } from '@apollo/client';
 import { useSnackbar } from 'notistack';
 import { useAppDispatch } from '../../app/hooks';
 import { sessionVar } from '../../cache';
-import { User } from './user';
 import { mergeUsers } from './userSlice';
 
 const SET_USER_COLOR = gql`
@@ -15,9 +14,9 @@ const SET_USER_COLOR = gql`
 `;
 
 export default function useSetUserColor() {
-  const sessionDetail = useReactiveVar(sessionVar);
   const dispatch = useAppDispatch();
 
+  const sessionDetail = useReactiveVar(sessionVar);
   const { enqueueSnackbar } = useSnackbar();
    
   const [setColor] = useMutation(SET_USER_COLOR, {
@@ -38,7 +37,7 @@ export default function useSetUserColor() {
         sessionId: sessionDetail.id,
         color,
       }
-    })
+    });
   };
 
   return { setUserColor }

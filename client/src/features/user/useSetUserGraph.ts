@@ -1,4 +1,4 @@
-import { gql, useApolloClient, useMutation, useReactiveVar } from '@apollo/client';
+import { gql, useMutation, useReactiveVar } from '@apollo/client';
 import { useSnackbar } from 'notistack';
 import { useContext } from 'react';
 import { AppContext } from '../../App';
@@ -7,8 +7,33 @@ import { sessionVar } from '../../cache';
 import { ABSTRACT_ARROW_FIELDS } from '../arrow/arrowFragments';
 import { SpaceType } from '../space/space';
 import { resetTwigs } from '../twig/twigSlice';
-import { User } from './user';
-import { mergeUsers, resetUsers, setCurrentUser } from './userSlice';
+import { mergeUsers, resetUsers } from './userSlice';
+
+const SET_USER_FRAME_BY_ID = gql`
+  mutation SetUserFrameById($sessionId: String!, $arrowId: String) {
+    setUserFrameById(sessionId: $sessionId, arrowId: $arrowId) {
+      id
+      frameId
+      frame {
+        ...AbstractArrowFields
+      }
+    }
+  }
+  ${ABSTRACT_ARROW_FIELDS}
+`;
+
+const SET_USER_FRAME_BY_ROUTE_NAME = gql`
+  mutation SetUserFrameByRouteName($sessionId: String!, $arrowRouteName: String!) {
+    setUserFrameByRouteName(sessionId: $sessionId, arrowRouteName: $arrowRouteName) {
+      id
+      frameId
+      frame {
+        ...AbstractArrowFields
+      }
+    }
+  }
+  ${ABSTRACT_ARROW_FIELDS}
+`;
 
 const SET_USER_FOCUS_BY_ID = gql`
   mutation SetUserFocusById($sessionId: String!, $arrowId: String) {
@@ -36,7 +61,7 @@ const SET_USER_FOCUS_BY_ROUTE_NAME = gql`
   ${ABSTRACT_ARROW_FIELDS}
 `;
 
-export default function useSetUserFocus() {
+export default function useSetUserGraph() {
   const { user } = useContext(AppContext);
 
   const sessionDetail = useReactiveVar(sessionVar);
@@ -44,7 +69,31 @@ export default function useSetUserFocus() {
   const dispatch = useAppDispatch();
 
   const { enqueueSnackbar } = useSnackbar();
-  
+    
+  const [setFrameById] = useMutation(SET_USER_FRAME_BY_ID, {
+    onError: error => {
+      console.error(error);
+
+      enqueueSnackbar(error.message);
+    },
+    onCompleted: data => {
+      console.log(data);
+      dispatch(mergeUsers([data.setUserFrameById]));
+    },
+  });
+
+  const [setFrameByRouteName] = useMutation(SET_USER_FRAME_BY_ROUTE_NAME, {
+    onError: error => {
+      console.error(error);
+
+      enqueueSnackbar(error.message);
+    },
+    onCompleted: data => {
+      console.log(data);
+      dispatch(mergeUsers([data.setUserFrameByRouteName]));
+    },
+  });
+
   const [setFocusById] = useMutation(SET_USER_FOCUS_BY_ID, {
     onError: error => {
       console.error(error);
@@ -68,6 +117,39 @@ export default function useSetUserFocus() {
       dispatch(mergeUsers([data.setUserFocusByRouteName]));
     },
   });
+
+
+  const setUserFrameById = (arrowId: string | null) => {
+    setFrameById({
+      variables: {
+        sessionId: sessionDetail.id,
+        arrowId,
+      },
+    });
+
+    if (!arrowId) {
+      const user1 = Object.assign({}, user, {
+        frameId: null,
+        frame: null,
+      });
+      dispatch(mergeUsers([user1]));
+    }
+
+    dispatch(resetTwigs(SpaceType.FOCUS));
+    dispatch(resetUsers(SpaceType.FOCUS));
+  };
+
+  const setUserFrameByRouteName = (arrowRouteName: string) => {
+    setFrameByRouteName({
+      variables: {
+        sessionId: sessionDetail.id,
+        arrowRouteName,
+      }
+    });
+
+    dispatch(resetTwigs(SpaceType.FOCUS));
+    dispatch(resetUsers(SpaceType.FOCUS));
+  }
 
 
   const setUserFocusById = (arrowId: string | null) => {
@@ -102,5 +184,10 @@ export default function useSetUserFocus() {
     dispatch(resetUsers(SpaceType.FOCUS));
   }
 
-  return { setUserFocusById, setUserFocusByRouteName };
+  return { 
+    setUserFrameById,
+    setUserFrameByRouteName,
+    setUserFocusById, 
+    setUserFocusByRouteName,
+  };
 }

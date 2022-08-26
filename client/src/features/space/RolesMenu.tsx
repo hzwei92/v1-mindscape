@@ -29,8 +29,10 @@ export default function RolesMenu(props: RolesMenuProps) {
     .filter(role_i => !role_i.deleteDate)
     .sort((a, b) => a.updateDate < b.updateDate ? -1 : 1)
     .forEach(role_i => {
-      if (role_i.type === RoleType.ADMIN && role_i.userId !== user?.id) {
-        admins.push(role_i);
+      if (role_i.type === RoleType.ADMIN) {
+        if (role_i.userId !== user?.id) {
+          admins.push(role_i);
+        }
       }
       else if (role_i.type === RoleType.MEMBER) {
         members.push(role_i);
@@ -100,10 +102,7 @@ export default function RolesMenu(props: RolesMenuProps) {
                 </Box>
               : props.role && props.role.isRequested
                 ? null
-                : <Box sx={{
-                    marginLeft: 1,
-                    marginTop: 1,
-                  }}>
+                : <Box>
                     {
                       props.role && props.role.isInvited
                         ? <Button disabled={!user} variant='contained' onClick={handleJoinClick}>
@@ -126,7 +125,9 @@ export default function RolesMenu(props: RolesMenuProps) {
           <Card variant='outlined' sx={{
             padding: 1,
           }}>
-            <Link onClick={handleUserClick(abstract.userId)}>
+            <Link onClick={handleUserClick(abstract.userId)} sx={{
+              cursor: 'pointer',
+            }}>
               {abstract.user.name || '...'}
             </Link>
           </Card>
@@ -136,36 +137,18 @@ export default function RolesMenu(props: RolesMenuProps) {
           padding: 1,
         }}>
           <Typography variant='overline'>
-            Admins
-          </Typography>
-          {
-            admins.map(role_i => {
-              return (
-                <Card variant='outlined' key={`role-${role_i.id}`} sx={{
-                  padding: 1,
-                }}>
-                  <Link onClick={handleUserClick(role_i.userId)}>
-                    {role_i.user.name || '...'}
-                  </Link>
-                </Card>
-              )
-            })
-          }
-        </Card>
-        <Card elevation={5} sx={{
-          margin: 1,
-          padding: 1,
-        }}>
-          <Typography variant='overline'>
             Members
           </Typography>
           {
-            admins.map(role_i => {
+            members.map(role_i => {
               return (
                 <Card variant='outlined' key={`role-${role_i.id}`} sx={{
                   padding: 1,
                 }}>
-                  <Link onClick={handleUserClick(role_i.userId)}>
+                  <Link color={role_i.user.color} onClick={handleUserClick(role_i.userId)} sx={{
+                    color: role_i.user.color,
+                    cursor: 'pointer',
+                  }}>
                     {role_i.user.name || '...'}
                   </Link>
                 </Card>
@@ -181,12 +164,15 @@ export default function RolesMenu(props: RolesMenuProps) {
             Other
           </Typography>
           {
-            admins.map(role_i => {
+            others.map(role_i => {
               return (
                 <Card variant='outlined' key={`role-${role_i.id}`} sx={{
                   padding: 1,
                 }}>
-                  <Link onClick={handleUserClick(role_i.userId)}>
+                  <Link  color={role_i.user.color} onClick={handleUserClick(role_i.userId)} sx={{
+                    color: role_i.user.color,
+                    cursor: 'pointer',
+                  }}>
                     {role_i.user.name || '...'}
                   </Link>
                 </Card>

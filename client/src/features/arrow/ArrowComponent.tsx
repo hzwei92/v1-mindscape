@@ -5,13 +5,13 @@ import ArrowEditor from './ArrowEditor';
 import { AppContext } from '../../App';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { getTimeString } from '../../utils';
-import { TWIG_WIDTH } from '../../constants';
 import UserTag from '../user/UserTag';
 import ArrowVoter from './ArrowVoter';
 import AdjustIcon from '@mui/icons-material/Adjust';
 import SouthEastIcon from '@mui/icons-material/SouthEast';
 import NorthWestIcon from '@mui/icons-material/NorthWest';
 import { selectUserById } from '../user/userSlice';
+
 interface ArrowProps {
   arrowId: string;
   showLinkLeftIcon: boolean;
@@ -120,16 +120,11 @@ export default function ArrowComponent(props: ArrowProps) {
       </Box>
       <Box>
         {
-          !arrow.url && !arrow.title
-            ? <ArrowEditor
-                arrow={arrow}
-                isReadonly={false}
-                instanceId={props.instanceId}
-              />
-            : <Box sx={{
+          arrow.title 
+            ? <Box sx={{
                 paddingTop: '5px',
               }}>
-                <Typography fontWeight='bold' fontSize={20} sx={{
+                <Typography fontWeight='500' fontSize={20} sx={{
                   whiteSpace: 'pre-wrap',
                   wordWrap: 'break-word',
                 }}>
@@ -145,24 +140,14 @@ export default function ArrowComponent(props: ArrowProps) {
                   }
                   {arrow.title}
                 </Typography>
-                {
-                  arrow.url
-                    ? <Box>
-                        <Link component='button' sx={{
-                          cursor: 'pointer',
-                          whiteSpace: 'pre-wrap',
-                          width: '100%',
-                          wordWrap: 'break-word',
-                          textAlign: 'left',
-                        }}>
-                          {arrow.url}
-                        </Link>
-                      </Box>
-                    : null
-                }
               </Box>
+            : null
         }
-
+        <ArrowEditor
+          arrow={arrow}
+          isReadonly={false}
+          instanceId={props.instanceId}
+        />
       </Box>
     </Box>
   )

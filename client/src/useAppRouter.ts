@@ -3,13 +3,14 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from './app/hooks';
 import { Role } from './features/role/role';
 import { User } from './features/user/user';
-import useSetUserFocus from './features/user/useSetUserFocus';
+import useSetUserFocus from './features/user/useSetUserGraph';
 import { checkPermit } from './utils';
 import useCenterTwig from './features/twig/useCenterTwig';
 import useSelectTwig from './features/twig/useSelectTwig';
 import { SpaceType } from './features/space/space';
 import { selectIdToTwig, selectIToTwigId, selectNewTwigId } from './features/twig/twigSlice';
 import { selectIdToPos, selectSelectedTwigId, setIsOpen, setSelectedSpace, setSelectedTwigId } from './features/space/spaceSlice';
+import useSetUserGraph from './features/user/useSetUserGraph';
 
 export default function useAppRouter(user: User | null) {
   const dispatch = useAppDispatch();
@@ -43,7 +44,7 @@ export default function useAppRouter(user: User | null) {
   const { selectTwig: frameSelectTwig } = useSelectTwig(SpaceType.FRAME, true);
   const { selectTwig: focusSelectTwig } = useSelectTwig(SpaceType.FOCUS, canEditFocus);
 
-  const { setUserFocusByRouteName } = useSetUserFocus();
+  const { setUserFocusByRouteName } = useSetUserGraph();
 
   useEffect(() => {
     if (!user?.frame) return;

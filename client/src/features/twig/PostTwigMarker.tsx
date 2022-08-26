@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import React, { useContext } from "react";
 import { AppContext } from "../../App";
 import { VIEW_RADIUS } from "../../constants";
 import { PosType } from "../space/space";
@@ -11,7 +11,7 @@ interface PostTwigMarkerProps {
   parentPos: PosType;
 }
 
-export default function PostTwigMarker(props: PostTwigMarkerProps) {
+function PostTwigMarker(props: PostTwigMarkerProps) {
   const { palette } = useContext(AppContext);
   const { abstract } = useContext(SpaceContext);
   if (
@@ -33,3 +33,5 @@ export default function PostTwigMarker(props: PostTwigMarkerProps) {
     />
   )
 }
+
+export default React.memo(PostTwigMarker)

@@ -150,6 +150,8 @@ type Mutation {
   copyToTab(entries: [TabEntry!]!, groupEntry: GroupEntry): [Twig!]!
   copyTwig(parentTwigId: String!, twigId: String!): CopyTwigResult!
   createBookmark(bookmark: BookmarkEntry): TabResult!
+  createFocusGraph(arrowId: String, routeName: String!, title: String!): User!
+  createFrameGraph(arrowId: String, routeName: String!, title: String!): User!
   createGroup(groupEntry: GroupEntry!): TabResult!
   createTab(tabEntry: TabEntry!): CreateTabResult!
   createWindow(windowEntry: WindowEntry!): TabResult!
@@ -192,6 +194,8 @@ type Mutation {
   setUserColor(color: String!, sessionId: String!): User!
   setUserFocusById(arrowId: String, sessionId: String!): User!
   setUserFocusByRouteName(arrowRouteName: String!, sessionId: String!): User!
+  setUserFrameById(arrowId: String, sessionId: String!): User!
+  setUserFrameByRouteName(arrowRouteName: String!, sessionId: String!): User!
   setUserMap(lat: Float!, lng: Float!, zoom: Float!): User!
   setUserName(name: String!, sessionId: String!): User!
   setUserPalette(palette: String!, sessionId: String!): User!

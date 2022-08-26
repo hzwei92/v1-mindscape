@@ -1,27 +1,18 @@
-import { Box, Card, createTheme, Icon, IconButton, ThemeProvider } from '@mui/material';
-import React, { useContext, useEffect, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { MAX_Z_INDEX, SPACE_BAR_HEIGHT } from '../../constants';
+import { Box, createTheme, ThemeProvider } from '@mui/material';
+import { useContext, useEffect, useState } from 'react';
+import { useAppSelector } from '../../app/hooks';
+import { MAX_Z_INDEX } from '../../constants';
 import SpaceComponent from '../space/SpaceComponent';
-import CloseIcon from '@mui/icons-material/Close';
 import { AppContext } from '../../App';
 import { SpaceType } from '../space/space';
-import { selectIsOpen, selectSelectedTwigId, setIsOpen } from '../space/spaceSlice';
-import { useNavigate } from 'react-router-dom';
-import { selectIdToTwig } from '../twig/twigSlice';
-import useSetUserFocus from '../user/useSetUserFocus';
+import { selectIsOpen } from '../space/spaceSlice';
 import { selectUserById } from '../user/userSlice';
-import Filter2Icon from '@mui/icons-material/Filter2';
 
 export default function FocusComponent() {
-  const dispatch = useAppDispatch();
-  const navigate = useNavigate();
-
   const { 
     user,
     width,
     palette,
-    dimColor: color,
     menuIsResizing,
     menuWidth,
     frameIsResizing,
@@ -31,9 +22,6 @@ export default function FocusComponent() {
   const focusWidth = width - menuWidth - frameWidth;
 
   const focusIsOpen = useAppSelector(selectIsOpen(SpaceType.FOCUS));
-  const frameSelectedTwigId = useAppSelector(selectSelectedTwigId(SpaceType.FRAME));
-  const frameIdToTwig = useAppSelector(selectIdToTwig(SpaceType.FRAME));
-
   const focusUser = useAppSelector(state => selectUserById(state, user?.focus?.userId));
 
   const [theme, setTheme] = useState(createTheme({
@@ -67,35 +55,24 @@ export default function FocusComponent() {
     }));
   }, [focusUser?.color, palette]);
 
-  const { setUserFocusById } = useSetUserFocus();
-
   if (!user) return null;
 
   const handleClick = () => {
     console.log('focus');
   }
 
-  const handleCloseClick = (event: React.MouseEvent) => {
-    const frameTwig = frameIdToTwig[frameSelectedTwigId];
-    const route = `/g/${user.frameId}/${frameTwig.i}`;
-    navigate(route);
-    dispatch(setIsOpen({
-      space: SpaceType.FOCUS,
-      isOpen: false,
-    }));
-    setUserFocusById(null);
-  };
-
   return (
     <ThemeProvider theme={theme}>
       <Box onClick={handleClick} sx={{
         position: 'relative',
-        width: focusWidth,
+        width: focusIsOpen
+          ? focusWidth
+          : 0,
         height: '100%',
-        transition: menuIsResizing || frameIsResizing
-          ? 'none'
-          : 'width 0.5s',
-        display: focusIsOpen 
+        // transition: menuIsResizing || frameIsResizing
+        //   ? 'none'
+        //   : 'width 0.5s',
+        display: focusIsOpen
           ? 'flex'
           : 'none',
         flexDirection: 'row',

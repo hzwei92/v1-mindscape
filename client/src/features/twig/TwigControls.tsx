@@ -22,10 +22,6 @@ import { v4 } from 'uuid';
 import { addEntry } from '../entry/entrySlice';
 import { searchPushSlice } from '../search/searchSlice';
 import { MenuMode } from '../menu/menu';
-import { Arrow } from '../arrow/arrow';
-import useSetUserFocus from '../user/useSetUserFocus';
-import { setIsOpen } from '../space/spaceSlice';
-import { SpaceType } from '../space/space';
 import { useNavigate } from 'react-router-dom';
 //import useCenterTwig from './useCenterTwig';
 
@@ -43,6 +39,8 @@ function TwigControls(props: TwigControlsProps) {
     pendingLink,
     setPendingLink,
     setMenuMode,
+    setIsCreatingGraph,
+    setCreateGraphArrowId,
   } = useContext(AppContext);
   
   const {
@@ -63,7 +61,6 @@ function TwigControls(props: TwigControlsProps) {
 
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const { setUserFocusById } = useSetUserFocus();
   const { replyTwig } = useReplyTwig();
   
   // const { sub } = useSubArrow(props.twig.post, () => {
@@ -87,7 +84,13 @@ function TwigControls(props: TwigControlsProps) {
   const handleOpenClick = (event: React.MouseEvent) => {
     event.stopPropagation();
     if (!arrow) return;
-    navigate(`/g/${arrow.routeName}/0`);
+    if (arrow.rootTwigId) {
+      navigate(`/g/${arrow.routeName}/0`)
+    }
+    else {
+      setCreateGraphArrowId(arrow.id);
+      setIsCreatingGraph(true);
+    }
   }
 
   const handleReplyClick = (event: React.MouseEvent) => {
@@ -334,6 +337,8 @@ function TwigControls(props: TwigControlsProps) {
       margin: 1,
       marginTop: 0,
       marginLeft: 0,
+      display: 'flex',
+      flexDirection: 'row',
     }}>
       <Button
         disabled={!canPost}
@@ -523,17 +528,20 @@ function TwigControls(props: TwigControlsProps) {
       }}>
         {arrow?.outCount} OUT
       </Button>
-      <Button
-        variant={abstract?.id === arrow?.id ? 'outlined' : 'text'}
-        onMouseDown={handleMouseDown}
-        onClick={handleOpenClick}
-        sx={{
-          color,
-          fontSize: 12,
-        }}
-      >
-        Open {arrow?.twigN ? `(${arrow?.twigN})` : ''}
-      </Button>
+      <Box>
+        <Button
+          variant={abstract?.id === arrow?.id ? 'outlined' : 'text'}
+          onMouseDown={handleMouseDown}
+          onClick={handleOpenClick}
+          sx={{
+            color,
+            fontSize: 12,
+          }}
+        >
+          Open {arrow?.twigN ? `(${arrow?.twigN})` : ''}
+        </Button>
+      </Box>
+
     </Box>
   )
 }

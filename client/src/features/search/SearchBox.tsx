@@ -55,38 +55,33 @@ function SearchBox(props: SearchBoxProps) {
 
   if (!slice) return null;
   return (
-    <Box sx={{
-      display: 'flex',
-      flexDirection: 'row',
-    }}>
-      <FormControl variant={'outlined'}>
-        <OutlinedInput
-          sx={{
-            height: 30, 
-            width: menuWidth - 130,
-            fontSize: 14,
-            transition: menuIsResizing
-              ? 'none'
-              : 'width 0.5s',
-          }}
-          id='query'
-          type={'text'}
-          value={slice.query}
-          onChange={handleChange}
-          onKeyPress={handleKeyPress}
-          endAdornment={
-            <InputAdornment position='end' sx={{
-              marginRight: -1,
-              color,
-            }}> 
-              <IconButton color='inherit' size='small' title='Search' onClick={refineQuery}>
-                <SearchIcon fontSize='inherit'/>
-              </IconButton>
-            </InputAdornment>
-          }
-        />
-      </FormControl>
-    </Box>
+    <FormControl variant={'outlined'}>
+      <OutlinedInput
+        sx={{
+          height: 30, 
+          width: menuWidth - 90,
+          fontSize: 14,
+          transition: menuIsResizing
+            ? 'none'
+            : 'width 0.5s',
+        }}
+        id='query'
+        type={'text'}
+        value={slice.query}
+        onChange={handleChange}
+        onKeyPress={handleKeyPress}
+        endAdornment={
+          <InputAdornment position='end' sx={{
+            marginRight: -1,
+            color,
+          }}> 
+            <IconButton color='inherit' size='small' title='Search' onClick={refineQuery}>
+              <SearchIcon fontSize='inherit'/>
+            </IconButton>
+          </InputAdornment>
+        }
+      />
+    </FormControl>
   )
 }
 

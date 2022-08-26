@@ -15,7 +15,7 @@ interface LinkTwigMarkerProps {
   sourcePos: PosType | null;
   targetPos: PosType | null;
 }
-export default function LinkTwigMarker(props: LinkTwigMarkerProps) {
+function LinkTwigMarker(props: LinkTwigMarkerProps) {
   const { 
     space, 
     abstract, 
@@ -93,3 +93,5 @@ export default function LinkTwigMarker(props: LinkTwigMarkerProps) {
     </g>
   )
 }
+
+export default React.memo(LinkTwigMarker)

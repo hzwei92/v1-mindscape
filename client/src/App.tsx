@@ -1,10 +1,10 @@
-import { Box, createTheme, Fab, IconButton, PaletteMode, Paper, ThemeProvider } from '@mui/material';
-import React, { Dispatch, SetStateAction, useEffect, useMemo, useReducer, useState } from 'react';
+import { createTheme, PaletteMode, Paper, ThemeProvider } from '@mui/material';
+import React, { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react';
 import { useAppSelector } from './app/hooks';
-import { APP_BAR_HEIGHT, FRAME_MIN_WIDTH, FRAME_WIDTH, MAX_Z_INDEX, MENU_MIN_WIDTH, MENU_WIDTH } from './constants';
+import { FRAME_MIN_WIDTH, MAX_Z_INDEX, MENU_MIN_WIDTH, MENU_WIDTH } from './constants';
 import { selectCurrentUser } from './features/user/userSlice';
 import { SnackbarProvider } from 'notistack';
-import AppBar from './AppBar1';
+import AppBar from './AppBar';
 import MenuComponent from './features/menu/MenuComponent';
 import { getColor } from './utils';
 import FrameComponent from './features/frame/FrameComponent';
@@ -13,8 +13,7 @@ import { User } from './features/user/user';
 import { MenuMode } from './features/menu/menu';
 import { PendingLinkType, SpaceType } from './features/space/space';
 import { selectIsOpen } from './features/space/spaceSlice';
-import Brightness4 from '@mui/icons-material/Brightness4';
-import useSetUserPalette from './features/user/useSetUserPalette';
+import CreateGraphDialog from './features/arrow/CreateGraphDialog';
 
 export const AppContext = React.createContext({} as {
   user: User | null;
@@ -39,6 +38,11 @@ export const AppContext = React.createContext({} as {
 
   pendingLink: PendingLinkType;
   setPendingLink: Dispatch<SetStateAction<PendingLinkType>>;
+
+  isCreatingGraph: boolean;
+  setIsCreatingGraph: Dispatch<SetStateAction<boolean>>;
+  setCreateGraphSpace: Dispatch<SetStateAction<SpaceType | null>>;
+  setCreateGraphArrowId: Dispatch<SetStateAction<string | null>>;
 });
 
 function App() {
@@ -69,6 +73,10 @@ function App() {
     targetId: '',
   });
 
+  const [isCreatingGraph, setIsCreatingGraph] = useState(false);
+  const [createGraphSpace, setCreateGraphSpace] = useState(null as SpaceType | null);
+  const [createGraphArrowId, setCreateGraphArrowId] = useState(null as string | null);
+
   const [theme, setTheme] = useState(createTheme({
     zIndex: {
       modal: MAX_Z_INDEX + 1000,
@@ -84,6 +92,7 @@ function App() {
 
   useEffect(() => {
     const handleResize = () => {
+      console.log('resize');
       setWidth(window.innerWidth);
       setHeight(window.innerHeight);
     };
@@ -128,13 +137,6 @@ function App() {
       );
     }
   }, [user?.palette])
-
-  useEffect(() => {
-    setMenuWidth(menuMode === MenuMode.NONE
-      ? 0
-      : latentMenuWidth
-    )
-  }, [menuMode]);
   
   useEffect(() => {
     setDimColor(getColor(palette, true));
@@ -142,18 +144,22 @@ function App() {
   }, [palette]);
 
   useEffect(() => {
+    const menuWidth1 = menuMode === MenuMode.NONE
+      ? 0
+      : latentMenuWidth
+    setMenuWidth(menuWidth1)
     if (frameIsOpen) {
       if (focusIsOpen) {
         setFrameWidth(latentFrameWidth);
       }
       else {
-        setFrameWidth(width - menuWidth);
+        setFrameWidth(width - menuWidth1);
       }
     }
     else {
       setFrameWidth(0);
     }
-  }, [focusIsOpen, frameIsOpen, menuWidth]);
+  }, [menuMode, focusIsOpen, frameIsOpen, latentMenuWidth, width]);
 
   const appContextValue = useMemo(() => {
     return {
@@ -179,6 +185,11 @@ function App() {
 
       pendingLink,
       setPendingLink,
+
+      isCreatingGraph,
+      setIsCreatingGraph,
+      setCreateGraphSpace,
+      setCreateGraphArrowId,
     };
   }, [
     user, 
@@ -187,6 +198,7 @@ function App() {
     menuMode, menuIsResizing, menuWidth, 
     frameIsResizing, frameWidth, 
     pendingLink,
+    isCreatingGraph,
   ]);
 
   const handleMouseMove = (event: React.MouseEvent) => {
@@ -240,6 +252,12 @@ function App() {
             <FrameComponent />
             <FocusComponent />
           </Paper>
+          <CreateGraphDialog 
+            isOpen={isCreatingGraph} 
+            setIsOpen={setIsCreatingGraph}
+            space={createGraphSpace}
+            arrowId={createGraphArrowId}
+          />
         </SnackbarProvider>
       </ThemeProvider>
     </AppContext.Provider>

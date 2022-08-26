@@ -12,11 +12,15 @@ import useCenterTwig from '../twig/useCenterTwig';
 import useSelectTwig from '../twig/useSelectTwig';
 import { Twig } from '../twig/twig';
 import { MAX_Z_INDEX } from '../../constants';
-import { getTwigColor } from '../../utils';
 import { selectIsOpen, selectSelectedSpace, selectSelectedTwigId } from './spaceSlice';
 import { selectIdToUser } from '../user/userSlice';
+import { AppContext } from '../../App';
 
 export default function SpaceNav() {
+  const {
+    palette
+  } = useContext(AppContext);
+
   const { 
     space, 
     abstract, 
@@ -122,6 +126,9 @@ export default function SpaceNav() {
         color: hasEarlier 
           ? (idToUser[twigs[0]?.userId]?.color || 'dimgrey') 
           : 'dimgrey',
+        backgroundColor: palette === 'dark'
+          ? '#000000'
+          : '#ffffff',
       }}>
         <SkipPreviousIcon color='inherit' />
       </Fab>
@@ -130,15 +137,21 @@ export default function SpaceNav() {
         color: hasEarlier 
           ? (idToUser[twigs[index - 1]?.userId]?.color || 'dimgrey') 
           : 'dimgrey',
+        backgroundColor: palette === 'dark'
+          ? '#000000'
+          : '#ffffff',
       }}>
         <FastRewindIcon color='inherit' />
       </Fab>
       <Fab title='Selected' size='small' disabled={!selectedTwigId} onClick={handleNavFocus} sx={{
         margin: 1,
         color: idToUser[twigs[index]?.userId]?.color || 'dimgrey',
-        border: space === selectedSpace
-          ? '3px solid'
-          : 'none'
+        outline: space === selectedSpace
+          ? '1px solid'
+          : 'none',
+        backgroundColor: palette === 'dark'
+          ? '#000000'
+          : '#ffffff',
       }}>
         <CenterFocusStrongIcon color='inherit' />
       </Fab>
@@ -147,6 +160,9 @@ export default function SpaceNav() {
         color: hasLater 
           ? (idToUser[twigs[index + 1]?.userId]?.color || 'dimgrey') 
           : 'dimgrey',
+        backgroundColor: palette === 'dark'
+          ? '#000000'
+          : '#ffffff',
       }}>
         <FastForwardIcon color='inherit' />
       </Fab>
@@ -155,6 +171,9 @@ export default function SpaceNav() {
         color: hasLater 
           ? (idToUser[twigs[twigs.length - 1]?.userId]?.color  || 'dimgrey') 
           : 'dimgrey',
+        backgroundColor: palette === 'dark'
+          ? '#000000'
+          : '#ffffff',
       }}>
         <SkipNextIcon color='inherit' />
       </Fab>

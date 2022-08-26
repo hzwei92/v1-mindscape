@@ -1,4 +1,4 @@
-import { Box, Button, Card, Fab } from '@mui/material';
+import { Box, Button, Card, colors, Fab } from '@mui/material';
 import { MAX_Z_INDEX, MOBILE_WIDTH, NOT_FOUND } from '../../constants';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
@@ -10,20 +10,32 @@ import { Dispatch, SetStateAction, useContext } from 'react';
 import { SpaceContext } from './SpaceComponent';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { AppContext } from '../../App';
-import { selectIsOpen, selectScale, setScale } from './spaceSlice';
+import { selectIsOpen, selectScale, selectSelectedTwigId, setIsOpen, setScale } from './spaceSlice';
 import { useReactiveVar } from '@apollo/client';
 import { SpaceType } from './space';
 import { focusSpaceElVar, frameSpaceElVar } from '../../cache';
+import Close from '@mui/icons-material/Close';
+import useSetUserGraph from '../user/useSetUserGraph';
+import { selectIdToTwig } from '../twig/twigSlice';
+import { useNavigate } from 'react-router-dom';
 
 interface SpaceControlsProps {
+  showSettings: boolean;
   setShowSettings: Dispatch<SetStateAction<boolean>>;
+  showRoles: boolean;
   setShowRoles: Dispatch<SetStateAction<boolean>>;
 }
 export default function SpaceControls(props: SpaceControlsProps) {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
-  const { width } = useContext(AppContext);
+  const { user, width, palette } = useContext(AppContext);
   const { space } = useContext(SpaceContext);
+
+  const frameSelectedTwigId = useAppSelector(selectSelectedTwigId(SpaceType.FRAME));
+  const frameIdToTwig = useAppSelector(selectIdToTwig(SpaceType.FRAME));
+  const focusSelectedTwigId = useAppSelector(selectSelectedTwigId(SpaceType.FOCUS));
+  const focusIdToTwig = useAppSelector(selectIdToTwig(SpaceType.FOCUS));
 
   const isOpen = useAppSelector(selectIsOpen(space));
 
@@ -34,6 +46,8 @@ export default function SpaceControls(props: SpaceControlsProps) {
   const scale = useAppSelector(selectScale(space));
 
   const isSynced = true;
+
+  const { setUserFrameById, setUserFocusById } = useSetUserGraph();
 
   if (!isOpen) return null;
 
@@ -87,6 +101,33 @@ export default function SpaceControls(props: SpaceControlsProps) {
         top,
       });
     }, 5)
+  };
+
+  const handleCloseClick = (event: React.MouseEvent) => {
+    if (space === SpaceType.FRAME) {
+      const focusTwig = focusIdToTwig[focusSelectedTwigId];
+      if (focusTwig) {
+        const route = `/g/${user?.focus?.routeName}/${focusTwig.i}`;
+        navigate(route);
+      }
+      dispatch(setIsOpen({
+        space: SpaceType.FRAME,
+        isOpen: false,
+      }));
+      setUserFrameById(null);
+    }
+    else {
+      const frameTwig = frameIdToTwig[frameSelectedTwigId];
+      if (frameTwig) {
+        const route = `/g/${user?.frame?.routeName}/${frameTwig.i}`;
+        navigate(route);
+      }
+      dispatch(setIsOpen({
+        space: SpaceType.FOCUS,
+        isOpen: false,
+      }));
+      setUserFocusById(null);
+    }
   };
 
   const handleSettingsClick = () => {
@@ -156,14 +197,36 @@ export default function SpaceControls(props: SpaceControlsProps) {
           display: 'flex',
           flexDirection: 'column'
         }}>
-          <Fab title='Settings' size='small' color='primary' onClick={handleSettingsClick} sx={{
+          <Fab title='Close' size='small' onClick={handleCloseClick} sx={{
             fontSize: 20,
+            backgroundColor: palette === 'dark'
+              ? '#000000'
+              : '#ffffff',
+            color: 'primary.main',
+          }}>
+            <Close fontSize='inherit'/>
+          </Fab> 
+          <Fab title='Settings' size='small' onClick={handleSettingsClick} sx={{
+            fontSize: 20,
+            marginTop: 1,
+            backgroundColor: palette === 'dark'
+              ? '#000000'
+              : '#ffffff',
+            color: 'primary.main',
           }}>
             <SettingsIcon fontSize='inherit'/>
           </Fab> 
-          <Fab title='Members' size='small' color='primary' onClick={handleRolesClick} sx={{
+          <Fab title='Members' size='small' onClick={handleRolesClick} sx={{
             fontSize: 20,
             marginTop: 1,
+            backgroundColor: props.showRoles
+              ? 'primary.main'
+              : palette === 'dark'
+                ? '#000000'
+                : '#ffffff',
+            color: props.showRoles
+              ? null
+              :'primary.main',
           }}>
             <PeopleIcon fontSize='inherit'/>
           </Fab> 

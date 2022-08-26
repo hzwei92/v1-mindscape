@@ -1,19 +1,19 @@
 
 
 import { gql, useLazyQuery, useMutation, useReactiveVar } from '@apollo/client';
-import { Box, Card, FormControl, FormHelperText, IconButton, InputAdornment, OutlinedInput, Typography } from '@mui/material';
-import React, { useState } from 'react';
+import { Box, Card, Dialog, FormControl, FormHelperText, IconButton, InputAdornment, OutlinedInput, Typography } from '@mui/material';
+import React, { Dispatch, SetStateAction, useContext, useEffect, useState } from 'react';
 import { sessionVar } from '../../cache';
 import EditIcon from '@mui/icons-material/Edit';
 import SendIcon from '@mui/icons-material/Send';
-import { User } from '../user/user';
 import { useSnackbar } from 'notistack';
 import { useAppDispatch } from '../../app/hooks';
-import { mergeUsers } from '../user/userSlice';
+import { mergeUsers } from './userSlice';
 import { ChromePicker } from 'react-color';
-import useSetUserColor from '../user/useSetUserColor';
+import useSetUserColor from './useSetUserColor';
 import Verify from '../auth/Verify';
 import Register from '../auth/Register';
+import { AppContext } from '../../App';
 
 const SET_USER_NAME = gql`
   mutation SetUserName($sessionId: String!, $name: String!) {
@@ -35,22 +35,26 @@ const GET_USER_BY_NAME = gql`
   }
 `;
 
-interface UserSettingsProps {
-  user: User;
+interface UserDialogProps {
+  isOpen: boolean;
+  setIsOpen: Dispatch<SetStateAction<boolean>>;
 }
 
-export default function UserSettings(props: UserSettingsProps) {
+
+export default function UserDialog(props: UserDialogProps) {
   const dispatch = useAppDispatch();
+
+  const { user } = useContext(AppContext);
 
   const sessionDetail = useReactiveVar(sessionVar);
 
   const [isEditingName, setIsEditingName] = useState(false);
-  const [name, setName] = useState(props.user.name);
+  const [name, setName] = useState(user?.name);
   const [nameError, setNameError] = useState('');
   const [nameTimeout, setNameTimeout] = useState(null as ReturnType<typeof setTimeout> | null);
 
 
-  const [color, setColor] = useState(props.user.color);
+  const [color, setColor] = useState(null as string | null);
   const [colorTimeout, setColorTimeout] = useState(null as ReturnType<typeof setTimeout> | null);
 
   const { setUserColor } = useSetUserColor();
@@ -63,7 +67,7 @@ export default function UserSettings(props: UserSettingsProps) {
     },
     onCompleted: data => {
       console.log(data);
-      if (data.getUserByName?.id && data.getUserByName.id !== props.user.id) {
+      if (data.getUserByName?.id && data.getUserByName.id !== user?.id) {
         setNameError('This name is already in use');
       }
     }
@@ -81,6 +85,22 @@ export default function UserSettings(props: UserSettingsProps) {
     }
   })
 
+  useEffect(() => {
+    if (user?.color) {
+      setColor(user.color);
+    }
+  }, [user?.id])
+
+  useEffect(() => {
+    if (user?.color && !color) {
+      setColor(user.color);
+    }
+  }, [user?.color, color])
+
+  const handleClose = () => {
+    props.setIsOpen(false);
+  }
+  
   const handleNameEditClick = (event: React.MouseEvent) => {
     setIsEditingName(true);
   };
@@ -139,7 +159,7 @@ export default function UserSettings(props: UserSettingsProps) {
   };
 
   return (
-    <Box>
+    <Dialog open={props.isOpen} onClose={handleClose}>
       <Card elevation={5} sx={{
         padding: 1,
         margin: 1,
@@ -155,7 +175,7 @@ export default function UserSettings(props: UserSettingsProps) {
             paddingLeft: 1,
             paddingBottom: 1,
           }}>
-            { props.user.name }&nbsp;
+            { user?.name }&nbsp;
             <Box sx={{position: 'relative', display:'inline-block'}}>
               <Box sx={{position: 'absolute', left: 0, top: -20}}>
               <IconButton title='Edit username' onClick={handleNameEditClick} size='small' sx={{
@@ -185,7 +205,7 @@ export default function UserSettings(props: UserSettingsProps) {
                   <InputAdornment position='end'>
                     <IconButton
                       title='Submit'
-                      disabled={!name.length || !!nameError}
+                      disabled={!name?.length || !!nameError}
                       edge='end'
                       onClick={handleNameSubmitClick}
                       onMouseDown={handleMouseDown}
@@ -208,8 +228,8 @@ export default function UserSettings(props: UserSettingsProps) {
         </Box>
       </Card>
       {
-        props.user.email
-          ? props.user.verifyEmailDate
+        user?.email
+          ? user?.verifyEmailDate
             ? <Card elevation={5} sx={{
                 padding: 1,
                 margin: 1,
@@ -220,7 +240,7 @@ export default function UserSettings(props: UserSettingsProps) {
                 <Box sx={{
                   marginLeft: 1,
                 }}>
-                  { props.user.email }
+                  { user?.email }
                 </Box>
               </Card>
             : <Verify />
@@ -237,13 +257,13 @@ export default function UserSettings(props: UserSettingsProps) {
           margin: 1,
         }}>
           <ChromePicker 
-            color={color}
+            color={color || '#ffffff'}
             disableAlpha={true}
             onChange={handleColorChange}
             onChangeComplete={handleColorChangeComplete}
           />
         </Box>
       </Card>
-    </Box>
+    </Dialog>
   )
 }

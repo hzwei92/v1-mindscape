@@ -99,13 +99,6 @@ export default function SearchComponent() {
           <CustomSearchBox defaultRefinement='5fda8f9c-42a0-4b42-bad0-ef30b0af14b0'/>
           <CustomHits />
         </Box>
-        <Box>
-          <IconButton onClick={handleClose} sx={{
-            fontSize: 16,
-          }}>
-            <CloseIcon fontSize='inherit' />
-          </IconButton>
-        </Box>
       </Card>
       <Box ref={containerEl} sx={{
         display: menuMode === MenuMode.SEARCH

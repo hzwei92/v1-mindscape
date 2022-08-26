@@ -115,9 +115,7 @@ export default function useAuth() {
         action: () => {
           return (
             <Box>
-              <IconButton onClick={handleDismissClick} sx={{
-                color,
-              }}>
+              <IconButton onClick={handleDismissClick}>
                 <CloseIcon sx={{
                   fontSize: 14,
                 }}/>
