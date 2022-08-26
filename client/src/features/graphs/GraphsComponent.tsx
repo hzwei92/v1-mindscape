@@ -9,6 +9,9 @@ import { MOBILE_WIDTH } from '../../constants';
 import { AppContext } from '../../App';
 import { MenuMode } from '../menu/menu';
 import { selectIdToArrow } from '../arrow/arrowSlice';
+import LooksOne from '@mui/icons-material/LooksOne';
+import LooksTwo from '@mui/icons-material/LooksTwo';
+import useSetUserGraph from '../user/useSetUserGraph';
 
 
 interface GraphsComponentProps {
@@ -35,11 +38,25 @@ export default function GraphsComponent(props: GraphsComponentProps) {
   // const { requestRole } = useRequestRole();
   // const { removeRole } = useRemoveRole();
 
+  const { setUserFrameById, setUserFocusById } = useSetUserGraph();
+
   const handleJoinClick = (jamId: string) => (event: React.MouseEvent) => {
     //requestRole(jamId);
   }
   const handleLeaveClick = (roleId: string) => (event: React.MouseEvent) => {
     //removeRole(roleId)
+  }
+
+  const handleFrameClick = (abstractId: string) => (event: React.MouseEvent) => {
+    if (abstractId !== user?.frameId) {
+      setUserFrameById(abstractId);
+    }
+  }
+
+  const handleFocusClick = (abstractId: string) => (event: React.MouseEvent) => {
+    if (abstractId !== user?.focusId) {
+      setUserFocusById(abstractId);
+    }
   }
 
   // const handleJamClick = (jamUserId: string | null, jamRouteName: string) => (event: React.MouseEvent) => {
@@ -159,6 +176,29 @@ export default function GraphsComponent(props: GraphsComponentProps) {
                           </Box>
                         : null
                   }
+                </Box>
+                <Box>
+                  <IconButton onClick={handleFrameClick(role.arrowId)} sx={{
+                    color: role.arrowId === user?.frameId
+                      ? role.arrow.user.color
+                      : null,
+                    outline: role.arrowId === user?.frameId
+                      ? `1px solid ${role.arrow.user.color}`
+                      : null,
+                  }}>
+                    <LooksOne />
+                  </IconButton>
+                  &nbsp;
+                  <IconButton onClick={handleFocusClick(role.arrowId)}  sx={{
+                    color: role.arrowId === user?.focusId
+                      ? role.arrow.user.color
+                      : null,
+                    outline: role.arrowId === user?.focusId
+                      ? `1px solid ${role.arrow.user.color}`
+                      : null,
+                  }}>
+                    <LooksTwo />
+                  </IconButton>
                 </Box>
               </Card>
             )
