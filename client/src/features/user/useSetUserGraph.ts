@@ -5,6 +5,7 @@ import { AppContext } from '../../App';
 import { useAppDispatch } from '../../app/hooks';
 import { sessionVar } from '../../cache';
 import { ABSTRACT_ARROW_FIELDS } from '../arrow/arrowFragments';
+import { mergeArrows } from '../arrow/arrowSlice';
 import { SpaceType } from '../space/space';
 import { resetTwigs } from '../twig/twigSlice';
 import { mergeUsers, resetUsers } from './userSlice';
@@ -79,6 +80,7 @@ export default function useSetUserGraph() {
     onCompleted: data => {
       console.log(data);
       dispatch(mergeUsers([data.setUserFrameById]));
+      dispatch(mergeArrows([data.setUserFrameById.frame]));
     },
   });
 
@@ -91,6 +93,7 @@ export default function useSetUserGraph() {
     onCompleted: data => {
       console.log(data);
       dispatch(mergeUsers([data.setUserFrameByRouteName]));
+      dispatch(mergeArrows([data.setUserFrameByRouteName.frame]));
     },
   });
 
@@ -103,6 +106,7 @@ export default function useSetUserGraph() {
     onCompleted: data => {
       console.log(data);
       dispatch(mergeUsers([data.setUserFocusById]));
+      dispatch(mergeArrows([data.setUserFocusById.focus]));
     },
   });
 
@@ -115,6 +119,7 @@ export default function useSetUserGraph() {
     onCompleted: data => {
       console.log(data);
       dispatch(mergeUsers([data.setUserFocusByRouteName]));
+      dispatch(mergeArrows([data.setUserFocusByRouteName.focus]));
     },
   });
 

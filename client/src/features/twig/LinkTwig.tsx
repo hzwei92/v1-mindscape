@@ -1,6 +1,5 @@
 import { Box, Card, IconButton } from '@mui/material';
 import React, { useContext, useEffect, useRef } from 'react';
-import type { Twig } from './twig';
 import RemoveIcon from '@mui/icons-material/Remove';
 import useSelectTwig from './useSelectTwig';
 import { AppContext } from '../../App';
@@ -10,7 +9,7 @@ import { CLOSED_LINK_TWIG_DIAMETER, TWIG_WIDTH } from '../../constants';
 import useOpenTwig from './useOpenTwig';
 import useLinkTwigs from './useLinkTwigs';
 import ArrowComponent from '../arrow/ArrowComponent';
-import { mergeIdToHeight, selectHeightByTwigId, selectIdToHeight, selectSelectedTwigId } from '../space/spaceSlice';
+import { mergeIdToHeight, selectHeightByTwigId, selectSelectedTwigId } from '../space/spaceSlice';
 import TwigControls from './TwigControls';
 import { selectUserById } from '../user/userSlice';
 import { selectTwigById } from './twigSlice';

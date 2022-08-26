@@ -100,7 +100,15 @@ export class TwigsResolver {
     @Args('y', {type: () => Int}) y: number,
     @Args('draft') draft: string,
   ) {
-    return this.twigsService.replyTwig(user, parentTwigId, twigId, postId, x, y, draft);
+    const result = await this.twigsService.replyTwig(user, parentTwigId, twigId, postId, x, y, draft);
+  
+    this.pubSub.publish('replyTwig', {
+      sessionId,
+      abstractId: result.abstract.id,
+      replyTwig: result,
+    });
+
+    return result;
   }
 
   @UseGuards(GqlAuthGuard)
@@ -398,6 +406,24 @@ export class TwigsResolver {
     return this.twigsService.removeBookmark(user, bookmarkId);
   }
 
+
+
+  
+  @Subscription(() => ReplyTwigResult, {name: 'replyTwig',
+    filter: (payload, variables) => {
+      if (payload.sessionId === variables.sessionId) {
+        return false;
+      }
+      return payload.abstractId === variables.abstractId;
+    },
+  })
+  replyTwigSub(
+    @Args('sessionId') sessionId: string,
+    @Args('abstractId') abstractId: string,
+  ) {
+    console.log('replyTwigSub');
+    return this.pubSub.asyncIterator('replyTwig')
+  }
 
   @Subscription(() => AddTwigResult, {name: 'addTwig',
     filter: (payload, variables) => {

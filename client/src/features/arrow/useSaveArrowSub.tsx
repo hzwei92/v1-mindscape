@@ -74,8 +74,10 @@ export default function useSaveArrowSub() {
       }
       
       const contentState = convertFromRaw(JSON.parse(saveArrow.draft)) as ContentState;
-      let text = contentState.getPlainText('\n').slice(0,20);
-      if (text.length > 20) {
+      let text = contentState.getPlainText('\n')
+      const index = Math.min(20, text.indexOf('\n'));
+      text = text.slice(0, index);
+      if (text.length > index) {
         text += '...'
       }
       enqueueSnackbar(` u/${arrow.user.name}: ${text}`, {

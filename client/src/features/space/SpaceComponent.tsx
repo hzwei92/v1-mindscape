@@ -40,6 +40,7 @@ import useTwigTree from '../twig/useTwigTree';
 import { useReactiveVar } from '@apollo/client';
 import useGraftTwig from '../twig/useGraftTwig';
 import RolesMenu from './RolesMenu';
+import useReplyTwigSub from '../twig/useReplyTwigSub';
 
 export const SpaceContext = React.createContext({} as {
   abstract: Arrow | null;
@@ -119,9 +120,6 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   const [showRoles, setShowRoles] = useState(false);
 
   const spaceEl = useRef<HTMLElement>();
-
-  useInitSpace(props.space, abstract, canView);
-  //useAddTwigSub(props.user, props.space, abstract);
 
   const { moveTwig } = useMoveTwig(props.space);
   const { graftTwig } = useGraftTwig(props.space);

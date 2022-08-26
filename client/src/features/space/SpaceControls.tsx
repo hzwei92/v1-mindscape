@@ -18,6 +18,8 @@ import Close from '@mui/icons-material/Close';
 import useSetUserGraph from '../user/useSetUserGraph';
 import { selectIdToTwig } from '../twig/twigSlice';
 import { useNavigate } from 'react-router-dom';
+import useInitSpace from './useInitSpace';
+import useReplyTwigSub from '../twig/useReplyTwigSub';
 
 interface SpaceControlsProps {
   showSettings: boolean;
@@ -48,6 +50,9 @@ export default function SpaceControls(props: SpaceControlsProps) {
   const isSynced = true;
 
   const { setUserFrameById, setUserFocusById } = useSetUserGraph();
+
+  useInitSpace();
+  useReplyTwigSub();
 
   if (!isOpen) return null;
 

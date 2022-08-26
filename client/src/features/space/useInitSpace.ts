@@ -6,7 +6,8 @@ import { FULL_TWIG_FIELDS } from '../twig/twigFragments';
 import { mergeTwigs, resetTwigs } from '../twig/twigSlice';
 import { v4 } from 'uuid';
 import { resetUsers } from '../user/userSlice';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
+import { SpaceContext } from './SpaceComponent';
 
 const GET_DETAILS = gql`
   mutation GetTwigs($abstractId: String!) {
@@ -17,8 +18,14 @@ const GET_DETAILS = gql`
   ${FULL_TWIG_FIELDS}
 `;
 
-export default function useInitSpace(space: SpaceType, abstract: Arrow | null, canView: boolean) {
+export default function useInitSpace() {
   const dispatch = useAppDispatch();
+
+  const {
+    space, 
+    abstract,
+    canView,
+  } = useContext(SpaceContext);
 
   const [getTwigs] = useMutation(GET_DETAILS, {
     onError: error => {

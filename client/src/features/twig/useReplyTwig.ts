@@ -6,11 +6,9 @@ import { FULL_ROLE_FIELDS } from '../role/roleFragments';
 import { applyRole } from '../role/useApplyRole';
 import { Arrow, createArrow } from '../arrow/arrow';
 import { selectSessionId } from '../auth/authSlice';
-import useSelectTwig from './useSelectTwig';
-import useCenterTwig from './useCenterTwig';
 import { useContext } from 'react';
 import { createTwig, Twig } from './twig';
-import { mergeTwigs, selectIdToChildIdToTrue, setNewTwigId } from './twigSlice';
+import { mergeTwigs, setNewTwigId } from './twigSlice';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { AppContext } from '../../App';
 import { SpaceContext } from '../space/SpaceComponent';
@@ -18,7 +16,6 @@ import { getEmptyDraft } from '../../utils';
 import { mergeIdToPos, selectIdToPos } from '../space/spaceSlice';
 import { mergeArrows } from '../arrow/arrowSlice';
 import { useNavigate } from 'react-router-dom';
-import { VIEW_RADIUS } from '../../constants';
 
 const REPLY_TWIG = gql`
   mutation ReplyTwig(
@@ -71,18 +68,12 @@ export default function useReplyTwig() {
   const { user } = useContext(AppContext);
   const { 
     space, 
-    abstract, 
-    canEdit
+    abstract,
   } = useContext(SpaceContext);
 
   const idToPos = useAppSelector(selectIdToPos(space));
 
   const sessionId = useAppSelector(selectSessionId);
-  const idToChildIdToTrue = useAppSelector(selectIdToChildIdToTrue(space));
-
-  const { selectTwig } = useSelectTwig(space, canEdit);
-  const { centerTwig } = useCenterTwig(space);
-
   const { enqueueSnackbar } = useSnackbar();
   
   const [reply] = useMutation(REPLY_TWIG, {

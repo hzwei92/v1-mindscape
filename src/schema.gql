@@ -311,6 +311,7 @@ type Subscription {
   moveTwig(abstractId: String!, sessionId: String!): Twig!
   publishCursor(abstractId: String!, sessionId: String!): UserCursor!
   removeTwig(abstractId: String!, sessionId: String!): RemoveTwigResult!
+  replyTwig(abstractId: String!, sessionId: String!): ReplyTwigResult!
   saveArrow(arrowIds: [String!]!, sessionId: String!, userId: String!): Arrow!
   selectTwig(abstractId: String!, sessionId: String!): SelectTwigResult!
   setUserFocus(abstractId: String!, sessionId: String!): User!
