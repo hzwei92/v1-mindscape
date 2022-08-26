@@ -67,7 +67,9 @@ export default function SpaceComponent(props: SpaceComponentProps) {
     brightColor: color,
   } = useContext(AppContext);
 
-  const offsetLeft = menuWidth;
+  const offsetLeft = props.space === SpaceType.FRAME
+    ? menuWidth
+    : menuWidth + frameWidth;
   const offsetTop = APP_BAR_HEIGHT;
 
   const adjustIdToPosDetail = useReactiveVar(props.space === SpaceType.FRAME
@@ -249,7 +251,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
 
       const scale1 = Math.min(Math.max(.03125, scale + event.deltaY * -0.004), 4)
 
-      const left = props.space === 'FRAME'
+      const left = props.space === SpaceType.FRAME
         ? Math.round((center.x * scale1) - (event.clientX - menuWidth))
         : Math.round((center.x * scale1) - (event.clientX - menuWidth - frameWidth));
       const top = Math.round(center.y * scale1 - (event.clientY - APP_BAR_HEIGHT));
