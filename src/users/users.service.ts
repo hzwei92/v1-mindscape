@@ -267,6 +267,8 @@ export class UsersService {
       if (arrow.userId !== user.id) {
         throw new BadRequestException('Insufficient privileges')
       }
+      arrow.title = title;
+      arrow.routeName = routeName;
     }
     else {
       const sheaf = await this.sheafsService.createSheaf(null, null, null);
@@ -305,6 +307,8 @@ export class UsersService {
       if (arrow.userId !== user.id) {
         throw new BadRequestException('Insufficient privileges')
       }
+      arrow.title = title;
+      arrow.routeName = routeName;
     }
     else {
       const sheaf = await this.sheafsService.createSheaf(null, null, null);

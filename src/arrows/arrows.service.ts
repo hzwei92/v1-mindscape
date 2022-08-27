@@ -140,7 +140,7 @@ export class ArrowsService {
       abstract: null,
       sheaf,
       draft: getEmptyDraft(),
-      title: 'Mindscape.pub',
+      title: 'MINDSCAPE.PUB',
       url: null,
       faviconUrl: null,
       routeName:'mindscape'
