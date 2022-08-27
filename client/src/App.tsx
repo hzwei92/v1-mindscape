@@ -2,7 +2,7 @@ import { createTheme, PaletteMode, Paper, ThemeProvider } from '@mui/material';
 import React, { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react';
 import { useAppSelector } from './app/hooks';
 import { FRAME_MIN_WIDTH, MAX_Z_INDEX, MENU_MIN_WIDTH, MENU_WIDTH } from './constants';
-import { selectCurrentUser } from './features/user/userSlice';
+import { selectCurrentUser, selectIdToUser } from './features/user/userSlice';
 import { SnackbarProvider } from 'notistack';
 import AppBar from './AppBar';
 import MenuComponent from './features/menu/MenuComponent';
@@ -48,6 +48,8 @@ export const AppContext = React.createContext({} as {
 function App() {
   //console.log('app');
   const user = useAppSelector(selectCurrentUser);
+
+  const idToUser = useAppSelector(selectIdToUser);
 
   const focusIsOpen = useAppSelector(selectIsOpen(SpaceType.FOCUS));
   const frameIsOpen = useAppSelector(selectIsOpen(SpaceType.FRAME));
@@ -248,6 +250,33 @@ function App() {
             display: 'flex',
             flexDirection: 'row',
           }}>
+            <svg>
+              <defs>
+                {
+                  Object.keys(idToUser).map(userId => {
+                    console.log(userId);
+                    const user = idToUser[userId];
+                    return (
+                      <marker 
+                        key={`marker-${userId}`}
+                        id={`marker-${userId}`} 
+                        markerWidth='6'
+                        markerHeight='10'
+                        refX='7'
+                        refY='5'
+                        orient='auto'
+                      >
+                        <polyline 
+                          points='0,0 5,5 0,10'
+                          fill='none'
+                          stroke={user?.color}
+                        />
+                      </marker>
+                    )
+                  })
+                }
+              </defs>
+            </svg>
             <MenuComponent />
             <FrameComponent />
             <FocusComponent />

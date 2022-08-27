@@ -617,30 +617,6 @@ export default function SpaceComponent(props: SpaceComponentProps) {
             width: w,
             height: h,
           }}>
-            <defs>
-              {
-                Object.keys(idToUser).map(userId => {
-                  const user = idToUser[userId];
-                  return (
-                    <marker 
-                      key={`marker-${userId}`}
-                      id={`marker-${userId}`} 
-                      markerWidth='6'
-                      markerHeight='10'
-                      refX='7'
-                      refY='5'
-                      orient='auto'
-                    >
-                      <polyline 
-                        points='0,0 5,5 0,10'
-                        fill='none'
-                        stroke={user?.color}
-                      />
-                    </marker>
-                  )
-                })
-              }
-            </defs>
             { twigMarkers }
           </svg>
           { twigs }
