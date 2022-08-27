@@ -5,7 +5,7 @@ export const DEV_WS_SERVER_URI = 'ws://localhost:9000';
 
 export const EMAIL_REGEX = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/
 
-export const GOOGLE_CLIENT_ID = '320721321078-iu61jffh7000m848qjha76o0qdrl6h7o.apps.googleusercontent.com';
+export const GOOGLE_CLIENT_ID = '453561312616-3go403qbepjm03b5g95h15tpcag6fvb0.apps.googleusercontent.com';
 
 export const REFRESH_ACCESS_TOKEN_TIME = 8 * 60 * 1000;
 
