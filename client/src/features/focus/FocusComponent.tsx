@@ -13,9 +13,7 @@ export default function FocusComponent() {
     user,
     width,
     palette,
-    menuIsResizing,
     menuWidth,
-    frameIsResizing,
     frameWidth,
   } = useContext(AppContext);
 
@@ -23,7 +21,6 @@ export default function FocusComponent() {
 
   const focusIsOpen = useAppSelector(selectIsOpen(SpaceType.FOCUS));
   const focusUser = useAppSelector(state => selectUserById(state, user?.focus?.userId));
-
   const [theme, setTheme] = useState(createTheme({
     palette: {
       primary: {
@@ -40,7 +37,7 @@ export default function FocusComponent() {
   }));
 
   useEffect(() => {
-    if (!user?.frameId) return;
+    if (!focusUser) return;
     setTheme(createTheme({
       palette: {
         primary: {

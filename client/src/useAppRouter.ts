@@ -47,18 +47,23 @@ export default function useAppRouter(user: User | null) {
   const { setUserFocusByRouteName } = useSetUserGraph();
 
   useEffect(() => {
-    if (!user?.frame) return;
-    if (!Object.keys(frameIdToPos || {}).length) return;
-
     const path = location.pathname.split('/');
     console.log(path);
+    
     if (path.length < 3) {
       console.log('no path')
-      navigate(`/g/${user.frame.routeName}/0`, {
-        replace: true,
-      })
+      if (user?.frame) {
+        navigate(`/g/${user.frame.routeName}/0`, {
+          replace: true,
+        })
+      }
+      else if (user?.focus) {
+        navigate(`/g/${user.focus.routeName}/0`, {
+          replace: true,
+        });
+      }
     }
-    else if (path[2].toLowerCase() === user.frame.routeName) {
+    else if (path[2].toLowerCase() === user?.frame?.routeName) {
       console.log('frame routing');
 
       dispatch(setIsOpen({
@@ -67,19 +72,16 @@ export default function useAppRouter(user: User | null) {
       }));
       dispatch(setSelectedSpace(SpaceType.FRAME));
 
-      if (user.focus) {
-        if (!focusSelectedTwigId && user?.focus?.rootTwigId) {
-          const twig = focusIdToTwig[user.focus.rootTwigId];
-          focusSelectTwig(user.focus, twig);
-          focusCenterTwig(user.focus.rootTwigId, true, 0);
-        }
+      if (user.focus && !focusSelectedTwigId && user.focus.rootTwigId) {
+        const twig = focusIdToTwig[user.focus.rootTwigId];
+        focusSelectTwig(user.focus, twig);
+        focusCenterTwig(user.focus.rootTwigId, true, 0);
       }
 
       document.title = `Mindscape | ${user.frame.title}`;
 
       const frameTwig = frameIdToTwig[frameSelectedTwigId];
 
-      console.log(frameTwig);
       if (path[3] !== (frameTwig?.i ?? -1).toString()) {
         console.log('hello')
         const twigId = frameIToTwigId[path[3] || (frameTwig.i ?? -1)];
@@ -116,7 +118,7 @@ export default function useAppRouter(user: User | null) {
         }
       }
     }
-    else {
+    else if (user) {
       console.log('focus routing')
 
       dispatch(setIsOpen({
@@ -125,12 +127,11 @@ export default function useAppRouter(user: User | null) {
       }));
       dispatch(setSelectedSpace(SpaceType.FOCUS));
 
-      if (!frameSelectedTwigId && user.frame.rootTwigId) {
+      if (user.frame && !frameSelectedTwigId && user.frame.rootTwigId) {
         const twig = frameIdToTwig[user.frame.rootTwigId];
         frameSelectTwig(user.frame, twig);
         frameCenterTwig(twig.id, true, 0);
       }
-
 
       if (path[2] !== user.focus?.routeName) {
         console.log('refocus')

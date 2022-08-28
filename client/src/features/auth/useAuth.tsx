@@ -6,11 +6,12 @@ import { useSnackbar } from 'notistack';
 import { Box, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { setCurrentUser } from '../user/userSlice';
+import { mergeUsers, setCurrentUser } from '../user/userSlice';
 import { AppContext } from '../../App';
 import { selectAuthIsValid, selectAuthIsInit } from './authSlice';
 import { setIsOpen } from '../space/spaceSlice';
 import { SpaceType } from '../space/space';
+import { mergeArrows } from '../arrow/arrowSlice';
 
 const INIT_USER = gql`
   mutation InitUser($palette: String!) {
@@ -61,13 +62,6 @@ export default function useAuth() {
 
       dispatch(setCurrentUser(data.getCurrentUser));
 
-      if (data.getCurrentUser.focus) {
-        dispatch(setIsOpen({
-          space: SpaceType.FOCUS,
-          isOpen: true,
-        }));
-      }
-      
       const handleDismissClick = (event: React.MouseEvent) => {
         closeSnackbar(data.getCurrentUser.id);
       }

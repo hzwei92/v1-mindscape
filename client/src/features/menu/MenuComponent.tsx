@@ -2,15 +2,13 @@ import { Box, Paper } from '@mui/material';
 import { useContext, useState } from 'react';
 import { AppContext } from '../../App';
 import { APP_BAR_HEIGHT } from '../../constants';
-import AccountComponent from '../user/UserDialog';
 import SearchComponent from '../search/SearchComponent';
 import GraphsComponent from '../graphs/GraphsComponent';
 
 export default function MenuComponent() {
   const {
     dimColor: color, 
-    menuWidth, 
-    menuIsResizing, 
+    menuWidth,
     setMenuIsResizing,
   } = useContext(AppContext);
 

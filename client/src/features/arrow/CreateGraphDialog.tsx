@@ -57,7 +57,6 @@ export default function CreateGraphDialog(props: CreateGraphDialogProps) {
   const [name, setName] = useState('');
   const [routeName, setRouteName] = useState('');
   const [location, setLocation] = useState(null as SpaceType | null);
-  console.log('location', location);
 
   const [createFrameGraph] = useMutation(CREATE_FRAME_GRAPH, {
     onError: err => {

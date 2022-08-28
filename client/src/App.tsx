@@ -150,8 +150,8 @@ function App() {
       ? 0
       : latentMenuWidth
     setMenuWidth(menuWidth1)
-    if (frameIsOpen) {
-      if (focusIsOpen) {
+    if (user?.frame && frameIsOpen) {
+      if (user?.focus && focusIsOpen) {
         setFrameWidth(latentFrameWidth);
       }
       else {
@@ -161,7 +161,7 @@ function App() {
     else {
       setFrameWidth(0);
     }
-  }, [menuMode, focusIsOpen, frameIsOpen, latentMenuWidth, width]);
+  }, [menuMode, focusIsOpen, frameIsOpen, latentMenuWidth, width, user?.frame, user?.focus]);
 
   const appContextValue = useMemo(() => {
     return {
@@ -250,11 +250,10 @@ function App() {
             display: 'flex',
             flexDirection: 'row',
           }}>
-            <svg>
+            <svg width={0} height={0}>
               <defs>
                 {
                   Object.keys(idToUser).map(userId => {
-                    console.log(userId);
                     const user = idToUser[userId];
                     return (
                       <marker 

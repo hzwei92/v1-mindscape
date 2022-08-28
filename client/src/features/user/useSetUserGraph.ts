@@ -80,7 +80,9 @@ export default function useSetUserGraph() {
     onCompleted: data => {
       console.log(data);
       dispatch(mergeUsers([data.setUserFrameById]));
-      dispatch(mergeArrows([data.setUserFrameById.frame]));
+      if (data.setUserFrameById.frame) {
+        dispatch(mergeArrows([data.setUserFrameById.frame]));
+      }
     },
   });
 
@@ -93,7 +95,9 @@ export default function useSetUserGraph() {
     onCompleted: data => {
       console.log(data);
       dispatch(mergeUsers([data.setUserFrameByRouteName]));
-      dispatch(mergeArrows([data.setUserFrameByRouteName.frame]));
+      if (data.setUserFrameByRouteName.frame) {
+        dispatch(mergeArrows([data.setUserFrameByRouteName.frame]));
+      }
     },
   });
 
@@ -106,7 +110,9 @@ export default function useSetUserGraph() {
     onCompleted: data => {
       console.log(data);
       dispatch(mergeUsers([data.setUserFocusById]));
-      dispatch(mergeArrows([data.setUserFocusById.focus]));
+      if (data.setUserFocusById.focus) {
+        dispatch(mergeArrows([data.setUserFocusById.focus]));
+      }
     },
   });
 
@@ -119,7 +125,9 @@ export default function useSetUserGraph() {
     onCompleted: data => {
       console.log(data);
       dispatch(mergeUsers([data.setUserFocusByRouteName]));
-      dispatch(mergeArrows([data.setUserFocusByRouteName.focus]));
+      if (data.setUserFocusByRouteName.focus) {
+        dispatch(mergeArrows([data.setUserFocusByRouteName.focus]));
+      }
     },
   });
 
@@ -140,8 +148,8 @@ export default function useSetUserGraph() {
       dispatch(mergeUsers([user1]));
     }
 
-    dispatch(resetTwigs(SpaceType.FOCUS));
-    dispatch(resetUsers(SpaceType.FOCUS));
+    dispatch(resetTwigs(SpaceType.FRAME));
+    dispatch(resetUsers(SpaceType.FRAME));
   };
 
   const setUserFrameByRouteName = (arrowRouteName: string) => {
@@ -152,8 +160,8 @@ export default function useSetUserGraph() {
       }
     });
 
-    dispatch(resetTwigs(SpaceType.FOCUS));
-    dispatch(resetUsers(SpaceType.FOCUS));
+    dispatch(resetTwigs(SpaceType.FRAME));
+    dispatch(resetUsers(SpaceType.FRAME));
   }
 
 

@@ -13,9 +13,7 @@ export default function FrameComponent() {
     user,
     palette,
     dimColor: color,
-    menuIsResizing,
     frameWidth,
-    frameIsResizing,
     setFrameIsResizing,
   } = useContext(AppContext);
 
@@ -42,11 +40,11 @@ export default function FrameComponent() {
   const [showResizer, setShowResizer] = useState(false);
 
   useEffect(() => {
-    if (!user?.frameId) return;
+    if (!frameUser) return;
     setTheme(createTheme({
       palette: {
         primary: {
-          main: frameUser?.color || '#ffffff',
+          main: frameUser?.color || (palette === 'dark' ? '#ffffff' : '#000000'),
         },
         mode: palette,
       },
@@ -80,7 +78,7 @@ export default function FrameComponent() {
         // transition: menuIsResizing || frameIsResizing
         //   ? 'none'
         //   : 'width 0.5s',
-        display: frameIsOpen
+        display: user.frame && frameIsOpen
           ? 'flex'
           : 'none',
         flexDirection: 'row',
@@ -97,7 +95,7 @@ export default function FrameComponent() {
               ? 'primary.main'
               : color,
             cursor: 'col-resize',
-            display: focusIsOpen
+            display: frameIsOpen && focusIsOpen
               ? 'block'
               : 'none'
           }}

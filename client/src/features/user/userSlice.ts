@@ -1,6 +1,7 @@
 import { createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../../app/store';
 import type { IdToType } from '../../types';
+import { mergeArrows } from '../arrow/arrowSlice';
 import { setInit, setLogin, setLogout } from '../auth/authSlice';
 import { SpaceType } from '../space/space';
 import { mergeTwigs } from '../twig/twigSlice';
@@ -21,9 +22,20 @@ const userSlice = createSlice({
   initialState,
   reducers: {
     setCurrentUser: (state, action: PayloadAction<User | null>) => {
+      const idToUser = { ...state.idToUser };
+      if (action.payload) {
+        idToUser[action.payload.id] = action.payload;
+        if (action.payload.frame?.user) {
+          idToUser[action.payload.frame.user.id] = action.payload.frame.user;
+        }
+        if (action.payload.focus?.user) {
+          idToUser[action.payload.focus.user.id] = action.payload.focus.user;
+        }
+      }
       return {
         ...state,
         currentUser: action.payload,
+        idToUser,
       }
     },
     mergeUsers: (state, action: PayloadAction<User[]>) => {
@@ -97,7 +109,25 @@ const userSlice = createSlice({
           ...state,
           idToUser,
         };
-      });
+      })
+      .addCase(mergeArrows, (state, action) => {
+        const idToUser = action.payload.reduce((acc, arrow) => {
+          if (!arrow.deleteDate) {
+            acc[arrow.userId] = Object.assign({}, 
+              acc[arrow.userId], 
+              arrow.user
+            );
+          }
+          return acc;
+        }, { 
+          ...state.idToUser
+        });
+
+        return {
+          ...state,
+          idToUser,
+        };
+      })
   },
 });
 
