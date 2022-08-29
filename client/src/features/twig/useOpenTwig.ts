@@ -1,8 +1,10 @@
 import { gql, useMutation } from '@apollo/client';
+import { useContext } from 'react';
 import { v4 } from 'uuid';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { selectSessionId } from '../auth/authSlice';
 import { SpaceType } from '../space/space';
+import { SpaceContext } from '../space/SpaceComponent';
 import type { Twig } from './twig';
 import { mergeTwigs } from './twigSlice';
 
@@ -19,6 +21,8 @@ const OPEN_TWIG = gql`
 
 const useOpenTwig = () => {
   const dispatch = useAppDispatch();
+
+  const { space } = useContext(SpaceContext);
 
   const sessionId = useAppSelector(selectSessionId);
 
@@ -48,7 +52,7 @@ const useOpenTwig = () => {
     });
 
     dispatch(mergeTwigs({
-      space: SpaceType.FRAME,
+      space,
       twigs: [twig1],
     }));
   }
