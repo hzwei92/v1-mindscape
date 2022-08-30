@@ -82,6 +82,17 @@ export default function useRemoveTwig() {
       });
     }
 
+    Object.values(idToTwig).forEach(twig => {
+      const shouldRemove = twigs.some(twig1 => 
+        twig1.id === twig.sourceId || twig1.id === twig.targetId
+      );
+      if (shouldRemove) {
+        twigs.push(Object.assign({}, twig, {
+          deleteDate: date,
+        }));
+      }
+    })
+
     dispatch(mergeTwigs({
       space,
       twigs,

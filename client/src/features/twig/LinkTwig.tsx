@@ -13,7 +13,7 @@ import { mergeIdToHeight, selectHeightByTwigId, selectSelectedTwigId } from '../
 import TwigControls from './TwigControls';
 import { selectUserById } from '../user/userSlice';
 import { selectTwigById } from './twigSlice';
-import { SpaceType } from '../space/space';
+import CloseIcon from '@mui/icons-material/Close';
 
 interface LinkTwigProps {
   twigId: string;
@@ -32,10 +32,16 @@ function LinkTwig(props: LinkTwigProps) {
     abstract,
     space, 
     canEdit,
+    setRemovalTwigId,
   } = useContext(SpaceContext);
-
+  
   const twig = useAppSelector(state => selectTwigById(state, space, props.twigId));
   const twigUser = useAppSelector(state => selectUserById(state, twig.userId));
+
+  const isLinking = (
+    pendingLink.sourceId === twig.detailId || 
+    pendingLink.targetId === twig.detailId
+  );
 
   const height = useAppSelector(state => selectHeightByTwigId(state, space, props.twigId));
 
@@ -109,10 +115,10 @@ function LinkTwig(props: LinkTwigProps) {
     openTwig(twig, !twig.isOpen);
   }
 
-  const isLinking = (
-    pendingLink.sourceId === twig.detailId || 
-    pendingLink.targetId === twig.detailId
-  );
+  const handleRemoveClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setRemovalTwigId(twig.id);
+  }
 
   return (
     <Box>
@@ -187,9 +193,10 @@ function LinkTwig(props: LinkTwigProps) {
               }}>
                 <Box sx={{
                   position: 'absolute',
-                  left: TWIG_WIDTH - 35,
+                  left: TWIG_WIDTH - 65,
                   top: -6,
                   zIndex: 1,
+                  display: 'flex',
                 }}>
                   <IconButton onClick={handleOpenClick} sx={{
                     color: palette === 'dark'
@@ -197,6 +204,15 @@ function LinkTwig(props: LinkTwigProps) {
                       : 'black'
                   }}>
                     <RemoveIcon color='inherit' sx={{
+                      fontSize: 12,
+                    }}/>
+                  </IconButton>
+                  <IconButton onClick={handleRemoveClick} sx={{
+                    color: palette === 'dark'
+                      ? 'white'
+                      : 'black'
+                  }}>
+                    <CloseIcon color='inherit' sx={{
                       fontSize: 12,
                     }}/>
                   </IconButton>

@@ -302,10 +302,25 @@ export class TwigsService {
       let twigs = await this.twigsRepository.manager.getTreeRepository(Twig)
         .findDescendants(twig);
 
+
       twigs = twigs.map(twig => {
         twig.deleteDate = date;
         return twig;
       });
+
+      const links = await this.twigsRepository.find({
+        where: [{
+          sourceId: In(twigs.map(twig => twig.id)),
+        }, {
+          targetId: In(twigs.map(twig => twig.id)),
+        }]
+      });
+
+      twigs.push(...links.map(link => {
+        link.deleteDate = date;
+        return link;
+      }));
+
       twigs = await this.twigsRepository.save(twigs);
 
       return {
@@ -323,7 +338,20 @@ export class TwigsService {
 
       twig.deleteDate = date;
 
-      const twigs = await this.twigsRepository.save([twig, ...children]);
+      let links = await this.twigsRepository.find({
+        where: [{
+          sourceId: twig.id,
+        }, {
+          targetId: twig.id,
+        }]
+      });
+
+      links = links.map(link => {
+        link.deleteDate = date;
+        return link;
+      })
+
+      const twigs = await this.twigsRepository.save([twig, ...children, ...links]);
 
       return {
         parentTwig: twig.parent,

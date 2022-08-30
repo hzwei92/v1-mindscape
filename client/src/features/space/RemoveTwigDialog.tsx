@@ -23,6 +23,10 @@ export default function RemoveTwigDialog() {
   const idToTwig = useAppSelector(selectIdToTwig(space));
   const idToDescIdToTrue = useAppSelector(selectIdToDescIdToTrue(space));
 
+  const removalTwig = idToTwig[removalTwigId];
+
+  const isLink = removalTwig?.sourceId !== removalTwig?.targetId;
+
   const { removeTwig } = useRemoveTwig();
   const { selectTwig } = useSelectTwig(space, canEdit);
 
@@ -30,24 +34,13 @@ export default function RemoveTwigDialog() {
     setRemovalTwigId('');
   };
 
-  const handleRemoveClick = (event: React.MouseEvent) => {
-    event.stopPropagation();
-    if (!removalTwigId) return;
-    const removalTwig = idToTwig[removalTwigId]
-
-    selectTwig(abstract, idToTwig[removalTwig.parent.id]);
-
-    removeTwig(removalTwig, false);
-
-    handleClose();
-  }
-
   const handleRemoveSubtreeClick = (event: React.MouseEvent) => {
     event.stopPropagation();
     if (!removalTwigId) return;
-    const removalTwig = idToTwig[removalTwigId]
 
-    selectTwig(abstract, idToTwig[removalTwig.parent.id]);
+    if (!isLink) {
+      selectTwig(abstract, idToTwig[removalTwig.parent.id]);
+    }
 
     removeTwig(removalTwig, true);
 
@@ -64,19 +57,29 @@ export default function RemoveTwigDialog() {
         <Typography variant='overline'>
           Remove
           {
+            isLink 
+              ? ' link' 
+              : ' post'
+          }
+          {
             descIds.length
               ? ' subtree'
-              : ' post'
+              : ''
           }
         </Typography>
         <Box sx={{
           marginTop: 2,
           marginBottom: 3,
         }}>
-          Remove this post.
+          Remove this
+          {
+            isLink
+              ? ' link'
+              : ' post'
+          }.
           {
             descIds.length
-              ? ' Or, remove it along with its ' + descIds.length + ' descendant' + (descIds.length === 1 ? '.' : 's.')
+              ? ', along with its ' + descIds.length + ' descendant' + (descIds.length === 1 ? '.' : 's.')
               : ''
           }
           <br/><br/>
@@ -85,18 +88,19 @@ export default function RemoveTwigDialog() {
           To delete a post open the More Options menu on the post.
         </Box>
         <Box>
-          <Button variant='contained' onClick={handleRemoveClick}>
-            Remove post
+          <Button variant='contained' onClick={handleRemoveSubtreeClick}>
+            Remove
+            {
+              isLink
+                ? ' Link'
+                : ' Post'
+            }
+            {
+              descIds.length
+                ? ' Subtree'
+                : ''
+            }
           </Button>
-          {
-            descIds.length 
-              ? <Button variant='contained' onClick={handleRemoveSubtreeClick} sx={{
-                  marginLeft: 1.5,
-                }}>
-                  Remove subtree
-                </Button>
-              : null
-          }
           &nbsp;
           &nbsp;
           <Button onClick={handleClose} sx={{
