@@ -41,6 +41,7 @@ interface ArrowEditorProps {
   arrow: Arrow;
   isReadonly: boolean;
   instanceId: string;
+  fontSize: number;
 }
 
 export default function ArrowEditor(props: ArrowEditorProps) {
@@ -154,7 +155,7 @@ export default function ArrowEditor(props: ArrowEditorProps) {
   return (
     <Box sx={{
       marginTop: 1,
-      fontSize: 20,
+      fontSize: props.fontSize,
       position: 'relative',
       cursor: pendingLink.sourceId
         ? 'crosshair'

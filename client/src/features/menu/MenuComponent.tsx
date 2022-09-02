@@ -33,7 +33,7 @@ export default function MenuComponent() {
       marginTop: `${APP_BAR_HEIGHT}px`,
       display: 'flex',
       flexDirection: 'row',
-      zIndex: MAX_Z_INDEX + 100,
+      zIndex: MAX_Z_INDEX + 1000,
       width: menuWidth,
       // transition: menuIsResizing
       //   ? 'none'

@@ -191,6 +191,7 @@ export default function EntryComponent(props: EntryComponentProps) {
           isWindow={false}
           isGroup={false}
           isTab={false}
+          fontSize={16}
         />
         <EntryControls
           entry={props.entry}

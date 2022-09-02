@@ -21,6 +21,7 @@ interface ArrowProps {
   isWindow: boolean;
   isGroup: boolean;
   isTab: boolean;
+  fontSize: number;
 }
 
 export default function ArrowComponent(props: ArrowProps) {
@@ -148,6 +149,7 @@ export default function ArrowComponent(props: ArrowProps) {
           arrow={arrow}
           isReadonly={false}
           instanceId={props.instanceId}
+          fontSize={props.fontSize}
         />
       </Box>
     </Box>
