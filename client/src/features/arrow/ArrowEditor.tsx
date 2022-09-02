@@ -154,7 +154,7 @@ export default function ArrowEditor(props: ArrowEditorProps) {
   return (
     <Box sx={{
       marginTop: 1,
-      fontSize: 16,
+      fontSize: 20,
       position: 'relative',
       cursor: pendingLink.sourceId
         ? 'crosshair'

@@ -57,7 +57,6 @@ interface SpaceComponentProps {
 }
 
 export default function SpaceComponent(props: SpaceComponentProps) {
-  //console.log('space');
   const dispatch = useAppDispatch();
 
   const { 

@@ -37,11 +37,11 @@ export class User {
   name: string;
 
   @Column()
-  @Index({ unique: true, where: '"deleteDate" is not null' })
+  @Index({ unique: true, where: '"deleteDate" is null' })
   lowercaseName: string;
 
   @Column()
-  @Index({ unique: true, where: '"deleteDate" is not null' })
+  @Index({ unique: true, where: '"deleteDate" is null' })
   routeName: string;
 
   @Column({ nullable: true })
