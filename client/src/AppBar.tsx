@@ -133,7 +133,7 @@ function AppBar() {
     else {
       setCreateGraphArrowId(null);
       setCreateGraphSpace(SpaceType.FRAME);
-      setIsCreatingGraph(true);
+      setMenuMode(MenuMode.GRAPHS);
     }
   }
 
@@ -148,7 +148,7 @@ function AppBar() {
     else {
       setCreateGraphArrowId(null);
       setCreateGraphSpace(SpaceType.FOCUS);
-      setIsCreatingGraph(true);
+      setMenuMode(MenuMode.GRAPHS);
     }
   }
 

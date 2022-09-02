@@ -1,7 +1,7 @@
 import { Box, Paper } from '@mui/material';
 import { useContext, useState } from 'react';
 import { AppContext } from '../../App';
-import { APP_BAR_HEIGHT } from '../../constants';
+import { APP_BAR_HEIGHT, MAX_Z_INDEX } from '../../constants';
 import SearchComponent from '../search/SearchComponent';
 import GraphsComponent from '../graphs/GraphsComponent';
 
@@ -28,10 +28,12 @@ export default function MenuComponent() {
 
   return (
     <Box sx={{
+      position: 'fixed',
       height: `calc(100% - ${APP_BAR_HEIGHT}px)`,
       marginTop: `${APP_BAR_HEIGHT}px`,
       display: 'flex',
       flexDirection: 'row',
+      zIndex: MAX_Z_INDEX + 100,
       width: menuWidth,
       // transition: menuIsResizing
       //   ? 'none'

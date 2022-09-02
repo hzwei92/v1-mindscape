@@ -46,7 +46,6 @@ export const AppContext = React.createContext({} as {
 });
 
 function App() {
-  //console.log('app');
   const user = useAppSelector(selectCurrentUser);
 
   const idToUser = useAppSelector(selectIdToUser);
@@ -148,20 +147,23 @@ function App() {
   useEffect(() => {
     const menuWidth1 = menuMode === MenuMode.NONE
       ? 0
-      : latentMenuWidth
-    setMenuWidth(menuWidth1)
+      : latentMenuWidth;
+    setMenuWidth(menuWidth1);
+
+  }, [menuMode]);
+  useEffect(() => {
     if (user?.frame && frameIsOpen) {
       if (user?.focus && focusIsOpen) {
         setFrameWidth(latentFrameWidth);
       }
       else {
-        setFrameWidth(width - menuWidth1);
+        setFrameWidth(width);
       }
     }
     else {
       setFrameWidth(0);
     }
-  }, [menuMode, focusIsOpen, frameIsOpen, latentMenuWidth, width, user?.frame, user?.focus]);
+  }, [focusIsOpen, frameIsOpen, user?.frame, user?.focus]);
 
   const appContextValue = useMemo(() => {
     return {
@@ -213,7 +215,7 @@ function App() {
     else if (frameIsResizing) {
       event.preventDefault();
       setFrameWidth(
-        Math.max(event.clientX - menuWidth, FRAME_MIN_WIDTH)
+        Math.max(event.clientX, FRAME_MIN_WIDTH)
       );
     }
   }

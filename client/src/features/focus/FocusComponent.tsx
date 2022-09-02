@@ -13,11 +13,10 @@ export default function FocusComponent() {
     user,
     width,
     palette,
-    menuWidth,
     frameWidth,
   } = useContext(AppContext);
 
-  const focusWidth = width - menuWidth - frameWidth;
+  const focusWidth = width - frameWidth;
 
   const focusIsOpen = useAppSelector(selectIsOpen(SpaceType.FOCUS));
   const focusUser = useAppSelector(state => selectUserById(state, user?.focus?.userId));
