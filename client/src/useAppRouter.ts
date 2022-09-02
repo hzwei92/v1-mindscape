@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from './app/hooks';
 import { Role } from './features/role/role';
 import { User } from './features/user/user';
-import useSetUserFocus from './features/user/useSetUserGraph';
 import { checkPermit } from './utils';
 import useCenterTwig from './features/twig/useCenterTwig';
 import useSelectTwig from './features/twig/useSelectTwig';
@@ -52,16 +51,6 @@ export default function useAppRouter(user: User | null) {
     
     if (path.length < 3) {
       console.log('no path')
-      if (user?.frame) {
-        navigate(`/g/${user.frame.routeName}/0`, {
-          replace: true,
-        })
-      }
-      else if (user?.focus) {
-        navigate(`/g/${user.focus.routeName}/0`, {
-          replace: true,
-        });
-      }
     }
     else if (path[2].toLowerCase() === user?.frame?.routeName) {
       console.log('frame routing');
@@ -74,8 +63,10 @@ export default function useAppRouter(user: User | null) {
 
       if (user.focus && !focusSelectedTwigId && user.focus.rootTwigId) {
         const twig = focusIdToTwig[user.focus.rootTwigId];
-        focusSelectTwig(user.focus, twig);
-        focusCenterTwig(user.focus.rootTwigId, true, 0);
+        if (twig) {
+          focusSelectTwig(user.focus, twig);
+          focusCenterTwig(user.focus.rootTwigId, true, 0);
+        }
       }
 
       document.title = `Mindscape | ${user.frame.title}`;
@@ -129,8 +120,10 @@ export default function useAppRouter(user: User | null) {
 
       if (user.frame && !frameSelectedTwigId && user.frame.rootTwigId) {
         const twig = frameIdToTwig[user.frame.rootTwigId];
-        frameSelectTwig(user.frame, twig);
-        frameCenterTwig(twig.id, true, 0);
+        if (twig) {
+          frameSelectTwig(user.frame, twig);
+          frameCenterTwig(twig.id, true, 0);
+        }
       }
 
       if (path[2] !== user.focus?.routeName) {

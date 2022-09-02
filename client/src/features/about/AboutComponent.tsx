@@ -45,7 +45,7 @@ export default function AboutComponent() {
           Each graph has a directory tree, indicated by the solid lines between nodes.
         </p>
         <p>
-          Use the consensus algorithm of your choice to share graphs and decide what graphs represent you.
+          Collect and share your favorite graphs. Organize them by creating edges between them.
         </p>
       </Box>
     </Card>

@@ -1,4 +1,5 @@
 import { gql, useApolloClient, useMutation } from '@apollo/client';
+import { useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '../../app/hooks';
 import { setLogout } from './authSlice';
 
@@ -12,6 +13,7 @@ const LOGOUT_USER = gql`
 
 export default function useLogout() {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
   const [logout] = useMutation(LOGOUT_USER, {
     onError: error => {
@@ -23,10 +25,9 @@ export default function useLogout() {
   });
 
   const logoutUser = async () => {
-    console.log('hihi')
     logout();
     dispatch(setLogout());
-    console.log('hello')
+    navigate('/');
   }
 
   return { logoutUser };

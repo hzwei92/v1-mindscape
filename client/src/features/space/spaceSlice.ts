@@ -30,7 +30,7 @@ export interface SpaceState {
 const initialState: SpaceState = {
   selectedSpace: SpaceType.FRAME,
   [SpaceType.FRAME]: {
-    isOpen: true,
+    isOpen: false,
     selectedTwigId: '',
     scale: 0.75,
     scroll: {
