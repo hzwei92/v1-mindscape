@@ -14,6 +14,7 @@ import { MenuMode } from './features/menu/menu';
 import { PendingLinkType, SpaceType } from './features/space/space';
 import { selectIsOpen } from './features/space/spaceSlice';
 import CreateGraphDialog from './features/arrow/CreateGraphDialog';
+import AboutComponent from './features/about/AboutComponent';
 
 export const AppContext = React.createContext({} as {
   user: User | null;
@@ -281,6 +282,7 @@ function App() {
             <MenuComponent />
             <FrameComponent />
             <FocusComponent />
+            <AboutComponent />
           </Paper>
           <CreateGraphDialog 
             isOpen={isCreatingGraph} 
