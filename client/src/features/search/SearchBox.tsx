@@ -20,8 +20,7 @@ interface SearchBoxProps {
 
 function SearchBox(props: SearchBoxProps) {
   const {
-    menuIsResizing,
-    menuWidth,
+    searchMenuWidth,
     brightColor: color,
   } = useContext(AppContext);
 
@@ -59,11 +58,8 @@ function SearchBox(props: SearchBoxProps) {
       <OutlinedInput
         sx={{
           height: 30, 
-          width: menuWidth - 125,
+          width: searchMenuWidth - 125,
           fontSize: 14,
-          transition: menuIsResizing
-            ? 'none'
-            : 'width 0.5s',
         }}
         id='query'
         type={'text'}

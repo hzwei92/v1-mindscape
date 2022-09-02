@@ -5,7 +5,6 @@ import { FRAME_MIN_WIDTH, MAX_Z_INDEX, MENU_MIN_WIDTH, MENU_WIDTH } from './cons
 import { selectCurrentUser, selectIdToUser } from './features/user/userSlice';
 import { SnackbarProvider } from 'notistack';
 import AppBar from './AppBar';
-import MenuComponent from './features/menu/MenuComponent';
 import { getColor } from './utils';
 import FrameComponent from './features/frame/FrameComponent';
 import FocusComponent from './features/focus/FocusComponent';
@@ -15,6 +14,8 @@ import { PendingLinkType, SpaceType } from './features/space/space';
 import { selectIsOpen } from './features/space/spaceSlice';
 import CreateGraphDialog from './features/arrow/CreateGraphDialog';
 import AboutComponent from './features/about/AboutComponent';
+import GraphsComponent from './features/graphs/GraphsComponent';
+import SearchComponent from './features/search/SearchComponent';
 
 export const AppContext = React.createContext({} as {
   user: User | null;
@@ -29,9 +30,14 @@ export const AppContext = React.createContext({} as {
 
   menuMode: MenuMode;
   setMenuMode: Dispatch<SetStateAction<MenuMode>>;
-  menuIsResizing: boolean;
-  setMenuIsResizing: Dispatch<SetStateAction<boolean>>;
-  menuWidth: number;
+
+  searchMenuIsResizing: boolean;
+  setSearchMenuIsResizing: Dispatch<SetStateAction<boolean>>;
+  searchMenuWidth: number;
+
+  graphsMenuIsResizing: boolean;
+  setGraphsMenuIsResizing: Dispatch<SetStateAction<boolean>>;
+  graphsMenuWidth: number;
 
   frameIsResizing: boolean;
   setFrameIsResizing: Dispatch<SetStateAction<boolean>>;
@@ -44,6 +50,7 @@ export const AppContext = React.createContext({} as {
   setIsCreatingGraph: Dispatch<SetStateAction<boolean>>;
   setCreateGraphSpace: Dispatch<SetStateAction<SpaceType | null>>;
   setCreateGraphArrowId: Dispatch<SetStateAction<string | null>>;
+
 });
 
 function App() {
@@ -62,6 +69,13 @@ function App() {
   const [brightColor, setBrightColor] = useState(getColor(palette, false));
 
   const [menuMode, setMenuMode] = useState(MenuMode.NONE);
+
+  const [graphsMenuWidth, setGraphsMenuWidth] = useState(MENU_WIDTH);
+  const [graphsMenuIsResizing, setGraphsMenuIsResizing] = useState(false);
+
+  const [searchMenuWidth, setSearchMenuWidth] = useState(MENU_WIDTH);
+  const [searchMenuIsResizing, setSearchMenuIsResizing] = useState(false);
+
   const [latentMenuWidth, setLatentMenuWidth] = useState(MENU_WIDTH);
   const [menuWidth, setMenuWidth] = useState(0); 
   const [menuIsResizing, setMenuIsResizing] = useState(false);
@@ -180,9 +194,14 @@ function App() {
 
       menuMode,
       setMenuMode,
-      menuIsResizing,
-      setMenuIsResizing,
-      menuWidth,
+
+      searchMenuIsResizing,
+      setSearchMenuIsResizing,
+      searchMenuWidth,
+
+      graphsMenuIsResizing,
+      setGraphsMenuIsResizing,
+      graphsMenuWidth,
 
       frameIsResizing,
       setFrameIsResizing,
@@ -200,31 +219,38 @@ function App() {
     user, 
     width, height, 
     palette, dimColor, brightColor, 
-    menuMode, menuIsResizing, menuWidth, 
+    menuMode, 
+    graphsMenuIsResizing, graphsMenuWidth,
+    searchMenuIsResizing, searchMenuWidth,
+    menuIsResizing, menuWidth, 
     frameIsResizing, frameWidth, 
     pendingLink,
     isCreatingGraph,
   ]);
 
   const handleMouseMove = (event: React.MouseEvent) => {
-    if (menuIsResizing) {
+    if (searchMenuIsResizing) {
       event.preventDefault();
-      const width = Math.max(event.clientX, MENU_MIN_WIDTH)
-      setMenuWidth(width);
-      setLatentMenuWidth(width)
+      setSearchMenuWidth(Math.max(event.clientX, MENU_MIN_WIDTH));
+    }
+    else if (graphsMenuIsResizing) {
+      event.preventDefault();
+      setGraphsMenuWidth(Math.max(event.clientX, MENU_MIN_WIDTH));
     }
     else if (frameIsResizing) {
       event.preventDefault();
-      setFrameWidth(
-        Math.max(event.clientX, FRAME_MIN_WIDTH)
-      );
+      setFrameWidth(Math.max(event.clientX, FRAME_MIN_WIDTH));
     }
   }
 
   const handleMouseUp = (event: React.MouseEvent) => {
-    if (menuIsResizing) {
+    if (searchMenuIsResizing) {
       event.preventDefault();
-      setMenuIsResizing(false);
+      setSearchMenuIsResizing(false);
+    }
+    else if (graphsMenuIsResizing) {
+      event.preventDefault();
+      setGraphsMenuIsResizing(false);
     }
     else if (frameIsResizing) {
       event.preventDefault();
@@ -279,7 +305,8 @@ function App() {
                 }
               </defs>
             </svg>
-            <MenuComponent />
+            <SearchComponent />
+            <GraphsComponent />
             <FrameComponent />
             <FocusComponent />
             <AboutComponent />

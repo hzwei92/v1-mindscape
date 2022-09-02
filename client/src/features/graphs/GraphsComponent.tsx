@@ -1,5 +1,5 @@
 import { gql, useApolloClient, useReactiveVar } from '@apollo/client';
-import { Box, Button, Card, IconButton, Link, Typography } from '@mui/material';
+import { Box, Button, Card, IconButton, Link, Paper, Typography } from '@mui/material';
 import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../app/hooks';
@@ -11,6 +11,7 @@ import { selectIdToArrow } from '../arrow/arrowSlice';
 import LooksOne from '@mui/icons-material/LooksOne';
 import LooksTwo from '@mui/icons-material/LooksTwo';
 import useSetUserGraph from '../user/useSetUserGraph';
+import { APP_BAR_HEIGHT, MAX_Z_INDEX } from '../../constants';
 
 
 interface GraphsComponentProps {
@@ -25,6 +26,8 @@ export default function GraphsComponent(props: GraphsComponentProps) {
     menuMode,
     setMenuMode,
     dimColor: color,
+    setGraphsMenuIsResizing,
+    graphsMenuWidth,
     setIsCreatingGraph,
     setCreateGraphArrowId,
   } = useContext(AppContext);
@@ -34,10 +37,25 @@ export default function GraphsComponent(props: GraphsComponentProps) {
 
   const idToArrow = useAppSelector(selectIdToArrow);
 
+  const [showResizer, setShowResizer] = useState(false);
+
   // const { requestRole } = useRequestRole();
   // const { removeRole } = useRemoveRole();
 
   const { setUserFrameById, setUserFocusById } = useSetUserGraph();
+
+
+  const handleResizeMouseEnter = (event: React.MouseEvent) => {
+    setShowResizer(true);
+  };
+
+  const handleResizeMouseLeave = (event: React.MouseEvent) => {
+    setShowResizer(false);
+  };
+
+  const handleResizeMouseDown = (event: React.MouseEvent) => {
+    setGraphsMenuIsResizing(true);
+  };
 
   const handleJoinClick = (jamId: string) => (event: React.MouseEvent) => {
     //requestRole(jamId);
@@ -86,133 +104,164 @@ export default function GraphsComponent(props: GraphsComponentProps) {
 
   return (
     <Box sx={{
-      height: '100%',
+      position: 'fixed',
+      height: `calc(100% - ${APP_BAR_HEIGHT}px)`,
+      marginTop: `${APP_BAR_HEIGHT}px`,
+      display: 'flex',
+      flexDirection: 'row',
+      zIndex: MAX_Z_INDEX + 1000,
+      width: graphsMenuWidth,
+      // transition: menuIsResizing
+      //   ? 'none'
+      //   : 'width .5s'
     }}>
-      <Card elevation={5} sx={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        padding: 1,
-      }}>
-        <Button onClick={handleStartClick} variant='contained' sx={{
-          whiteSpace: 'nowrap',
-        }}>
-          Create a graph
-        </Button>
-        <Box>
-          <IconButton onClick={handleClose} sx={{
-            fontSize: 16,
-          }}>
-            <CloseIcon fontSize='inherit' />
-          </IconButton>
-        </Box>
-      </Card>
-      <Box sx={{
+      <Paper sx={{
         height: '100%',
-        width: '100%',
-        overflowY: 'scroll',
+        width: 'calc(100% - 4px)',
+        color,
       }}>
-
-      {
-          roles.map(role => {
-            const { arrow } = role;
-            const time = new Date(arrow?.updateDate || Date.now()).getTime();
-            const timeString = getTimeString(time);
-            return (
-              <Card key={`role-${role.id}`} elevation={5} sx={{
-                margin: 1,
-                padding: 1,
+        <Box sx={{
+          height: '100%',
+        }}>
+          <Card elevation={5} sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            padding: 1,
+          }}>
+            <Button onClick={handleStartClick} variant='contained' sx={{
+              whiteSpace: 'nowrap',
+            }}>
+              Create a graph
+            </Button>
+            <Box>
+              <IconButton onClick={handleClose} sx={{
                 fontSize: 16,
-                display: 'flex',
-                flexDirection: 'row',
-                justifyContent: 'space-between'
               }}>
-                <Box>
-                  <Box>
-                    <Link color={arrow.user?.color} sx={{
-                      color: arrow.user?.color,
-                      cursor: arrow.userId === user?.id
-                        ? 'default'
-                        : 'pointer',
-                    }}>
-                      {arrow.title}
-                    </Link>
-                    &nbsp;
-                    <Box component='span' sx={{
-                      fontSize: 14,
-                      color,
+                <CloseIcon fontSize='inherit' />
+              </IconButton>
+            </Box>
+          </Card>
+          <Box sx={{
+            height: '100%',
+            width: '100%',
+            overflowY: 'scroll',
+          }}>
+
+          {
+              roles.map(role => {
+                const { arrow } = role;
+                const time = new Date(arrow?.updateDate || Date.now()).getTime();
+                const timeString = getTimeString(time);
+                return (
+                  <Card key={`role-${role.id}`} elevation={5} sx={{
+                    margin: 1,
+                    padding: 1,
+                    fontSize: 16,
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: 'space-between'
+                  }}>
+                    <Box>
+                      <Box>
+                        <Link color={arrow.user?.color} sx={{
+                          color: arrow.user?.color,
+                          cursor: arrow.userId === user?.id
+                            ? 'default'
+                            : 'pointer',
+                        }}>
+                          {arrow.title}
+                        </Link>
+                        &nbsp;
+                        <Box component='span' sx={{
+                          fontSize: 14,
+                          color,
+                        }}>
+                          {
+                            timeString
+                          }
+                        </Box>
+                      </Box>
+                      <Box sx={{
+                        marginTop:1,
+                        fontSize: 12,
+                      }}>
+                        { role.type }
+                        { role.isInvited 
+                            ? ' - INVITED'
+                            : role.isRequested
+                              ? ' - REQUESTED'
+                              : null
+                        }
+                      </Box>
+                    </Box>
+                    <Box sx={{
+                      display: role.userId === user?.id && role.type !== 'ADMIN'
+                        ? 'block'
+                        : 'none'
                     }}>
                       {
-                        timeString
+                        role.isRequested
+                          ? role.isInvited
+                            ? <Button onClick={handleLeaveClick(role.id)}>
+                                Leave
+                              </Button>
+                            : <Button onClick={handleLeaveClick(role.id)}>
+                                Cancel
+                              </Button>
+                          : role.isInvited
+                            ? <Box>
+                              <Button onClick={handleJoinClick(role.arrowId)}>
+                                Accept
+                              </Button>
+                              <Button onClick={handleLeaveClick(role.id)}>
+                                Decline
+                              </Button>
+                              </Box>
+                            : null
                       }
                     </Box>
-                  </Box>
-                  <Box sx={{
-                    marginTop:1,
-                    fontSize: 12,
-                  }}>
-                    { role.type }
-                    { role.isInvited 
-                        ? ' - INVITED'
-                        : role.isRequested
-                          ? ' - REQUESTED'
-                          : null
-                    }
-                  </Box>
-                </Box>
-                <Box sx={{
-                  display: role.userId === user?.id && role.type !== 'ADMIN'
-                    ? 'block'
-                    : 'none'
-                }}>
-                  {
-                    role.isRequested
-                      ? role.isInvited
-                        ? <Button onClick={handleLeaveClick(role.id)}>
-                            Leave
-                          </Button>
-                        : <Button onClick={handleLeaveClick(role.id)}>
-                            Cancel
-                          </Button>
-                      : role.isInvited
-                        ? <Box>
-                          <Button onClick={handleJoinClick(role.arrowId)}>
-                            Accept
-                          </Button>
-                          <Button onClick={handleLeaveClick(role.id)}>
-                            Decline
-                          </Button>
-                          </Box>
-                        : null
-                  }
-                </Box>
-                <Box>
-                  <IconButton onClick={handleFrameClick(role.arrowId)} sx={{
-                    color: role.arrowId === user?.frameId
-                      ? role.arrow.user.color
-                      : null,
-                    outline: role.arrowId === user?.frameId
-                      ? `1px solid ${role.arrow.user.color}`
-                      : null,
-                  }}>
-                    <LooksOne />
-                  </IconButton>
-                  &nbsp;
-                  <IconButton onClick={handleFocusClick(role.arrowId)}  sx={{
-                    color: role.arrowId === user?.focusId
-                      ? role.arrow.user.color
-                      : null,
-                    outline: role.arrowId === user?.focusId
-                      ? `1px solid ${role.arrow.user.color}`
-                      : null,
-                  }}>
-                    <LooksTwo />
-                  </IconButton>
-                </Box>
-              </Card>
-            )
-          })
-        }
-      </Box>
+                    <Box>
+                      <IconButton onClick={handleFrameClick(role.arrowId)} sx={{
+                        color: role.arrowId === user?.frameId
+                          ? role.arrow.user.color
+                          : null,
+                        outline: role.arrowId === user?.frameId
+                          ? `1px solid ${role.arrow.user.color}`
+                          : null,
+                      }}>
+                        <LooksOne />
+                      </IconButton>
+                      &nbsp;
+                      <IconButton onClick={handleFocusClick(role.arrowId)}  sx={{
+                        color: role.arrowId === user?.focusId
+                          ? role.arrow.user.color
+                          : null,
+                        outline: role.arrowId === user?.focusId
+                          ? `1px solid ${role.arrow.user.color}`
+                          : null,
+                      }}>
+                        <LooksTwo />
+                      </IconButton>
+                    </Box>
+                  </Card>
+                )
+              })
+            }
+          </Box>
+        </Box>
+      </Paper>
+      <Box 
+        onMouseDown={handleResizeMouseDown}
+        onMouseEnter={handleResizeMouseEnter}
+        onMouseLeave={handleResizeMouseLeave} 
+          sx={{
+          width: 4,
+          backgroundColor: showResizer
+            ? 'primary.main'
+            : color,
+          cursor: 'col-resize'
+        }}
+      />
     </Box>
   );
 
