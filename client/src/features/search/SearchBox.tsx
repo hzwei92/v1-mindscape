@@ -59,7 +59,7 @@ function SearchBox(props: SearchBoxProps) {
       <OutlinedInput
         sx={{
           height: 30, 
-          width: menuWidth - 90,
+          width: menuWidth - 125,
           fontSize: 14,
           transition: menuIsResizing
             ? 'none'

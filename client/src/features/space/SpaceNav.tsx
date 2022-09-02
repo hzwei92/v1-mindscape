@@ -44,11 +44,11 @@ export default function SpaceNav() {
   const { selectTwig } = useSelectTwig(space, canEdit);
 
   useEffect(() => {
-    const sortedTwigs = Object.keys(idToTwig).map(id => idToTwig[id])
-      .filter(twig => twig && !twig.deleteDate)
+    const twigs1 = Object.keys(idToTwig).map(id => idToTwig[id])
+      .filter(twig => twig && !twig.deleteDate && twig.sourceId === twig.targetId)
       .sort((a, b) => a.i < b.i ? -1 : 1);
       
-    setTwigs(sortedTwigs);
+    setTwigs(twigs1);
   }, [idToTwig]);
 
   useEffect(() => {

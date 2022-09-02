@@ -3,9 +3,8 @@ import { Box, Button, Card, IconButton, Link, Typography } from '@mui/material';
 import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../app/hooks';
-import { getColor, getTimeString } from '../../utils';
+import { getTimeString } from '../../utils';
 import CloseIcon from '@mui/icons-material/Close';
-import { MOBILE_WIDTH } from '../../constants';
 import { AppContext } from '../../App';
 import { MenuMode } from '../menu/menu';
 import { selectIdToArrow } from '../arrow/arrowSlice';
@@ -89,21 +88,30 @@ export default function GraphsComponent(props: GraphsComponentProps) {
     <Box sx={{
       height: '100%',
     }}>
+      <Card elevation={5} sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        padding: 1,
+      }}>
+        <Button onClick={handleStartClick} variant='contained' sx={{
+          whiteSpace: 'nowrap',
+        }}>
+          Create a graph
+        </Button>
+        <Box>
+          <IconButton onClick={handleClose} sx={{
+            fontSize: 16,
+          }}>
+            <CloseIcon fontSize='inherit' />
+          </IconButton>
+        </Box>
+      </Card>
       <Box sx={{
         height: '100%',
         width: '100%',
         overflowY: 'scroll',
       }}>
-        <Card elevation={5} sx={{
-          margin: 1,
-          padding: 1,
-        }}>
-          <Button onClick={handleStartClick} sx={{
-            whiteSpace: 'nowrap',
-          }}>
-            Create a graph
-          </Button>
-        </Card>
+
       {
           roles.map(role => {
             const { arrow } = role;

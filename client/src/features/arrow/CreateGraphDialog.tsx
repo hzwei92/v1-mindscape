@@ -56,7 +56,16 @@ export default function CreateGraphDialog(props: CreateGraphDialogProps) {
 
   const [name, setName] = useState('');
   const [routeName, setRouteName] = useState('');
+  const [routeError, setRouteError] = useState('');
+
   const [location, setLocation] = useState(null as SpaceType | null);
+
+  useEffect(() => {
+    const route = routeName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    if (route !== routeName) {
+      setRouteName(route)
+    }
+  }, [routeName]);
 
   const [createFrameGraph] = useMutation(CREATE_FRAME_GRAPH, {
     onError: err => {
@@ -161,14 +170,13 @@ export default function CreateGraphDialog(props: CreateGraphDialogProps) {
         }}>
           <TextField
             variant='outlined' 
-            label='Permalink*'
+            error={!!routeError}
+            label='route-name*'
             value={routeName}
             onChange={handleRouteNameChange}
+            helperText={routeError}
             sx={{
               width: '100%',
-            }}
-            InputProps={{
-              startAdornment: <InputAdornment position="start" sx={{mr: 0}}>g/</InputAdornment>,
             }}
           />
         </Box>
