@@ -226,7 +226,7 @@ function LinkTwig(props: LinkTwigProps) {
                   isTab={!!twig.tabId}
                   isGroup={!twig.tabId && !!twig.groupId}
                   isWindow={!twig.tabId && !twig.groupId && !!twig.windowId}
-                  fontSize={20}
+                  fontSize={twig.isOpen ? 60 : 20}
                 />
                 <TwigControls 
                   twig={twig}
