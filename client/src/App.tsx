@@ -166,6 +166,7 @@ function App() {
     setMenuWidth(menuWidth1);
 
   }, [menuMode]);
+  
   useEffect(() => {
     if (user?.frame && frameIsOpen) {
       if (user?.focus && focusIsOpen) {
