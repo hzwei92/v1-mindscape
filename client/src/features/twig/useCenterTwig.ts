@@ -16,7 +16,7 @@ export default function useCenterTwig(space: SpaceType) {
 
   const focusWidth = width - frameWidth;
 
-  const spaceWidth = space === SpaceType.FRAME  //TODO: use this
+  const spaceWidth = space === SpaceType.FRAME  //TODO: use this?
     ? frameWidth 
     : focusWidth;
 
@@ -42,7 +42,7 @@ export default function useCenterTwig(space: SpaceType) {
       console.log('centerTwig', scale);
 
       spaceEl.current.scrollTo({
-        left: (x1 - (spaceEl.current.clientWidth / 2)),
+        left: (x1 - ((spaceEl.current.clientWidth || spaceWidth ) / 2 || VIEW_RADIUS)),
         top: (y1 - spaceEl.current.clientHeight / 2),
         behavior: isSmooth 
           ? 'smooth'

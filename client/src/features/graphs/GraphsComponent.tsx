@@ -229,7 +229,7 @@ export default function GraphsComponent(props: GraphsComponentProps) {
                           ? `1px solid ${role.arrow.user.color}`
                           : null,
                       }}>
-                        <LooksOne />
+                        <LooksTwo />
                       </IconButton>
                       &nbsp;
                       <IconButton onClick={handleFocusClick(role.arrowId)}  sx={{
@@ -240,7 +240,7 @@ export default function GraphsComponent(props: GraphsComponentProps) {
                           ? `1px solid ${role.arrow.user.color}`
                           : null,
                       }}>
-                        <LooksTwo />
+                        <LooksOne />
                       </IconButton>
                     </Box>
                   </Card>

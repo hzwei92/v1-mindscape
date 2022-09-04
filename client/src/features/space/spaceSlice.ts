@@ -32,7 +32,7 @@ const initialState: SpaceState = {
   [SpaceType.FRAME]: {
     isOpen: false,
     selectedTwigId: '',
-    scale: 0.75,
+    scale: 0.5,
     scroll: {
       left: 0,
       top: 0,
