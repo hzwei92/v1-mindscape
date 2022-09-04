@@ -5,8 +5,9 @@ import { MAX_Z_INDEX } from '../../constants';
 import SpaceComponent from '../space/SpaceComponent';
 import { AppContext } from '../../App';
 import { SpaceType } from '../space/space';
-import { selectIsOpen } from '../space/spaceSlice';
+import { selectIsOpen, selectSelectedTwigId } from '../space/spaceSlice';
 import { selectUserById } from '../user/userSlice';
+import useCenterTwig from '../twig/useCenterTwig';
 
 export default function FocusComponent() {
   const { 
@@ -20,6 +21,9 @@ export default function FocusComponent() {
 
   const focusIsOpen = useAppSelector(selectIsOpen(SpaceType.FOCUS));
   const focusUser = useAppSelector(state => selectUserById(state, user?.focus?.userId));
+
+  const focusSelectedTwigId = useAppSelector(selectSelectedTwigId(SpaceType.FOCUS));
+
   const [theme, setTheme] = useState(createTheme({
     palette: {
       primary: {
@@ -34,6 +38,14 @@ export default function FocusComponent() {
       snackbar: MAX_Z_INDEX + 10000
     },
   }));
+
+  const { centerTwig } = useCenterTwig(SpaceType.FOCUS);
+
+  useEffect(() => {
+    if (user?.frame && focusIsOpen) {
+      centerTwig(focusSelectedTwigId || user.frame.rootTwigId || '', true, 0);
+    }
+  }, [focusIsOpen, user?.focus]);
 
   useEffect(() => {
     if (!focusUser) return;
@@ -51,6 +63,7 @@ export default function FocusComponent() {
     }));
   }, [focusUser?.color, palette]);
 
+  
   if (!user) return null;
 
   const handleClick = () => {

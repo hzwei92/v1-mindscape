@@ -7,6 +7,9 @@ import { AppContext } from '../../App';
 import { SpaceContext } from '../space/SpaceComponent';
 import { selectDrag, setDrag } from '../space/spaceSlice';
 import { User } from '../user/user';
+import Remove from '@mui/icons-material/Remove';
+import Add from '@mui/icons-material/Add';
+import useOpenTwig from './useOpenTwig';
 
 interface TwigBarProps {
   twig: Twig;
@@ -31,6 +34,8 @@ function TwigBar(props: TwigBarProps) {
   
   const drag = useAppSelector(selectDrag(space));
 
+  const { openTwig } = useOpenTwig();
+
   const color = palette === 'dark'
     ? 'black'
     : 'white';
@@ -50,6 +55,11 @@ function TwigBar(props: TwigBarProps) {
 
   const dontDrag = (event: React.MouseEvent) => {
     event.stopPropagation();
+  }
+
+  const handleToggleOpenClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    openTwig(props.twig, !props.twig.isOpen);
   }
 
   const handleRemoveClick = (event: React.MouseEvent) => {
@@ -118,12 +128,26 @@ function TwigBar(props: TwigBarProps) {
         </Box>
         <Box>
           <IconButton
+            size='small'
+            color='inherit'
+            onMouseDown={dontDrag}
+            onClick={handleToggleOpenClick}
+            sx={{
+              fontSize: 12,
+              color,
+            }}
+          >
+            {
+              props.twig.isOpen
+               ? <Remove />
+               : <Add />
+            }
+          </IconButton>
+          <IconButton
             disabled={
               abstract?.id === props.twig.detailId || 
               !canEdit || 
-              !!pendingLink.sourceId ||
-              props.twig.bookmarkId === "1" ||
-              props.twig.bookmarkId === "2"
+              !!pendingLink.sourceId 
             } 
             size='small'
             color='inherit'

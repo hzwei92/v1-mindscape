@@ -293,7 +293,7 @@ function AppBar() {
                 ? user.frame.user.color
                 : color,
             }}>
-              <LooksOneIcon fontSize='inherit'/>
+              <LooksTwoIcon fontSize='inherit'/>
             </IconButton>
             &nbsp;
             <IconButton onClick={handleFocusClick} sx={{
@@ -305,7 +305,7 @@ function AppBar() {
                 ? user.focus.user.color
                 : color,
             }}>
-              <LooksTwoIcon fontSize='inherit'/>
+            <LooksOneIcon fontSize='inherit'/>
             </IconButton>
             &nbsp;&nbsp;
             <IconButton onClick={handleOpenUserMenu} sx={{

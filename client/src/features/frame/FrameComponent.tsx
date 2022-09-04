@@ -4,9 +4,10 @@ import { MAX_Z_INDEX } from '../../constants';
 import SpaceComponent from '../space/SpaceComponent';
 import { AppContext } from '../../App';
 import { SpaceType } from '../space/space';
-import { selectIsOpen } from '../space/spaceSlice';
+import { selectIsOpen, selectSelectedTwigId } from '../space/spaceSlice';
 import { useAppSelector } from '../../app/hooks';
 import { selectUserById } from '../user/userSlice';
+import useCenterTwig from '../twig/useCenterTwig';
 
 export default function FrameComponent() {
   const { 
@@ -19,6 +20,10 @@ export default function FrameComponent() {
 
   const frameIsOpen = useAppSelector(selectIsOpen(SpaceType.FRAME));
   const focusIsOpen = useAppSelector(selectIsOpen(SpaceType.FOCUS));
+
+  const frameSelectedTwigId = useAppSelector(selectSelectedTwigId(SpaceType.FRAME));
+
+  console.log('FrameComponent', frameIsOpen, focusIsOpen);
 
   const frameUser = useAppSelector(state => selectUserById(state, user?.frame?.userId));
 
@@ -55,6 +60,14 @@ export default function FrameComponent() {
     }));
   }, [frameUser?.color, palette]);
 
+  const { centerTwig } = useCenterTwig(SpaceType.FRAME);
+
+  useEffect(() => {
+    if (user?.frame && frameIsOpen) {
+      centerTwig(frameSelectedTwigId || user.frame.rootTwigId || '', true, 0);
+    }
+  }, [frameIsOpen, user?.frame]);
+
   if (!theme || !user) return null;
 
   const handleResizeMouseEnter = (event: React.MouseEvent) => {
@@ -75,9 +88,6 @@ export default function FrameComponent() {
         position: 'relative',
         width: frameWidth - 1,
         height: '100%',
-        // transition: menuIsResizing || frameIsResizing
-        //   ? 'none'
-        //   : 'width 0.5s',
         display: user.frame && frameIsOpen
           ? 'flex'
           : 'none',
