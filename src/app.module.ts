@@ -21,6 +21,7 @@ import { LeadsModule } from './leads/leads.module';
 import { EmailModule } from './email/email.module';
 import { TwigsModule } from './twigs/twigs.module';
 import { SheafsModule } from './sheafs/sheafs.module';
+import { TabsModule } from './tabs/tabs.module';
 
 @Module({
   imports: [
@@ -111,6 +112,7 @@ import { SheafsModule } from './sheafs/sheafs.module';
     VotesModule,
     TwigsModule,
     SheafsModule,
+    TabsModule,
   ],
 })
 export class AppModule {}

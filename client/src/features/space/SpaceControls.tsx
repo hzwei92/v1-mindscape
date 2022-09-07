@@ -20,6 +20,7 @@ import { selectIdToTwig } from '../twig/twigSlice';
 import { useNavigate } from 'react-router-dom';
 import useInitSpace from './useInitSpace';
 import useReplyTwigSub from '../twig/useReplyTwigSub';
+import Remove from '@mui/icons-material/Remove';
 
 interface SpaceControlsProps {
   showSettings: boolean;
@@ -107,6 +108,14 @@ export default function SpaceControls(props: SpaceControlsProps) {
       });
     }, 5)
   };
+
+  const handleHideClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    dispatch(setIsOpen({
+      space,
+      isOpen: false,
+    }));
+  }
 
   const handleCloseClick = (event: React.MouseEvent) => {
     if (space === SpaceType.FRAME) {
@@ -202,8 +211,18 @@ export default function SpaceControls(props: SpaceControlsProps) {
           display: 'flex',
           flexDirection: 'column'
         }}>
+           <Fab title='Hide' size='small' onClick={handleHideClick} sx={{
+            fontSize: 20,
+            backgroundColor: palette === 'dark'
+              ? '#000000'
+              : '#ffffff',
+            color: 'primary.main',
+          }}>
+            <Remove fontSize='inherit'/>
+          </Fab> 
           <Fab title='Close' size='small' onClick={handleCloseClick} sx={{
             fontSize: 20,
+            marginTop: 1,
             backgroundColor: palette === 'dark'
               ? '#000000'
               : '#ffffff',
