@@ -42,6 +42,7 @@ import useGraftTwig from '../twig/useGraftTwig';
 import RolesMenu from './RolesMenu';
 import useReplyTwigSub from '../twig/useReplyTwigSub';
 import { selectFocusTab, selectFrameTab } from '../tab/tabSlice';
+import SettingsMenu from './SettingsMenu';
 
 export const SpaceContext = React.createContext({} as {
   abstract: Arrow | null;
@@ -635,6 +636,12 @@ export default function SpaceComponent(props: SpaceComponentProps) {
       <RolesMenu
         isOpen={showRoles}
         setIsOpen={setShowRoles}
+        role={role}
+      />
+      <SettingsMenu 
+        isOpen={showSettings}
+        setIsOpen={setShowSettings}
+        abstract={abstract}
         role={role}
       />
     </SpaceContext.Provider>

@@ -192,6 +192,7 @@ type Mutation {
   resendUserVerification: User!
   saveArrow(arrowId: String!, draft: String!, sessionId: String!): Arrow!
   selectTwig(sessionId: String!, twigId: String!): SelectTwigResult!
+  setArrowColor(arrowId: String!, color: String!): Arrow!
   setUserColor(color: String!, sessionId: String!): User!
   setUserMap(lat: Float!, lng: Float!, zoom: Float!): User!
   setUserName(name: String!, sessionId: String!): User!

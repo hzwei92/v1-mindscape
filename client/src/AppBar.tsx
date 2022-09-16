@@ -27,6 +27,7 @@ import useSaveArrowSub from './features/arrow/useSaveArrowSub';
 import { Tab } from './features/tab/tab';
 import { selectFocusTab, selectFrameTab, selectIdToTab } from './features/tab/tabSlice';
 import useUpdateTab from './features/tab/useUpdateTab';
+import { selectIdToArrow } from './features/arrow/arrowSlice';
 
 const navItems = ['SEARCH', 'GRAPHS', 'CONTACTS', 'MAP', 'FEED'];
 const userItems = ['SETTINGS', 'LOGIN', 'LOGOUT'];
@@ -63,6 +64,7 @@ function AppBar() {
   const focusTab = useAppSelector(selectFocusTab);
 
   const idToTab = useAppSelector(selectIdToTab);
+  const idToArrow = useAppSelector(selectIdToArrow);
 
   useAuth();
   useAppRouter(user);
@@ -89,10 +91,12 @@ function AppBar() {
   };
 
   const handleTabClick = (tab: Tab) => () => {
+    const arrow = idToArrow[tab.arrowId];
+    if (!arrow) return;
     if (clickTimeout) {
       clearTimeout(clickTimeout);
       setClickTimeout(null);
-      navigate(`/g/${tab.arrow.routeName}`);
+      navigate(`/g/${arrow.routeName}`);
       updateTab(tab, true, false);
       console.log('double click');
     }
@@ -106,7 +110,7 @@ function AppBar() {
           updateTab(tab, false, false)
         }
         else {
-          navigate(`/g/${tab.arrow.routeName}`);
+          navigate(`/g/${arrow.routeName}`);
           updateTab(tab, false, true)
         }
         console.log('single click');
@@ -291,7 +295,11 @@ function AppBar() {
                 .filter(tab => !tab.deleteDate)
                 .sort((a, b) => a.i - b.i)
                 .map((tab) => {
-                  if (!tab || !tab.arrow) return null;
+                  if (!tab) return null;
+
+                  const arrow = idToArrow[tab.arrowId]
+
+                  if (!arrow) return null;
 
                   return (
                     <Button key={tab.id} variant={
@@ -311,10 +319,10 @@ function AppBar() {
                           ? palette === 'dark'
                             ? '#000000'
                             : '#ffffff'
-                          : tab.arrow.color,
-                        borderColor: tab.arrow.color,
+                          : arrow.color,
+                        borderColor: arrow.color,
                         backgroundColor: tab.id === frameTab?.id
-                          ? tab.arrow.color
+                          ? arrow.color
                           : null,
                       }}
                     >
