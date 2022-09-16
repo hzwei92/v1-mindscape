@@ -13,6 +13,8 @@ import { Lead } from 'src/leads/lead.model';
 import { RolesService } from 'src/roles/roles.service';
 import { LeadsService } from 'src/leads/leads.service';
 import { User as UserEntity } from 'src/users/user.entity';
+import { TabsService } from 'src/tabs/tabs.service';
+import { Tab } from 'src/tabs/tab.model';
 
 @Resolver(() => User)
 export class UsersResolver {
@@ -21,6 +23,7 @@ export class UsersResolver {
     private readonly arrowsService: ArrowsService,
     private readonly rolesService: RolesService,
     private readonly leadsService: LeadsService,
+    private readonly tabsService: TabsService,
     @Inject(PUB_SUB)
     private readonly pubSub: RedisPubSub,
   ) {}
@@ -60,6 +63,13 @@ export class UsersResolver {
     @Parent() user: User,
   ) {
     return this.leadsService.getLeadsByLeaderId(user.id, false);
+  }
+
+  @ResolveField(() => [Tab], {name: 'tabs'})
+  async getUserTabs(
+    @Parent() user: User,
+  ) {
+    return this.tabsService.getTabsByUserId(user.id);
   }
 
   @UseGuards(GqlAuthGuard)
@@ -123,68 +133,6 @@ export class UsersResolver {
       return user1;
     }
     return user;
-  }
-
-  @UseGuards(GqlAuthGuard)
-  @Mutation(() => User, {name: 'setUserFrameById'})
-  async setUserFrameById(
-    @CurrentUser() user: UserEntity,
-    @Args('sessionId') sessionId: string,
-    @Args('arrowId', {nullable: true}) arrowId: string,
-  ) {
-    return this.usersService.setUserFrameById(user, arrowId);
-  }
-
-  @UseGuards(GqlAuthGuard)
-  @Mutation(() => User, {name: 'setUserFrameByRouteName'})
-  async setUserFrameByRouteName(
-    @CurrentUser() user: UserEntity,
-    @Args('sessionId') sessionId: string,
-    @Args('arrowRouteName') arrowRouteName: string,
-  ) {
-    return this.usersService.setUserFrameByRouteName(user, arrowRouteName);
-  }
-
-  @UseGuards(GqlAuthGuard)
-  @Mutation(() => User, {name: 'setUserFocusById'})
-  async setUserFocusById(
-    @CurrentUser() user: UserEntity,
-    @Args('sessionId') sessionId: string,
-    @Args('arrowId', {nullable: true}) arrowId: string,
-  ) {
-    return this.usersService.setUserFocusById(user, arrowId);
-  }
-
-  @UseGuards(GqlAuthGuard)
-  @Mutation(() => User, {name: 'setUserFocusByRouteName'})
-  async setUserFocusByRouteName(
-    @CurrentUser() user: UserEntity,
-    @Args('sessionId') sessionId: string,
-    @Args('arrowRouteName') arrowRouteName: string,
-  ) {
-    return this.usersService.setUserFocusByRouteName(user, arrowRouteName);
-  }
-
-  @UseGuards(GqlAuthGuard)
-  @Mutation(() => User, {name: 'createFrameGraph'})
-  async createFrameGraph(
-    @CurrentUser() user: UserEntity,
-    @Args('title') title: string,
-    @Args('routeName') routeName: string,
-    @Args('arrowId', {nullable: true}) arrowId: string,
-  ) {
-    return this.usersService.createFrameGraph(user, title, routeName, arrowId);
-  }
-
-  @UseGuards(GqlAuthGuard)
-  @Mutation(() => User, {name: 'createFocusGraph'})
-  async createFocusGraph(
-    @CurrentUser() user: UserEntity,
-    @Args('title') title: string,
-    @Args('routeName') routeName: string,
-    @Args('arrowId', {nullable: true}) arrowId: string,
-  ) {
-    return this.usersService.createFocusGraph(user, title, routeName, arrowId);
   }
 
   @UseGuards(GqlAuthGuard)

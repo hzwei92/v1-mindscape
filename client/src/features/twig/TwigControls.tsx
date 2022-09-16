@@ -484,37 +484,6 @@ function TwigControls(props: TwigControlsProps) {
                 &nbsp; Subscribe to post
               </MenuItem>
           }
-          {
-            space === 'FOCUS'
-              ? <MenuItem onClick={handleFrameClick} sx={{
-                  fontSize: 14,
-                }}>
-                  <Box sx={{
-                    marginLeft: '-5px',
-                    marginBottom: '-5px',
-                    fontSize: 14,
-                    color: frameTwig ? user?.frame?.user.color : null
-                  }}>
-                    <CropDinIcon fontSize='inherit'/>
-                  </Box>
-                  &nbsp; { frameTwig ? 'View in frame' : 'Add to frame' }
-                </MenuItem>
-              : user?.focusId
-                ? <MenuItem onClick={handleFocusClick} sx={{
-                    fontSize: 14,
-                  }}>
-                    <Box sx={{
-                      marginLeft: '-5px',
-                      marginBottom: '-5px',
-                      fontSize: 14,
-                      color: focusTwig ? user?.focus?.user.color : null
-                    }}>
-                      <CropFreeIcon fontSize='inherit'/>
-                    </Box>
-                    &nbsp; { focusTwig ? 'View in focus' : 'Add to focus' }
-                  </MenuItem>
-                : null
-          }
       </Menu>
       <Button onMouseDown={handleMouseDown} onClick={handlePrevClick} sx={{
         color,

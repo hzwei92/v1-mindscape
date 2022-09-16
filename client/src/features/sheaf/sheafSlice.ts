@@ -44,39 +44,39 @@ const sheafSlice = createSlice({
           return initialState;
         }
       })
-      .addCase(setLogin, (state, action) => {
-        return [action.payload.frame?.sheaf, action.payload.focus?.sheaf].reduce((acc, sheaf) => {
-          if (sheaf?.id) {
-            acc.idToSheaf[sheaf.id] = sheaf;
+      // .addCase(setLogin, (state, action) => {
+      //   return [action.payload.frame?.sheaf, action.payload.focus?.sheaf].reduce((acc, sheaf) => {
+      //     if (sheaf?.id) {
+      //       acc.idToSheaf[sheaf.id] = sheaf;
 
-            if (sheaf.url) {
-              acc.urlToSheafId[sheaf.url] = sheaf.id
-            }
-          } 
-          return acc;
-        }, {
-          idToSheaf: {} as IdToType<Sheaf>,
-          urlToSheafId: {} as IdToType<string>,
-        });
-      })
+      //       if (sheaf.url) {
+      //         acc.urlToSheafId[sheaf.url] = sheaf.id
+      //       }
+      //     } 
+      //     return acc;
+      //   }, {
+      //     idToSheaf: {} as IdToType<Sheaf>,
+      //     urlToSheafId: {} as IdToType<string>,
+      //   });
+      // })
       .addCase(setLogout, () => {
         return initialState;
       })
-      .addCase(setCurrentUser, (state, action) => {
-        return [action.payload?.frame, action.payload?.focus].reduce((acc, arrow) => {
-          if (arrow?.sheaf) {
-            acc.idToSheaf[arrow.sheaf.id] = arrow.sheaf;
+      // .addCase(setCurrentUser, (state, action) => {
+      //   return [action.payload?.frame, action.payload?.focus].reduce((acc, arrow) => {
+      //     if (arrow?.sheaf) {
+      //       acc.idToSheaf[arrow.sheaf.id] = arrow.sheaf;
             
-            if (arrow.sheaf.url) {
-              acc.urlToSheafId[arrow.sheaf.url] = arrow.sheaf.id
-            }
-          } 
-          return acc;
-        }, {
-          idToSheaf: { ...state.idToSheaf },
-          urlToSheafId: { ...state.urlToSheafId },
-        });
-      })
+      //       if (arrow.sheaf.url) {
+      //         acc.urlToSheafId[arrow.sheaf.url] = arrow.sheaf.id
+      //       }
+      //     } 
+      //     return acc;
+      //   }, {
+      //     idToSheaf: { ...state.idToSheaf },
+      //     urlToSheafId: { ...state.urlToSheafId },
+      //   });
+      // })
       .addCase(mergeTwigs, (state, action) => {
         return action.payload.twigs.reduce((acc, twig) => {
           const arrow = twig.detail;

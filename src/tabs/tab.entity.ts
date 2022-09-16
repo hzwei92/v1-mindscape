@@ -33,6 +33,12 @@ export class Tab {
   
   @Column()
   i: number;
+
+  @Column({ default: false })
+  isFrame: boolean;
+
+  @Column({ default: false })
+  isFocus: boolean;
   
   @CreateDateColumn()
   createDate: Date;

@@ -2,7 +2,7 @@ import { Field, ObjectType } from "@nestjs/graphql";
 import { Twig } from "../twig.model";
 
 @ObjectType()
-export class RemoveTabResult {
+export class RemoveTabResult1 {
   @Field(() => Twig)
   twig: Twig;
 

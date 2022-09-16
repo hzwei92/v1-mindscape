@@ -11,11 +11,11 @@ import FocusComponent from './features/focus/FocusComponent';
 import { User } from './features/user/user';
 import { MenuMode } from './features/menu/menu';
 import { PendingLinkType, SpaceType } from './features/space/space';
-import { selectIsOpen } from './features/space/spaceSlice';
 import CreateGraphDialog from './features/arrow/CreateGraphDialog';
 import AboutComponent from './features/about/AboutComponent';
 import GraphsComponent from './features/graphs/GraphsComponent';
 import SearchComponent from './features/search/SearchComponent';
+import { selectFocusTab, selectFrameTab } from './features/tab/tabSlice';
 
 export const AppContext = React.createContext({} as {
   user: User | null;
@@ -55,11 +55,10 @@ export const AppContext = React.createContext({} as {
 
 function App() {
   const user = useAppSelector(selectCurrentUser);
+  const frameTab = useAppSelector(selectFrameTab);
+  const focusTab = useAppSelector(selectFocusTab);
 
   const idToUser = useAppSelector(selectIdToUser);
-
-  const focusIsOpen = useAppSelector(selectIsOpen(SpaceType.FOCUS));
-  const frameIsOpen = useAppSelector(selectIsOpen(SpaceType.FRAME));
 
   const [width, setWidth] = useState(window.innerWidth);
   const [height, setHeight] = useState(window.innerHeight);
@@ -168,8 +167,8 @@ function App() {
   }, [menuMode]);
   
   useEffect(() => {
-    if (user?.frame && frameIsOpen) {
-      if (user?.focus && focusIsOpen) {
+    if (frameTab) {
+      if (focusTab) {
         setFrameWidth(latentFrameWidth);
       }
       else {
@@ -179,7 +178,7 @@ function App() {
     else {
       setFrameWidth(0);
     }
-  }, [focusIsOpen, frameIsOpen, user?.frame, user?.focus]);
+  }, [frameTab, focusTab]);
 
   const appContextValue = useMemo(() => {
     return {

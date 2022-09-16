@@ -25,12 +25,6 @@ const userSlice = createSlice({
       const idToUser = { ...state.idToUser };
       if (action.payload) {
         idToUser[action.payload.id] = action.payload;
-        if (action.payload.frame?.user) {
-          idToUser[action.payload.frame.user.id] = action.payload.frame.user;
-        }
-        if (action.payload.focus?.user) {
-          idToUser[action.payload.focus.user.id] = action.payload.focus.user;
-        }
       }
       return {
         ...state,

@@ -1,16 +1,14 @@
 import { Lead } from '../lead/lead';
 import { Arrow } from '../arrow/arrow';
 import { Role } from '../role/role';
+import { Tab } from '../tab/tab';
 
 export type User = {
   id: string;
   roles: Role[];
   leaders: Lead[];
   followers: Lead[];
-  frameId: string | null;
-  frame: Arrow | null;
-  focusId: string | null;
-  focus: Arrow | null;
+  tabs: Tab[];
   email: string;
   name: string;
   lowercaseName: string;

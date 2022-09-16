@@ -800,7 +800,7 @@ export class TwigsService {
   }
 
   async loadWindows(user: User, windowEntries: WindowEntry[]) {
-    const abstract = await this.arrowsService.getArrowById(user.frameId);
+    const abstract = null /// await this.arrowsService.getArrowById(user.frameId);
 
     const parentTwigIdToTrue = windowEntries.reduce((acc, entry) => {
       acc[entry.parentTwigId] = true;
@@ -854,7 +854,7 @@ export class TwigsService {
   }
   
   async loadGroups(user: User, groupEntries: GroupEntry[]) {
-    const abstract = await this.arrowsService.getArrowById(user.frameId);
+    const abstract = null //await this.arrowsService.getArrowById(user.frameId);
 
     const parentTwigIdToTrue = groupEntries.reduce((acc, entry) => {
       acc[entry.parentTwigId] = true;
@@ -910,7 +910,7 @@ export class TwigsService {
   }
 
   async loadTabs(user: User, tabEntries: TabEntry[]) {
-    const abstract = await this.arrowsService.getArrowById(user.frameId);
+    const abstract = null// await this.arrowsService.getArrowById(user.frameId);
 
     const parentTwigIdToTrue = tabEntries.reduce((acc, entry) => {
       acc[entry.parentTwigId] = true;
@@ -1121,7 +1121,7 @@ export class TwigsService {
     if (!twig) {
       throw new BadRequestException('This twig does not exist');
     }
-    const abstract = await this.arrowsService.getArrowById(user.frameId);
+    const abstract = null //await this.arrowsService.getArrowById(user.frameId);
     const entries = await this.arrowsService.loadTabArrows(user, abstract, [{
       arrowId: v4(),
       url,
@@ -1473,7 +1473,7 @@ export class TwigsService {
   }
 
   async createBookmark(user: User, entry: BookmarkEntry) {
-    const abstract = await this.arrowsService.getArrowById(user.frameId);
+    const abstract =  null //await this.arrowsService.getArrowById(user.frameId);
     if (!abstract) {
       throw new BadRequestException('Missing abstract');
     }
@@ -1534,7 +1534,7 @@ export class TwigsService {
   }
 
   async changeBookmark(user: User, bookmarkId: string, title: string, url: string | null) {
-    const abstract = await this.arrowsService.getArrowById(user.frameId);
+    const abstract =  null //await this.arrowsService.getArrowById(user.frameId);
     if (!abstract) {
       throw new BadRequestException('Missing abstract');
     }

@@ -1,41 +1,20 @@
-import { Box, Button, Card, Dialog, IconButton, InputAdornment, InputLabel, OutlinedInput, TextField, Typography } from "@mui/material";
+import { Box, Button, Card, Dialog, TextField, Typography } from "@mui/material";
 import { Dispatch, SetStateAction, useContext, useEffect, useState } from "react";
-import LooksOneIcon from '@mui/icons-material/LooksOne';
-import LooksTwoIcon from '@mui/icons-material/LooksTwo';
 import { AppContext } from "../../App";
-import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { selectSelectedSpace } from "../space/spaceSlice";
+import { useAppDispatch } from "../../app/hooks";
 import { SpaceType } from "../space/space";
 import { gql, useMutation } from "@apollo/client";
-import { ABSTRACT_ARROW_FIELDS } from "./arrowFragments";
-import { mergeUsers } from "../user/userSlice";
-import { mergeArrows } from "./arrowSlice";
+import { FULL_TAB_FIELDS } from "../tab/tabFragments";
+import { mergeTabs } from "../tab/tabSlice";
+import { useNavigate } from "react-router-dom";
 
-
-const CREATE_FRAME_GRAPH = gql`
-  mutation CreateFrameGraph($title: String!, $routeName: String!, $arrowId: String) {
-    createFrameGraph(title: $title, routeName: $routeName, arrowId: $arrowId) {
-      id
-      frameId
-      frame {
-        ...AbstractArrowFields
-      }
-    }
+const CREATE_GRAPH = gql`
+  mutation CreateGraphTab($name: String!, $routeName: String!) {
+    createGraphTab(name: $name, routeName: $routeName) {
+      ...FullTabFields
+    } 
   }
-  ${ABSTRACT_ARROW_FIELDS}
-`;
-
-const CREATE_FOCUS_GRAPH = gql`
-  mutation CreateFocusGraph($title: String!, $routeName: String!, $arrowId: String) {
-    createFocusGraph(title: $title, routeName: $routeName, arrowId: $arrowId) {
-      id
-      focusId
-      focus {
-        ...AbstractArrowFields
-      }
-    }
-  }
-  ${ABSTRACT_ARROW_FIELDS}
+  ${FULL_TAB_FIELDS}
 `;
 
 interface CreateGraphDialogProps {
@@ -46,19 +25,27 @@ interface CreateGraphDialogProps {
 }
 export default function CreateGraphDialog(props: CreateGraphDialogProps) {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
   const { 
     user,
     dimColor: color,
   } = useContext(AppContext);
 
-  const selectedSpace = useAppSelector(selectSelectedSpace);
-
   const [name, setName] = useState('');
   const [routeName, setRouteName] = useState('');
   const [routeError, setRouteError] = useState('');
 
-  const [location, setLocation] = useState(null as SpaceType | null);
+  const [create] = useMutation(CREATE_GRAPH, {
+    onError: err => {
+      console.error(err);
+    },
+    onCompleted: data => {
+      console.log(data, routeName);
+      dispatch(mergeTabs(data.createGraphTab));
+      navigate(`/g/${routeName}/0`);
+    }
+  });
 
   useEffect(() => {
     const route = routeName.toLowerCase().replace(/[^a-z0-9]/g, '-');
@@ -66,41 +53,6 @@ export default function CreateGraphDialog(props: CreateGraphDialogProps) {
       setRouteName(route)
     }
   }, [routeName]);
-
-  const [createFrameGraph] = useMutation(CREATE_FRAME_GRAPH, {
-    onError: err => {
-      console.error(err);
-    },
-    onCompleted: data => {
-      console.log(data);
-      dispatch(mergeUsers([data.createFrameGraph]));
-      dispatch(mergeArrows([data.createFrameGraph.frame]))
-    }
-  });
-
-  const [createFocusGraph] = useMutation(CREATE_FOCUS_GRAPH, {
-    onError: err => {
-      console.error(err);
-    },
-    onCompleted: data => {
-      console.log(data);
-      dispatch(mergeUsers([data.createFocusGraph]));
-      dispatch(mergeArrows([data.createFocusGraph.focus]))
-    },
-  });
-
-  useEffect(() => {
-    console.log(props.space);
-    setLocation(
-      props.space || (user?.frame
-        ? user?.focus
-          ? selectedSpace === SpaceType.FRAME
-            ? SpaceType.FOCUS
-            : SpaceType.FRAME
-          : SpaceType.FOCUS
-        : SpaceType.FRAME)
-    )
-  }, [user?.frame, user?.focus, selectedSpace, props.space]);
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setName(e.target.value);
@@ -110,36 +62,17 @@ export default function CreateGraphDialog(props: CreateGraphDialogProps) {
     setRouteName(e.target.value);
   }
 
-  const handleFrameClick = () => {
-    setLocation(SpaceType.FRAME);
-  }
-
-  const handleFocusClick = () => {
-    setLocation(SpaceType.FOCUS);
-  }
-
   const handleClose = () => {
     props.setIsOpen(false);
   }
 
   const handleSubmitClick = () => {
-    if (location === SpaceType.FRAME) {
-      createFrameGraph({ 
-        variables: {
-          title: name, 
-          routeName,
-          arrowId: props.arrowId,
-        },
-      });
-    } else {
-      createFocusGraph({ 
-        variables: { 
-          title: name, 
-          routeName,
-          arrowId: props.arrowId,
-        },
-      });
-    }
+    create({
+      variables: {
+        name,
+        routeName,
+      },
+    });
     props.setIsOpen(false);
   }
 
@@ -179,33 +112,6 @@ export default function CreateGraphDialog(props: CreateGraphDialogProps) {
               width: '100%',
             }}
           />
-        </Box>
-        <Box sx={{
-          marginTop:2,
-          color,
-        }}>
-          Location:&nbsp;&nbsp;
-          <IconButton onClick={handleFrameClick} sx={{
-            color: location === SpaceType.FRAME
-              ? user?.color
-              : null,
-            border: location === SpaceType.FRAME
-              ? `1px solid ${user?.color}`
-              : 'none',
-          }}>
-            <LooksOneIcon />
-          </IconButton>
-          &nbsp;
-          <IconButton onClick={handleFocusClick} sx={{
-            color: location === SpaceType.FOCUS
-              ? user?.color
-              : null,
-            border: location === SpaceType.FOCUS
-              ? `1px solid ${user?.color}`
-              : 'none',
-          }}>
-            <LooksTwoIcon />
-          </IconButton>
         </Box>
         <Box sx={{
           marginTop: 2,

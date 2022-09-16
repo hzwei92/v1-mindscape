@@ -6,7 +6,6 @@ import { DragState, PosType, ScrollState, SpaceType } from '../space/space';
 export interface SpaceState {
   selectedSpace: SpaceType;
   [SpaceType.FRAME]: {
-    isOpen: boolean;
     selectedTwigId: string;
     scale: number;
     scroll: ScrollState;
@@ -16,7 +15,6 @@ export interface SpaceState {
     idToHeight: IdToType<number>;
   };
   [SpaceType.FOCUS]: {
-    isOpen: boolean;
     selectedTwigId: string;
     scale: number;
     scroll: ScrollState;
@@ -30,7 +28,6 @@ export interface SpaceState {
 const initialState: SpaceState = {
   selectedSpace: SpaceType.FRAME,
   [SpaceType.FRAME]: {
-    isOpen: false,
     selectedTwigId: '',
     scale: 0.5,
     scroll: {
@@ -50,7 +47,6 @@ const initialState: SpaceState = {
     idToHeight: {},
   },
   [SpaceType.FOCUS]: {
-    isOpen: false,
     selectedTwigId: '',
     scale: 0.75,
     scroll: {
@@ -80,15 +76,6 @@ export const spaceSlice = createSlice({
         ...state,
         selectedSpace: action.payload,
       }
-    },
-    setIsOpen: (state, action: PayloadAction<{space: SpaceType, isOpen: boolean}>) => {
-      return {
-        ...state,
-        [action.payload.space]: {
-          ...state[action.payload.space],
-          isOpen: action.payload.isOpen,
-        },
-      };
     },
     setSelectedTwigId: (state, action: PayloadAction<{space: SpaceType, selectedTwigId: string}>) => {
       return {
@@ -180,7 +167,6 @@ export const spaceSlice = createSlice({
         ...state,
         [action.payload]: {
           ...initialState[action.payload],
-          isOpen: state[action.payload].isOpen,
         },
       };
     },
@@ -189,7 +175,6 @@ export const spaceSlice = createSlice({
 
 export const {
   setSelectedSpace,
-  setIsOpen,
   setSelectedTwigId,
   setScale,
   setScroll,
@@ -202,7 +187,6 @@ export const {
 } = spaceSlice.actions;
 
 export const selectSelectedSpace = (state: RootState) => state.space.selectedSpace;
-export const selectIsOpen = (space: SpaceType) => (state: RootState) => state.space[space].isOpen;
 export const selectSelectedTwigId = (space: SpaceType) => (state: RootState) => state.space[space].selectedTwigId;
 export const selectScale = (space: SpaceType) => (state: RootState) => state.space[space].scale;
 export const selectScroll = (space: SpaceType) => (state: RootState) => state.space[space].scroll;

@@ -69,59 +69,59 @@ const arrowSlice = createSlice({
           return initialState;
         }
       })
-      .addCase(setLogin, (state, action) => {
-        const {
-          idToVote,
-          arrowIdToVoteIds,
-        } = [action.payload.frame, action.payload.focus].reduce((acc, arrow) => {
-          if (arrow?.votes) {
-            acc.arrowIdToVoteIds[arrow.id] = [];
+      // .addCase(setLogin, (state, action) => {
+      //   const {
+      //     idToVote,
+      //     arrowIdToVoteIds,
+      //   } = [action.payload.frame, action.payload.focus].reduce((acc, arrow) => {
+      //     if (arrow?.votes) {
+      //       acc.arrowIdToVoteIds[arrow.id] = [];
 
-            arrow.votes.forEach(vote => {
-              acc.arrowIdToVoteIds[arrow.id].push(vote.id);
-              acc.idToVote[vote.id] = vote;
-            });
-          } 
-          return acc;
-        }, {
-          idToVote: {} as IdToType<Vote>,
-          arrowIdToVoteIds: {} as IdToType<string[]>,
-        });
+      //       arrow.votes.forEach(vote => {
+      //         acc.arrowIdToVoteIds[arrow.id].push(vote.id);
+      //         acc.idToVote[vote.id] = vote;
+      //       });
+      //     } 
+      //     return acc;
+      //   }, {
+      //     idToVote: {} as IdToType<Vote>,
+      //     arrowIdToVoteIds: {} as IdToType<string[]>,
+      //   });
 
-        return {
-          ...state,
-          idToVote,
-          arrowIdToVoteIds,
-        };
-      })
+      //   return {
+      //     ...state,
+      //     idToVote,
+      //     arrowIdToVoteIds,
+      //   };
+      // })
       .addCase(setLogout, () => {
         return initialState;
       })
-      .addCase(setCurrentUser, (state, action) => {
-        const {
-          idToVote,
-          arrowIdToVoteIds,
-        } = [action.payload?.frame, action.payload?.focus].reduce((acc, arrow) => {
-          if (arrow?.votes?.length) {
-            acc.arrowIdToVoteIds[arrow.id] = [];
+      // .addCase(setCurrentUser, (state, action) => {
+      //   const {
+      //     idToVote,
+      //     arrowIdToVoteIds,
+      //   } = [action.payload?.frame, action.payload?.focus].reduce((acc, arrow) => {
+      //     if (arrow?.votes?.length) {
+      //       acc.arrowIdToVoteIds[arrow.id] = [];
 
-            arrow.votes.forEach(vote => {
-              acc.arrowIdToVoteIds[arrow.id].push(vote.id);
-              acc.idToVote[vote.id] = vote;
-            });
-          } 
-          return acc;
-        }, {
-          idToVote: {} as IdToType<Vote>,
-          arrowIdToVoteIds: {} as IdToType<string[]>,
-        });
+      //       arrow.votes.forEach(vote => {
+      //         acc.arrowIdToVoteIds[arrow.id].push(vote.id);
+      //         acc.idToVote[vote.id] = vote;
+      //       });
+      //     } 
+      //     return acc;
+      //   }, {
+      //     idToVote: {} as IdToType<Vote>,
+      //     arrowIdToVoteIds: {} as IdToType<string[]>,
+      //   });
 
-        return {
-          ...state,
-          idToVote,
-          arrowIdToVoteIds,
-        };
-      })
+      //   return {
+      //     ...state,
+      //     idToVote,
+      //     arrowIdToVoteIds,
+      //   };
+      // })
       .addCase(mergeTwigs, (state, action) => {
         const {
           idToVote,

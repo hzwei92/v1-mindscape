@@ -8,25 +8,31 @@ import useCenterTwig from './features/twig/useCenterTwig';
 import useSelectTwig from './features/twig/useSelectTwig';
 import { SpaceType } from './features/space/space';
 import { selectIdToTwig, selectIToTwigId, selectNewTwigId } from './features/twig/twigSlice';
-import { selectIdToPos, selectSelectedTwigId, setIsOpen, setSelectedSpace, setSelectedTwigId } from './features/space/spaceSlice';
-import useSetUserGraph from './features/user/useSetUserGraph';
+import { selectIdToPos, selectSelectedTwigId, setSelectedSpace, setSelectedTwigId } from './features/space/spaceSlice';
+import { selectFocusTab, selectFrameTab, selectIdToTab } from './features/tab/tabSlice';
+import useCreateTab from './features/tab/useCreateTab';
+import { Tab } from './features/tab/tab';
 
 export default function useAppRouter(user: User | null) {
   const dispatch = useAppDispatch();
   const location = useLocation();
   const navigate = useNavigate();
 
+  const focusTab = useAppSelector(selectFocusTab);
+  const frameTab = useAppSelector(selectFrameTab);
+
   let focusRole = null as Role | null;
   (user?.roles || []).filter(role_i => !role_i.deleteDate).some(role => {
-    if (role.arrowId === user?.focusId) {
+    if (role.arrowId === frameTab?.arrowId) {
       focusRole = role;
       return true;
     }
     return false;
   });
 
-  const canEditFocus = checkPermit(user?.focus?.canEdit, focusRole?.type);
+  const canEditFocus = checkPermit(focusTab?.arrow.canEdit, focusRole?.type);
 
+  const idToTab = useAppSelector(selectIdToTab);
   const newTwigId = useAppSelector(selectNewTwigId);
   const frameSelectedTwigId = useAppSelector(selectSelectedTwigId(SpaceType.FRAME));
   const frameIdToTwig = useAppSelector(selectIdToTwig(SpaceType.FRAME));
@@ -43,117 +49,130 @@ export default function useAppRouter(user: User | null) {
   const { selectTwig: frameSelectTwig } = useSelectTwig(SpaceType.FRAME, true);
   const { selectTwig: focusSelectTwig } = useSelectTwig(SpaceType.FOCUS, canEditFocus);
 
-  const { setUserFocusByRouteName } = useSetUserGraph();
+  const { createTabByRoutename } = useCreateTab();
+
 
   useEffect(() => {
     const path = location.pathname.split('/');
     console.log(path);
-    
+    if (!Object.keys(idToTab).length) return;
+
     if (path.length < 3) {
       console.log('no path')
-    }
-    else if (path[2].toLowerCase() === user?.frame?.routeName) {
-      console.log('frame routing');
-
-      dispatch(setIsOpen({
-        space: SpaceType.FRAME,
-        isOpen: true,
-      }));
-      dispatch(setSelectedSpace(SpaceType.FRAME));
-
-      if (user.focus && !focusSelectedTwigId && user.focus.rootTwigId) {
-        const twig = focusIdToTwig[user.focus.rootTwigId];
-        if (twig) {
-          focusSelectTwig(user.focus, twig);
-          focusCenterTwig(user.focus.rootTwigId, true, 0);
+      if (focusTab) {
+        console.log('hello')
+        navigate(`/g/${focusTab.arrow.routeName}/0`);
+        if (frameTab) {
+          dispatch(setSelectedTwigId({
+            space: SpaceType.FRAME,
+            selectedTwigId: frameTab.arrow.rootTwigId || '',
+          }));
         }
       }
-
-      document.title = `Mindscape | ${user.frame.title}`;
-
-      const frameTwig = frameIdToTwig[frameSelectedTwigId];
-
-      if (path[3] !== (frameTwig?.i ?? -1).toString()) {
-        console.log('hello')
-        const twigId = frameIToTwigId[path[3] || (frameTwig.i ?? -1)];
-        const twig = frameIdToTwig[twigId];
-  
-        if (twig?.id && !twig?.deleteDate) {
-          if (twig.id === newTwigId) {
-            console.log('frame, index select new twig');
+      else if (frameTab) {
+        navigate(`/g/${frameTab.arrow.routeName}/0`);
+      }
+    }
+    else {
+      let tab = null as Tab | null;
+      Object.values(idToTab).some(tab_i => {
+        if (tab_i.arrow.routeName === path[2].toLowerCase()) {
+          tab = tab_i;
+        }
+        return !!tab;
+      });
+      console.log('matching tab', tab);
+      if (tab) {
+        document.title = `Mindscape | ${tab.arrow.title}`
+        if (tab.isFrame && Object.keys(frameIdToPos).length) {
+          console.log('tab is frameTab')
+          if (focusTab && !focusSelectedTwigId) {
             dispatch(setSelectedTwigId({
               space: SpaceType.FRAME,
-              selectedTwigId: twig.id,
+              selectedTwigId: focusTab.arrow.rootTwigId || '',
             }));
-            frameCenterTwig(twig.id, true, 0);
           }
-          else {
-            console.log('frame, index select');
-            frameSelectTwig(user.frame, twig);
-            frameCenterTwig(twigId, true, 0);
+
+          dispatch(setSelectedSpace(SpaceType.FRAME));
+
+          const frameTwig = frameIdToTwig[frameSelectedTwigId];
+
+          if (path[3] !== (frameTwig?.i ?? -1).toString()) {
+            const twigId = frameIToTwigId[path[3] || (frameTwig?.i ?? -1)];
+            const twig = frameIdToTwig[twigId];
+      
+            if (twig?.id && !twig?.deleteDate) {
+              if (twig.id === newTwigId) {
+                console.log('frame, index select newly created twig');
+                dispatch(setSelectedTwigId({
+                  space: SpaceType.FRAME,
+                  selectedTwigId: twig.id,
+                }));
+                frameCenterTwig(twig.id, true, 0);
+              }
+              else {
+                console.log('frame, index select');
+                frameSelectTwig(tab.arrow, twig);
+                frameCenterTwig(twigId, true, 0);
+              }
+            }
+            else {
+              console.log('frame, index invalid');
+              const twig = tab.arrow.rootTwigId
+                ? frameIdToTwig[tab.arrow.rootTwigId]
+                : null;
+              if (twig?.id && !twig?.deleteDate) {
+                navigate(`/g/${tab.arrow.routeName}/0`, {
+                  replace: true,
+                })
+              }
+              else {
+                console.error('frame, index invalid; no root twig');
+              }
+            }
+          }
+        }
+        else if (tab.isFocus && Object.keys(focusIdToPos).length) {
+          console.log('tab is focusTab', frameTab, frameSelectedTwigId, focusTab)
+          if (frameTab && !frameSelectedTwigId) {
+            dispatch(setSelectedTwigId({
+              space: SpaceType.FRAME,
+              selectedTwigId: frameTab.arrow.rootTwigId || '',
+            }));
+          }
+
+          dispatch(setSelectedSpace(SpaceType.FOCUS));
+
+          const focusTwig = focusIdToTwig[focusSelectedTwigId]
+  
+          if (path[3] !== (focusTwig?.i ?? -1).toString()) {
+            const twigId = focusIToTwigId[path[3] || (focusTwig?.i ?? -1)];
+            const twig = focusIdToTwig[twigId];
+  
+            if (twig?.id && !twig?.deleteDate) {
+              console.log('focus, index select');
+              focusSelectTwig(tab.arrow, twig);
+              focusCenterTwig(twigId, true, 0);
+            }
+            else {
+              console.log('focus, index invalid');
+              navigate(`/g/${path[2]}/0`, {
+                replace: true,
+              });
+            }
           }
         }
         else {
-          console.log('frame, index invalid');
-          const twig = user?.frame?.rootTwigId
-            ? frameIdToTwig[user?.frame?.rootTwigId]
-            : null;
-          if (twig?.id && !twig?.deleteDate) {
-            navigate(`/g/${user.frame.routeName}/0`, {
-              replace: true,
-            })
-          }
-          else {
-            console.error('frame, index invalid; no root twig');
-          }
+          console.log('tab is neither frame nor focus');
+          dispatch(setSelectedSpace(SpaceType.FOCUS));
+          // if (!tab.isFocus) {
+          //   updateTab(tab, false, true);
+          // }
         }
-      }
-    }
-    else if (user) {
-      console.log('focus routing')
-
-      dispatch(setIsOpen({
-        space: SpaceType.FOCUS,
-        isOpen: true,
-      }));
-      dispatch(setSelectedSpace(SpaceType.FOCUS));
-
-      if (user.frame && !frameSelectedTwigId && user.frame.rootTwigId) {
-        const twig = frameIdToTwig[user.frame.rootTwigId];
-        if (twig) {
-          frameSelectTwig(user.frame, twig);
-          frameCenterTwig(twig.id, true, 0);
-        }
-      }
-
-      if (path[2] !== user.focus?.routeName) {
-        console.log('refocus')
-        setUserFocusByRouteName(path[2]);
       }
       else {
-        if (!Object.keys(focusIdToPos || {}).length) return;
-
-        document.title = `Mindscape | ${user.focus.title}`
-
-        const focusTwig = focusIdToTwig[focusSelectedTwigId]
-
-        if (path[3] !== (focusTwig?.i ?? -1).toString()) {
-          const twigId = focusIToTwigId[path[3] || (focusTwig?.i ?? -1)];
-          const twig = focusIdToTwig[twigId];
-
-          if (twig?.id && !twig?.deleteDate) {
-            console.log('index select');
-            focusSelectTwig(user.focus, twig);
-            focusCenterTwig(twigId, true, 0);
-          }
-          else {
-            console.log('index invalid');
-            navigate(`/g/${path[2]}/0`, {
-              replace: true,
-            });
-          }
-        }
+        createTabByRoutename(path[2], null, false, true);
       }
     }
-  }, [location.pathname, Object.keys(frameIdToPos || {}).length, Object.keys(focusIdToPos || {}).length])
+  }, [location.pathname, Object.keys(frameIdToPos || {}).length, Object.keys(focusIdToPos || {}).length, Object.keys(idToTab).length])
 }

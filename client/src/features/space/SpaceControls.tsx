@@ -1,5 +1,5 @@
-import { Box, Button, Card, colors, Fab } from '@mui/material';
-import { MAX_Z_INDEX, MOBILE_WIDTH, NOT_FOUND } from '../../constants';
+import { Box, Button, Card, Fab } from '@mui/material';
+import { MAX_Z_INDEX, MOBILE_WIDTH } from '../../constants';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -10,17 +10,19 @@ import { Dispatch, SetStateAction, useContext } from 'react';
 import { SpaceContext } from './SpaceComponent';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { AppContext } from '../../App';
-import { selectIsOpen, selectScale, selectSelectedTwigId, setIsOpen, setScale } from './spaceSlice';
+import { selectScale, selectSelectedTwigId, setScale } from './spaceSlice';
 import { useReactiveVar } from '@apollo/client';
 import { SpaceType } from './space';
 import { focusSpaceElVar, frameSpaceElVar } from '../../cache';
 import Close from '@mui/icons-material/Close';
-import useSetUserGraph from '../user/useSetUserGraph';
 import { selectIdToTwig } from '../twig/twigSlice';
 import { useNavigate } from 'react-router-dom';
 import useInitSpace from './useInitSpace';
 import useReplyTwigSub from '../twig/useReplyTwigSub';
 import Remove from '@mui/icons-material/Remove';
+import useRemoveTab from '../tab/useRemoveTab';
+import { selectFocusTab, selectFrameTab, selectIdToTab } from '../tab/tabSlice';
+import useUpdateTab from '../tab/useUpdateTab';
 
 interface SpaceControlsProps {
   showSettings: boolean;
@@ -35,12 +37,14 @@ export default function SpaceControls(props: SpaceControlsProps) {
   const { user, width, palette } = useContext(AppContext);
   const { space } = useContext(SpaceContext);
 
+  const frameTab = useAppSelector(selectFrameTab);
+  const focusTab = useAppSelector(selectFocusTab);
+
+  const idToTab = useAppSelector(selectIdToTab)
   const frameSelectedTwigId = useAppSelector(selectSelectedTwigId(SpaceType.FRAME));
   const frameIdToTwig = useAppSelector(selectIdToTwig(SpaceType.FRAME));
   const focusSelectedTwigId = useAppSelector(selectSelectedTwigId(SpaceType.FOCUS));
   const focusIdToTwig = useAppSelector(selectIdToTwig(SpaceType.FOCUS));
-
-  const isOpen = useAppSelector(selectIsOpen(space));
 
   const spaceEl = useReactiveVar(space === SpaceType.FRAME
     ? frameSpaceElVar
@@ -50,13 +54,11 @@ export default function SpaceControls(props: SpaceControlsProps) {
 
   const isSynced = true;
 
-  const { setUserFrameById, setUserFocusById } = useSetUserGraph();
+  const { updateTab } = useUpdateTab();
+  const { removeTab } = useRemoveTab();
 
   useInitSpace();
   useReplyTwigSub();
-
-  if (!isOpen) return null;
-
 
   const handleScaleDownClick = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -111,36 +113,57 @@ export default function SpaceControls(props: SpaceControlsProps) {
 
   const handleHideClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    dispatch(setIsOpen({
-      space,
-      isOpen: false,
-    }));
+
+    if (space === SpaceType.FRAME) {
+      updateTab(frameTab, false, false);
+
+      if (focusTab) {
+        const focusTwig = focusIdToTwig[focusSelectedTwigId];
+        const route = `/g/${focusTab.arrow.routeName}/${focusTwig.i || 0}`;
+        navigate(route);
+      }
+      else {
+        navigate(`/`);
+      }
+    }
+    else if (space == SpaceType.FOCUS) {
+      updateTab(focusTab, false, false);
+
+      if (frameTab) {
+        const frameTwig = frameIdToTwig[frameSelectedTwigId];
+        const route = `/g/${frameTab.arrow.routeName}/${frameTwig.i}`;
+        navigate(route);
+      }
+      else {
+        navigate(`/`);
+      }
+    }
   }
 
   const handleCloseClick = (event: React.MouseEvent) => {
     if (space === SpaceType.FRAME) {
-      const focusTwig = focusIdToTwig[focusSelectedTwigId];
-      if (focusTwig) {
-        const route = `/g/${user?.focus?.routeName}/${focusTwig.i}`;
+      removeTab(frameTab?.id);
+      
+      if (focusTab) {
+        const focusTwig = focusIdToTwig[focusSelectedTwigId];
+        const route = `/g/${focusTab.arrow.routeName}/${focusTwig.i || 0}`;
         navigate(route);
       }
-      dispatch(setIsOpen({
-        space: SpaceType.FRAME,
-        isOpen: false,
-      }));
-      setUserFrameById(null);
+      else {
+        navigate(`/`);
+      }
     }
-    else {
-      const frameTwig = frameIdToTwig[frameSelectedTwigId];
-      if (frameTwig) {
-        const route = `/g/${user?.frame?.routeName}/${frameTwig.i}`;
+    else if (space == SpaceType.FOCUS) {
+      removeTab(focusTab?.id);
+
+      if (frameTab) {
+        const frameTwig = frameIdToTwig[frameSelectedTwigId];
+        const route = `/g/${frameTab.arrow.routeName}/${frameTwig.i}`;
         navigate(route);
       }
-      dispatch(setIsOpen({
-        space: SpaceType.FOCUS,
-        isOpen: false,
-      }));
-      setUserFocusById(null);
+      else {
+        navigate(`/`);
+      }
     }
   };
 

@@ -41,6 +41,7 @@ import { useReactiveVar } from '@apollo/client';
 import useGraftTwig from '../twig/useGraftTwig';
 import RolesMenu from './RolesMenu';
 import useReplyTwigSub from '../twig/useReplyTwigSub';
+import { selectFocusTab, selectFrameTab } from '../tab/tabSlice';
 
 export const SpaceContext = React.createContext({} as {
   abstract: Arrow | null;
@@ -88,9 +89,13 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   const idToDescIdToTrue = useAppSelector(selectIdToDescIdToTrue(props.space));
   useTwigTree(props.space);
 
+
+  const focusTab = useAppSelector(selectFocusTab);
+  const frameTab = useAppSelector(selectFrameTab);
+
   const abstractId = props.space === SpaceType.FRAME
-    ? user?.frameId
-    : user?.focusId;
+    ? frameTab?.arrowId
+    : focusTab?.arrowId;
 
   const abstract = useAppSelector(state => selectArrowById(state, abstractId));
 

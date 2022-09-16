@@ -4,10 +4,12 @@ import { MAX_Z_INDEX } from '../../constants';
 import SpaceComponent from '../space/SpaceComponent';
 import { AppContext } from '../../App';
 import { SpaceType } from '../space/space';
-import { selectIsOpen, selectSelectedTwigId } from '../space/spaceSlice';
+import { selectSelectedTwigId } from '../space/spaceSlice';
 import { useAppSelector } from '../../app/hooks';
 import { selectUserById } from '../user/userSlice';
 import useCenterTwig from '../twig/useCenterTwig';
+import { selectFocusTab, selectFrameTab } from '../tab/tabSlice';
+import { selectArrowById } from '../arrow/arrowSlice';
 
 export default function FrameComponent() {
   const { 
@@ -18,14 +20,12 @@ export default function FrameComponent() {
     setFrameIsResizing,
   } = useContext(AppContext);
 
-  const frameIsOpen = useAppSelector(selectIsOpen(SpaceType.FRAME));
-  const focusIsOpen = useAppSelector(selectIsOpen(SpaceType.FOCUS));
-
   const frameSelectedTwigId = useAppSelector(selectSelectedTwigId(SpaceType.FRAME));
 
-  console.log('FrameComponent', frameIsOpen, focusIsOpen);
+  const focusTab = useAppSelector(selectFocusTab);
 
-  const frameUser = useAppSelector(state => selectUserById(state, user?.frame?.userId));
+  const frameTab = useAppSelector(selectFrameTab);
+  const frameArrow = useAppSelector(state => selectArrowById(state, frameTab?.arrowId));
 
   const [theme, setTheme] = useState(createTheme({
     palette: {
@@ -45,11 +45,11 @@ export default function FrameComponent() {
   const [showResizer, setShowResizer] = useState(false);
 
   useEffect(() => {
-    if (!frameUser) return;
+    if (!frameArrow) return;
     setTheme(createTheme({
       palette: {
         primary: {
-          main: frameUser?.color || (palette === 'dark' ? '#ffffff' : '#000000'),
+          main: frameArrow?.color || (palette === 'dark' ? '#ffffff' : '#000000'),
         },
         mode: palette,
       },
@@ -58,15 +58,15 @@ export default function FrameComponent() {
         snackbar: MAX_Z_INDEX + 10000
       },
     }));
-  }, [frameUser?.color, palette]);
+  }, [frameArrow?.color, palette]);
 
   const { centerTwig } = useCenterTwig(SpaceType.FRAME);
 
   useEffect(() => {
-    if (user?.frame && frameIsOpen) {
-      centerTwig(frameSelectedTwigId || user.frame.rootTwigId || '', true, 0);
+    if (frameTab) {
+      centerTwig(frameSelectedTwigId || frameTab.arrow.rootTwigId || '', true, 0);
     }
-  }, [frameIsOpen, user?.frame]);
+  }, [frameTab?.id]);
 
   if (!theme || !user) return null;
 
@@ -88,7 +88,7 @@ export default function FrameComponent() {
         position: 'relative',
         width: frameWidth - 1,
         height: '100%',
-        display: user.frame && frameIsOpen
+        display: frameTab
           ? 'flex'
           : 'none',
         flexDirection: 'row',
@@ -105,7 +105,7 @@ export default function FrameComponent() {
               ? 'primary.main'
               : color,
             cursor: 'col-resize',
-            display: frameIsOpen && focusIsOpen
+            display: frameTab && focusTab
               ? 'block'
               : 'none'
           }}

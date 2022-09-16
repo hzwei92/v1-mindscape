@@ -34,12 +34,10 @@ export default function useCenterTwig(space: SpaceType) {
       
       const pos = idToPos[twigId];
 
-      console.log(pos, space, twigId, idToPos);
+      console.log('centerTwig', pos, space, twigId);
 
-      const x1 = ((coords?.x ?? pos?.x) + VIEW_RADIUS) * scale;
-      const y1 = ((coords?.y ?? pos?.y) + VIEW_RADIUS) * scale;
-
-      console.log('centerTwig', scale);
+      const x1 = ((coords?.x ?? pos?.x ?? 0) + VIEW_RADIUS) * scale;
+      const y1 = ((coords?.y ?? pos?.y ?? 0) + VIEW_RADIUS) * scale;
 
       spaceEl.current.scrollTo({
         left: (x1 - ((spaceEl.current.clientWidth || spaceWidth ) / 2 || VIEW_RADIUS)),

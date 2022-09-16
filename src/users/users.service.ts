@@ -7,6 +7,7 @@ import { adjectives, animals, NumberDictionary, uniqueNamesGenerator } from 'uni
 import { SearchService } from 'src/search/search.service';
 import { ArrowsService } from 'src/arrows/arrows.service';
 import { SheafsService } from 'src/sheafs/sheafs.service';
+import { TabsService } from 'src/tabs/tabs.service';
 import { PaletteMode } from 'src/enums';
 import { getEmptyDraft } from 'src/utils';
 import { Arrow } from 'src/arrows/arrow.entity';
@@ -21,6 +22,7 @@ export class UsersService {
     private readonly sheafsService: SheafsService,
     private readonly arrowsService: ArrowsService,
     private readonly searchService: SearchService,
+    private readonly tabsService: TabsService,
   ) {}
 
   async getUserById(id: string): Promise<User> {
@@ -45,15 +47,6 @@ export class UsersService {
       where: {
         lowercaseName,
       },
-    });
-  }
-
-  async getActiveUsersByFocusId(focusId: string, date: Date): Promise<User[]> {
-    return this.usersRepository.find({
-      where: {
-        focusId,
-        activeDate: MoreThan(date),
-      }
     });
   }
 
@@ -92,7 +85,8 @@ export class UsersService {
     if (!startArrow) {
       startArrow = await this.arrowsService.createStartArrow(user1);
     }
-    user1.frameId = startArrow.id;
+
+    const tab = await this.tabsService.appendTab(user1, startArrow, false, true);
 
     await this.usersRepository.save(user1);
     const user2 = await this.getUserById(user1.id);
@@ -214,126 +208,6 @@ export class UsersService {
     return user1;
   }
 
-  async setUserFrameById(user: User, arrowId: string): Promise<User> {
-    if (arrowId) {
-      const arrow = await this.arrowsService.getArrowById(arrowId);
-      if (!arrow) {
-        throw new BadRequestException('This arrow does not exist');
-      }
-    }
-    user.frameId = arrowId;
-    return this.usersRepository.save(user);
-  }
-  
-  async setUserFrameByRouteName(user: User, arrowRouteName: string): Promise<User> {
-    let arrow = await this.arrowsService.getArrowByRouteName(arrowRouteName);
-    if (!arrow) {
-      throw new BadRequestException('This jam does not exist');
-    }
-    user.frameId = arrow.id;
-    return this.usersRepository.save(user);
-  }
-
-  async setUserFocusById(user: User, arrowId: string): Promise<User> {
-    if (arrowId) {
-      const arrow = await this.arrowsService.getArrowById(arrowId);
-      if (!arrow) {
-        throw new BadRequestException('This arrow does not exist');
-      }
-    }
-    user.focusId = arrowId;
-    return this.usersRepository.save(user);
-  }
-  
-  async setUserFocusByRouteName(user: User, arrowRouteName: string): Promise<User> {
-    let arrow = await this.arrowsService.getArrowByRouteName(arrowRouteName);
-    if (!arrow) {
-      throw new BadRequestException('This jam does not exist');
-    }
-    user.focusId = arrow.id;
-    return this.usersRepository.save(user);
-  }
-
-  async createFrameGraph(user: User, title: string, routeName: string, arrowId: string | null): Promise<User> {
-    let arrow: Arrow;
-    if (arrowId) {
-      arrow = await this.arrowsService.getArrowById(arrowId);
-      if (!arrow) {
-        throw new BadRequestException('This arrow does not exist');
-      }
-      if (arrow.rootTwigId) {
-        throw new BadRequestException('This arrow has already been opened')
-      }
-      if (arrow.userId !== user.id) {
-        throw new BadRequestException('Insufficient privileges')
-      }
-      arrow.title = title;
-      arrow.routeName = routeName;
-    }
-    else {
-      const sheaf = await this.sheafsService.createSheaf(null, null, null);
-      ({ arrow } = await this.arrowsService.createArrow({
-        user,
-        id: null,
-        sourceId: null,
-        targetId: null,
-        sheaf,
-        abstract: null,
-        draft: getEmptyDraft(),
-        title,
-        url: null,
-        faviconUrl: null,
-        routeName,
-      }));
-    }
-
-    ({ arrow } = await this.arrowsService.openArrow(user, arrow));
-
-    user.frameId = arrow.id;
-
-    return this.usersRepository.save(user);
-  } 
-
-  async createFocusGraph(user: User, title: string, routeName: string, arrowId: string | null): Promise<User> {
-    let arrow: Arrow;
-    if (arrowId) {
-      arrow = await this.arrowsService.getArrowById(arrowId);
-      if (!arrow) {
-        throw new BadRequestException('This arrow does not exist');
-      }
-      if (arrow.rootTwigId) {
-        throw new BadRequestException('This arrow has already been opened')
-      }
-      if (arrow.userId !== user.id) {
-        throw new BadRequestException('Insufficient privileges')
-      }
-      arrow.title = title;
-      arrow.routeName = routeName;
-    }
-    else {
-      const sheaf = await this.sheafsService.createSheaf(null, null, null);
-      ({ arrow } = await this.arrowsService.createArrow({
-        user,
-        id: null,
-        sourceId: null,
-        targetId: null,
-        sheaf,
-        abstract: null,
-        draft: getEmptyDraft(),
-        title,
-        url: null,
-        faviconUrl: null,
-        routeName,
-      }));
-    }
-
-
-    ({ arrow } = await this.arrowsService.openArrow(user, arrow));
-
-    user.focusId = arrow.id;
-
-    return this.usersRepository.save(user);
-  } 
 
   async setUserActiveDate(user: User, date: Date) {
     const user0 = new User();

@@ -2,6 +2,7 @@ import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../../app/store";
 import { IdToType } from "../../types";
 import { setInit, setLogin, setLogout } from "../auth/authSlice";
+import { mergeTabs } from "../tab/tabSlice";
 import { mergeTwigs } from "../twig/twigSlice";
 import { setCurrentUser } from "../user/userSlice";
 import type { Arrow, ArrowInstance } from "./arrow";
@@ -51,7 +52,7 @@ const arrowSlice = createSlice({
         return acc;
       }, {
         idToArrow: { ...state.idToArrow },
-        urlToArrowId: { ...state.urlToArrowId },
+        urlToArrowId: { ...state.urlToArrowId } as IdToType<string>,
       });
 
       return {
@@ -86,10 +87,10 @@ const arrowSlice = createSlice({
       };
     },
     removeInstance: (state, action: PayloadAction<string>) => {
-      const idToInstance = {
+      const idToInstance: IdToType<ArrowInstance> = {
         ...state.idToInstance,
       };
-      const arrowIdToInstanceIds = {
+      const arrowIdToInstanceIds:IdToType<string[]> = {
         ...state.arrowIdToInstanceIds,
       }
       delete idToInstance[action.payload];
@@ -119,12 +120,12 @@ const arrowSlice = createSlice({
         const {
           idToArrow,
           urlToArrowId,
-        } = [action.payload.frame, action.payload.focus].reduce((acc, arrow) => {
-          if (arrow?.id) {
-            acc.idToArrow[arrow.id] = arrow;
+        } = action.payload.tabs.reduce((acc, tab) => {
+          if (tab.arrow?.id) {
+            acc.idToArrow[tab.arrow.id] = tab.arrow;
 
-            if (arrow.url) {
-              acc.urlToArrowId[arrow.url] = arrow.id
+            if (tab.arrow.url) {
+              acc.urlToArrowId[tab.arrow.url] = tab.arrow.id
             }
           } 
           return acc;
@@ -146,18 +147,18 @@ const arrowSlice = createSlice({
         const {
           idToArrow,
           urlToArrowId,
-        } = [action.payload?.frame, action.payload?.focus].reduce((acc, arrow) => {
-          if (arrow?.id) {
-            acc.idToArrow[arrow.id] = arrow;
+        } = (action.payload?.tabs || []).reduce((acc, tab) => {
+          if (tab.arrow?.id) {
+            acc.idToArrow[tab.arrow.id] = tab.arrow;
             
-            if (arrow.url) {
-              acc.urlToArrowId[arrow.url] = arrow.id
+            if (tab.arrow.url) {
+              acc.urlToArrowId[tab.arrow.url] = tab.arrow.id
             }
           } 
           return acc;
         }, {
-          idToArrow: { ...state.idToArrow },
-          urlToArrowId: { ...state.urlToArrowId },
+          idToArrow: { ...state.idToArrow } as IdToType<Arrow>,
+          urlToArrowId: { ...state.urlToArrowId } as IdToType<string>,
         });
 
         return {
@@ -178,6 +179,32 @@ const arrowSlice = createSlice({
             };
             if (twig.detail.url) {
               acc.urlToArrowId[twig.detail.url] = twig.detail.id;
+            }
+          }
+          return acc;
+        }, {
+          idToArrow: { ...state.idToArrow },
+          urlToArrowId: { ...state.urlToArrowId },
+        });
+
+        return {
+          ...state,
+          idToArrow,
+          urlToArrowId,
+        }
+      })
+      .addCase(mergeTabs, (state, action) => {
+        const {
+          idToArrow,
+          urlToArrowId,
+        } = action.payload.reduce((acc, tab) => {
+          if (tab.arrow?.id) {
+            acc.idToArrow[tab.arrow.id] = {
+              ...acc.idToArrow[tab.arrow.id], 
+              ...tab.arrow,
+            };
+            if (tab.arrow.url) {
+              acc.urlToArrowId[tab.arrow.url] = tab.arrow.id;
             }
           }
           return acc;

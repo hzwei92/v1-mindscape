@@ -9,6 +9,7 @@ import { FULL_ARROW_FIELDS } from '../arrow/arrowFragments';
 import { selectCurrentUser } from '../user/userSlice';
 import { createArrow } from '../arrow/arrow';
 import { mergeArrows, selectArrowById } from '../arrow/arrowSlice';
+import { selectFocusTab, selectFrameTab } from '../tab/tabSlice';
 
 const REPLY_ARROW = gql`
   mutation ReplyArrow(
@@ -50,6 +51,8 @@ export default function useReplyEntry(entryId: string) {
   const sessionDetail = useReactiveVar(sessionVar);
 
   const user = useAppSelector(selectCurrentUser);
+  const frameTab = useAppSelector(selectFrameTab);
+  const focusTab = useAppSelector(selectFocusTab);
 
   const idToEntry = useAppSelector(selectIdToEntry);
   const newEntryId = useAppSelector(selectNewEntryId);
@@ -83,7 +86,11 @@ export default function useReplyEntry(entryId: string) {
   });
 
   const replyEntry = () => {
-    if (!user || !user.frame || newEntryId) return;
+    if (!user || newEntryId) return;
+
+    const abstract = frameTab?.arrow || focusTab?.arrow;
+
+    if (!abstract) return;
 
     const linkId = v4();
     const targetId = v4();
@@ -117,7 +124,7 @@ export default function useReplyEntry(entryId: string) {
     reply({
       variables: {
         sessionId: sessionDetail.id,
-        abstractId: user.frameId,
+        abstractId: abstract.id,
         sourceId: entry.arrowId,
         linkId,
         targetId,
@@ -133,7 +140,7 @@ export default function useReplyEntry(entryId: string) {
       title: null,
       url: null,
       faviconUrl: null,
-      abstract: user.frame,
+      abstract,
       sheaf: null,
       source: null,
       target: null,
@@ -146,7 +153,7 @@ export default function useReplyEntry(entryId: string) {
       title: null,
       url: null,
       faviconUrl: null,
-      abstract: user.frame,
+      abstract,
       sheaf: null,
       source: arrow,
       target,

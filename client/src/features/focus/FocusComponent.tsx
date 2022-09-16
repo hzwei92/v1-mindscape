@@ -5,9 +5,11 @@ import { MAX_Z_INDEX } from '../../constants';
 import SpaceComponent from '../space/SpaceComponent';
 import { AppContext } from '../../App';
 import { SpaceType } from '../space/space';
-import { selectIsOpen, selectSelectedTwigId } from '../space/spaceSlice';
+import { selectSelectedTwigId } from '../space/spaceSlice';
 import { selectUserById } from '../user/userSlice';
 import useCenterTwig from '../twig/useCenterTwig';
+import { selectFocusTab } from '../tab/tabSlice';
+import { selectArrowById } from '../arrow/arrowSlice';
 
 export default function FocusComponent() {
   const { 
@@ -19,8 +21,8 @@ export default function FocusComponent() {
 
   const focusWidth = width - frameWidth;
 
-  const focusIsOpen = useAppSelector(selectIsOpen(SpaceType.FOCUS));
-  const focusUser = useAppSelector(state => selectUserById(state, user?.focus?.userId));
+  const focusTab = useAppSelector(selectFocusTab);
+  const focusArrow = useAppSelector(state => selectArrowById(state, focusTab?.arrowId));
 
   const focusSelectedTwigId = useAppSelector(selectSelectedTwigId(SpaceType.FOCUS));
 
@@ -42,17 +44,17 @@ export default function FocusComponent() {
   const { centerTwig } = useCenterTwig(SpaceType.FOCUS);
 
   useEffect(() => {
-    if (user?.frame && focusIsOpen) {
-      centerTwig(focusSelectedTwigId || user.frame.rootTwigId || '', true, 0);
+    if (focusTab) {
+      centerTwig(focusSelectedTwigId || focusTab.arrow.rootTwigId || '', true, 0);
     }
-  }, [focusIsOpen, user?.focus]);
+  }, [focusTab]);
 
   useEffect(() => {
-    if (!focusUser) return;
+    if (!focusArrow) return;
     setTheme(createTheme({
       palette: {
         primary: {
-          main: focusUser?.color || '#ffffff',
+          main: focusArrow.color || '#ffffff',
         },
         mode: palette,
       },
@@ -61,7 +63,7 @@ export default function FocusComponent() {
         snackbar: MAX_Z_INDEX + 10000
       },
     }));
-  }, [focusUser?.color, palette]);
+  }, [focusArrow?.color, palette]);
 
   
   if (!user) return null;
@@ -74,14 +76,14 @@ export default function FocusComponent() {
     <ThemeProvider theme={theme}>
       <Box onClick={handleClick} sx={{
         position: 'relative',
-        width: focusIsOpen
+        width: focusTab
           ? focusWidth
           : 0,
         height: '100%',
         // transition: menuIsResizing || frameIsResizing
         //   ? 'none'
         //   : 'width 0.5s',
-        display: focusIsOpen
+        display: focusTab && !focusTab.deleteDate
           ? 'flex'
           : 'none',
         flexDirection: 'row',

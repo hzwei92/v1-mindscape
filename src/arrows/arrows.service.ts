@@ -200,6 +200,7 @@ export class ArrowsService {
     arrow0.draft = draft || getEmptyDraft();
     arrow0.title = title;
     arrow0.url = url;
+    arrow0.color = user.color;
     arrow0.faviconUrl = faviconUrl;
     arrow0.routeName = routeName || arrow0.id;
     arrow0.saveDate = new Date();

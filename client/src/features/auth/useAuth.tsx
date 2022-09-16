@@ -9,7 +9,6 @@ import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { mergeUsers, setCurrentUser } from '../user/userSlice';
 import { AppContext } from '../../App';
 import { selectAuthIsValid, selectAuthIsInit } from './authSlice';
-import { setIsOpen } from '../space/spaceSlice';
 import { SpaceType } from '../space/space';
 import { mergeArrows } from '../arrow/arrowSlice';
 

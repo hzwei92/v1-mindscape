@@ -12,7 +12,7 @@ import useCenterTwig from '../twig/useCenterTwig';
 import useSelectTwig from '../twig/useSelectTwig';
 import { Twig } from '../twig/twig';
 import { MAX_Z_INDEX } from '../../constants';
-import { selectIsOpen, selectSelectedSpace, selectSelectedTwigId } from './spaceSlice';
+import { selectSelectedSpace, selectSelectedTwigId } from './spaceSlice';
 import { selectIdToUser } from '../user/userSlice';
 import { AppContext } from '../../App';
 
@@ -29,8 +29,6 @@ export default function SpaceNav() {
 
   const selectedSpace = useAppSelector(selectSelectedSpace);
   const selectedTwigId = useAppSelector(selectSelectedTwigId(space));
-
-  const isOpen = useAppSelector(selectIsOpen(space));
 
   const idToTwig = useAppSelector(selectIdToTwig(space));
   const idToUser = useAppSelector(selectIdToUser);
@@ -62,8 +60,6 @@ export default function SpaceNav() {
       return false;
     });
   }, [selectedTwigId]);
-
-  if (!isOpen) return null;
 
   const select = (twig: Twig, isInstant?: boolean) => {
     if (selectedTwigId !== twig.id) {

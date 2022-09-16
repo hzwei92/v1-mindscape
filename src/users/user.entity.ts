@@ -18,20 +18,6 @@ import { PaletteMode } from 'src/enums';
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
-  
-  @Column({ nullable: true })
-  frameId: string;
-
-  @ManyToOne(() => Arrow, { nullable: true })
-  @JoinColumn({ referencedColumnName: 'id'})
-  frame: Arrow;
-
-  @Column({ nullable: true })
-  focusId: string;
-
-  @ManyToOne(() => Arrow, { nullable: true })
-  @JoinColumn({ referencedColumnName: 'id'})
-  focus: Arrow;
 
   @Column()
   name: string;

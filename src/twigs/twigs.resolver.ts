@@ -25,7 +25,7 @@ import { TabResult } from './dto/tab-result.dto';
 import { UpdateTabResult } from './dto/udpate-tab-result.dto';
 import { MoveTabResult } from './dto/move-tab-result.dto';
 import { RemoveTwigResult } from './dto/remove-twig-result.dto';
-import { RemoveTabResult } from './dto/remove-tab-result.dto';
+import { RemoveTabResult1 } from './dto/remove-tab-result.dto';
 import { BookmarkEntry } from './dto/bookmark-entry.dto';
 import { DragTwigResult } from './dto/drag-twig-result.dto';
 import { SyncBookmarksResult } from './dto/sync-bookmarks-result.dto';
@@ -322,7 +322,7 @@ export class TwigsResolver {
 
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => RemoveTabResult, {name: 'removeTab'})
+  @Mutation(() => RemoveTabResult1, {name: 'removeTab'})
   async removeTab(
     @CurrentUser() user: UserEntity,
     @Args('twigId') twigId: string,

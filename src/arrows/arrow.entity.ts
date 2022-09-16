@@ -44,6 +44,11 @@ export class Arrow {
   @Column({ nullable: true })
   faviconUrl: string;
   
+
+  @Column({ default: '#000000' })
+  color: string;
+
+
   @Column({ default: 1 })
   clicks: number;
 

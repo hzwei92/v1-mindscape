@@ -24,9 +24,7 @@ export const MOBILE_WIDTH = 420;
 export const LOAD_LIMIT = 20;
 
 
-export const IFRAMELY_API_KEY ='7ddcf037df1408738a31dbe056575ba1'
-export const IFRAMELY_API_KEY_DARK='94bfef11d502890ea3be39545c43c2f9';
-export const IFRAMELY_API_KEY_LIGHT='ccc8c698f47cd34726d1dde82d931c1f';
+export const IFRAMELY_API_KEY ='193c294f2fc38dfbb32781'
 
 export const MAX_Z_INDEX = 2000000000;
 

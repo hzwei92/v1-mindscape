@@ -24,6 +24,12 @@ export class Tab {
   i: number;
 
   @Field()
+  isFrame: boolean;
+
+  @Field()
+  isFocus: boolean;
+
+  @Field()
   createDate: Date;
   
   @Field()

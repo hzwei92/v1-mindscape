@@ -19,6 +19,7 @@ type Arrow {
   canView: String!
   city: String
   clicks: Int!
+  color: String!
   commitDate: DateTime
   country: String
   createDate: DateTime!
@@ -150,10 +151,10 @@ type Mutation {
   copyToTab(entries: [TabEntry!]!, groupEntry: GroupEntry): [Twig!]!
   copyTwig(parentTwigId: String!, twigId: String!): CopyTwigResult!
   createBookmark(bookmark: BookmarkEntry): TabResult!
-  createFocusGraph(arrowId: String, routeName: String!, title: String!): User!
-  createFrameGraph(arrowId: String, routeName: String!, title: String!): User!
+  createGraphTab(name: String!, routeName: String!): [Tab!]!
   createGroup(groupEntry: GroupEntry!): TabResult!
-  createTab(tabEntry: TabEntry!): CreateTabResult!
+  createTab(arrowId: String!, i: Int, isFocus: Boolean!, isFrame: Boolean!): [Tab!]!
+  createTabByRoutename(i: Int, isFocus: Boolean!, isFrame: Boolean!, routename: String!): [Tab!]!
   createWindow(windowEntry: WindowEntry!): TabResult!
   dragTwig(abstractId: String!, dx: Int!, dy: Int!, sessionId: String!, twigId: String!): Twig!
   followUser(userId: String!): Lead!
@@ -182,7 +183,7 @@ type Mutation {
   removeBookmark(bookmarkId: String!): RemoveBookmarkResult!
   removeGroup(twigId: String!): TabResult!
   removeRole(roleId: String!, sessionId: String!): Role!
-  removeTab(twigId: String!): RemoveTabResult!
+  removeTab(tabId: String!): RemoveTabResult!
   removeTwig(sessionId: String!, shouldRemoveDescs: Boolean!, twigId: String!): RemoveTwigResult!
   removeWindow(twigId: String!): TabResult!
   replyArrow(abstractId: String!, linkDraft: String!, linkId: String!, sessionId: String!, sourceId: String!, targetDraft: String!, targetId: String!): ReplyArrowResult!
@@ -192,17 +193,13 @@ type Mutation {
   saveArrow(arrowId: String!, draft: String!, sessionId: String!): Arrow!
   selectTwig(sessionId: String!, twigId: String!): SelectTwigResult!
   setUserColor(color: String!, sessionId: String!): User!
-  setUserFocusById(arrowId: String, sessionId: String!): User!
-  setUserFocusByRouteName(arrowRouteName: String!, sessionId: String!): User!
-  setUserFrameById(arrowId: String, sessionId: String!): User!
-  setUserFrameByRouteName(arrowRouteName: String!, sessionId: String!): User!
   setUserMap(lat: Float!, lng: Float!, zoom: Float!): User!
   setUserName(name: String!, sessionId: String!): User!
   setUserPalette(palette: String!, sessionId: String!): User!
   syncBookmarks(bookmarks: [BookmarkEntry!]!, twigId: String!): SyncBookmarksResult!
   syncTabState(groups: [GroupEntry!]!, tabs: [TabEntry!]!, twigId: String!, windows: [WindowEntry!]!): SyncTabStateResult!
   unfollowUser(userId: String!): Lead!
-  updateTab(faviconUrl: String, title: String!, twigId: String!, url: String!): UpdateTabResult!
+  updateTab(i: Int!, isFocus: Boolean!, isFrame: Boolean!, tabId: String!): [Tab!]!
   verifyUser(code: String!): User!
   voteArrow(arrowId: String!, clicks: Int!, sessionId: String!): VoteArrowResult!
 }
@@ -223,6 +220,11 @@ type RemoveBookmarkResult {
 }
 
 type RemoveTabResult {
+  sibs: [Tab!]!
+  tab: Tab!
+}
+
+type RemoveTabResult1 {
   children: [Twig!]!
   descs: [Twig!]!
   links: [Twig!]!
@@ -332,6 +334,20 @@ type SyncTabStateResult {
   windows: [Twig!]!
 }
 
+type Tab {
+  arrow: Arrow!
+  arrowId: String!
+  createDate: DateTime!
+  deleteDate: DateTime
+  i: Float!
+  id: String!
+  isFocus: Boolean!
+  isFrame: Boolean!
+  updateDate: DateTime!
+  user: User!
+  userId: String!
+}
+
 input TabEntry {
   arrowId: String!
   color: String!
@@ -410,6 +426,7 @@ type User {
   palette: String!
   roles: [Role!]!
   routeName: String!
+  tabs: [Tab!]!
   updateDate: DateTime!
   verifyEmailDate: DateTime
 }

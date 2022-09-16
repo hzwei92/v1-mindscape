@@ -12,13 +12,9 @@ import React, { useContext, useState } from 'react';
 import useAuth from './features/auth/useAuth';
 import useAppRouter from './useAppRouter';
 import { AppContext } from './App';
-import LooksOneIcon from '@mui/icons-material/LooksOne';
-import LooksTwoIcon from '@mui/icons-material/LooksTwo';
 import { APP_BAR_HEIGHT, MOBILE_WIDTH } from './constants';
 import { useAppDispatch, useAppSelector } from './app/hooks';
-import { selectIsOpen, selectSelectedSpace, selectSelectedTwigId, setIsOpen } from './features/space/spaceSlice';
 import { SpaceType } from './features/space/space';
-import useCenterTwig from './features/twig/useCenterTwig';
 import { MenuMode } from './features/menu/menu';
 import Brightness4 from '@mui/icons-material/Brightness4';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -28,12 +24,14 @@ import { Link } from '@mui/material';
 import LoginDialog from './features/auth/LoginDialog';
 import LogoutDialog from './features/auth/LogoutDialog';
 import useSaveArrowSub from './features/arrow/useSaveArrowSub';
+import { Tab } from './features/tab/tab';
+import { selectFocusTab, selectFrameTab, selectIdToTab } from './features/tab/tabSlice';
+import useUpdateTab from './features/tab/useUpdateTab';
 
 const navItems = ['SEARCH', 'GRAPHS', 'CONTACTS', 'MAP', 'FEED'];
 const userItems = ['SETTINGS', 'LOGIN', 'LOGOUT'];
 
 function AppBar() {
-  //console.log('appbar'); TODO prevent rerenders due to useCenterTwig?
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
@@ -57,21 +55,21 @@ function AppBar() {
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
+  const [clickTimeout, setClickTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
+
   const isMobile = width < MOBILE_WIDTH;
 
-  const selectedSpace = useAppSelector(selectSelectedSpace);
-  const isFrameOpen = useAppSelector(selectIsOpen(SpaceType.FRAME));
-  const frameSelectedTwigId = useAppSelector(selectSelectedTwigId(SpaceType.FRAME));
-  const isFocusOpen = useAppSelector(selectIsOpen(SpaceType.FOCUS));
-  const focusSelectedTwigId = useAppSelector(selectSelectedTwigId(SpaceType.FOCUS));
+  const frameTab = useAppSelector(selectFrameTab);
+  const focusTab = useAppSelector(selectFocusTab);
+
+  const idToTab = useAppSelector(selectIdToTab);
 
   useAuth();
   useAppRouter(user);
 
   const { setUserPalette } = useSetUserPalette();
 
-  const { centerTwig: frameCenterTwig } = useCenterTwig(SpaceType.FRAME);
-  const { centerTwig: focusCenterTwig } = useCenterTwig(SpaceType.FOCUS);
+  const { updateTab } = useUpdateTab();
 
   useSaveArrowSub();
 
@@ -89,6 +87,34 @@ function AppBar() {
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
   };
+
+  const handleTabClick = (tab: Tab) => () => {
+    if (clickTimeout) {
+      clearTimeout(clickTimeout);
+      setClickTimeout(null);
+      navigate(`/g/${tab.arrow.routeName}`);
+      updateTab(tab, true, false);
+      console.log('double click');
+    }
+    else {
+      const t = setTimeout(() => {
+        setClickTimeout(null);
+        if (focusTab?.id === tab.id) {
+          updateTab(tab, false, false)
+        }
+        else if (frameTab?.id === tab.id) {
+          updateTab(tab, false, false)
+        }
+        else {
+          navigate(`/g/${tab.arrow.routeName}`);
+          updateTab(tab, false, true)
+        }
+        console.log('single click');
+      }, 200);
+
+      setClickTimeout(t);
+    }
+  }
 
   const handleMenuItemClick = (item: string) => () => {
     if (item === 'SEARCH') {
@@ -122,35 +148,11 @@ function AppBar() {
     setUserPalette(palette === 'light' ? 'dark' : 'light');
   };
 
-  const handleFrameClick = () => {
-    if (user?.frame) {
-      dispatch(setIsOpen({
-        space: SpaceType.FRAME,
-        isOpen: !isFrameOpen,
-      }))
-      //frameCenterTwig(frameSelectedTwigId, false, 0);
-    }
-    else {
-      setCreateGraphArrowId(null);
-      setCreateGraphSpace(SpaceType.FRAME);
-      setMenuMode(MenuMode.GRAPHS);
-    }
-  }
-
-  const handleFocusClick = () => {
-    if (user?.focus) {
-      dispatch(setIsOpen({
-        space: SpaceType.FOCUS,
-        isOpen: !isFocusOpen,
-      }));
-      //focusCenterTwig(focusSelectedTwigId, false, 0);
-    }
-    else {
-      setCreateGraphArrowId(null);
-      setCreateGraphSpace(SpaceType.FOCUS);
-      setMenuMode(MenuMode.GRAPHS);
-    }
-  }
+  const handleCreateGraphClick = () => {
+    setCreateGraphArrowId(null);
+    setCreateGraphSpace(SpaceType.FOCUS);
+    setIsCreatingGraph(true);
+  };
 
   return (
     <Box sx={{
@@ -284,29 +286,50 @@ function AppBar() {
               <Brightness4 fontSize='inherit' />
             </IconButton>
             &nbsp;
-            <IconButton onClick={handleFrameClick} sx={{
-              fontSize: 20,
-              outline: user?.frame && isFrameOpen
-                ? '1px solid'
-                : 'none',
-              color: user?.frame
-                ? user.frame.user.color
-                : color,
+            {
+              Object.values(idToTab)
+                .filter(tab => !tab.deleteDate)
+                .sort((a, b) => a.i - b.i)
+                .map((tab) => {
+                  if (!tab || !tab.arrow) return null;
+
+                  return (
+                    <Button key={tab.id} variant={
+                      tab.id === frameTab?.id 
+                        ? 'contained'
+                        : tab.id === focusTab?.id 
+                          ? 'outlined'
+                          : 'text'
+                      }
+                      onClick={handleTabClick(tab)} 
+                      sx={{
+                        margin: 1,
+                        height: 30,
+                        width: 30,
+                        minWidth: 30,
+                        color: tab.id === frameTab?.id
+                          ? palette === 'dark'
+                            ? '#000000'
+                            : '#ffffff'
+                          : tab.arrow.color,
+                        borderColor: tab.arrow.color,
+                        backgroundColor: tab.id === frameTab?.id
+                          ? tab.arrow.color
+                          : null,
+                      }}
+                    >
+                      { tab.i + 1 }
+                    </Button>
+                  );
+                })
+            }
+            <Button onClick={handleCreateGraphClick} sx={{
+              height: 30,
+              width: 30,
+              minWidth: 30,
             }}>
-              <LooksTwoIcon fontSize='inherit'/>
-            </IconButton>
-            &nbsp;
-            <IconButton onClick={handleFocusClick} sx={{
-              fontSize: 20,
-              outline: user?.focus && isFocusOpen
-                ? '1px solid'
-                : 'none',
-              color: user?.focus
-                ? user.focus.user.color
-                : color,
-            }}>
-            <LooksOneIcon fontSize='inherit'/>
-            </IconButton>
+              +
+            </Button>
             &nbsp;&nbsp;
             <IconButton onClick={handleOpenUserMenu} sx={{
               padding: 0,

@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
 import { useEffect, useState} from 'react';
-import { IFRAMELY_API_KEY_LIGHT } from '../../constants';
+import { IFRAMELY_API_KEY } from '../../constants';
 
 export interface IframelyComponentProps {
   url: string
@@ -13,7 +13,7 @@ export default function IframelyComponent(props: any) {
     __html: '<div />'
   });
 
-  const key = IFRAMELY_API_KEY_LIGHT;
+  const key = IFRAMELY_API_KEY;
 
   useEffect(() => {
     if (props.blockProps && props.blockProps.url) {

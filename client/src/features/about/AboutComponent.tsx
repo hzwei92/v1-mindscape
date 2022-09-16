@@ -3,21 +3,21 @@ import { useContext } from "react";
 import { AppContext } from "../../App";
 import { useAppSelector } from "../../app/hooks";
 import { SpaceType } from "../space/space";
-import { selectIsOpen } from "../space/spaceSlice";
+import { selectFocusTab, selectFrameTab } from "../tab/tabSlice";
 
 
 export default function AboutComponent() {
   const {
     user,
   } = useContext(AppContext);
-
-  const frameIsOpen = useAppSelector(selectIsOpen(SpaceType.FRAME));
-  const focusIsOpen = useAppSelector(selectIsOpen(SpaceType.FOCUS));
+  
+  const frameTab = useAppSelector(selectFrameTab);
+  const focusTab = useAppSelector(selectFocusTab);
 
   return (
     <Card elevation={5} sx={{
       position: 'absolute',
-      display: (!frameIsOpen || !user?.frame) && (!focusIsOpen || !user?.focus)
+      display: !frameTab && !focusTab
         ? 'flex'
         : 'none',
       padding: 2,
@@ -33,13 +33,16 @@ export default function AboutComponent() {
       </Box>
       <Box>
         <p>
-        Browse the Web one graph at a time!
+          Browse the Web as a weighted directed graph.
         </p>
         <p>
-        A graph is a node that has been opened for the viewing of its contents.
+          Each graph is a node that has been opened for the viewing of its contents.
         </p>
         <p>
-          This app gives you two slots, 1 and 2, to use in viewing graphs.
+          This app gives you two slots, A and B, to use in viewing graphs.
+        </p>
+        <p>
+          click a tab to load it into slot A; double click a tab to load it into slot B
         </p>
         <p>
           Each graph has a directory tree, indicated by the solid lines between nodes.

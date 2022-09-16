@@ -9,6 +9,7 @@ import { RolesModule } from 'src/roles/roles.module';
 import { LeadsModule } from 'src/leads/leads.module';
 import { ArrowsModule } from 'src/arrows/arrows.module';
 import { SheafsModule } from 'src/sheafs/sheafs.module';
+import { TabsModule } from 'src/tabs/tabs.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { SheafsModule } from 'src/sheafs/sheafs.module';
     LeadsModule,
     SearchModule,
     PubSubModule,
+    TabsModule,
   ],
   providers: [UsersService, UsersResolver],
   exports: [UsersService],
