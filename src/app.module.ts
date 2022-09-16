@@ -22,6 +22,7 @@ import { EmailModule } from './email/email.module';
 import { TwigsModule } from './twigs/twigs.module';
 import { SheafsModule } from './sheafs/sheafs.module';
 import { TabsModule } from './tabs/tabs.module';
+import { TransfersModule } from './transfers/transfers.module';
 
 @Module({
   imports: [
@@ -113,6 +114,7 @@ import { TabsModule } from './tabs/tabs.module';
     TwigsModule,
     SheafsModule,
     TabsModule,
+    TransfersModule,
   ],
 })
 export class AppModule {}
