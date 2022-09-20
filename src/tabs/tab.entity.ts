@@ -9,7 +9,6 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { User } from 'src/users/user.entity';
-import { RoleType } from 'src/enums';
 import { Arrow } from 'src/arrows/arrow.entity';
 
 @Entity()

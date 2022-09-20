@@ -117,7 +117,6 @@ export default function SpaceComponent(props: SpaceComponentProps) {
 
   const [touches, setTouches] = useState(null as React.TouchList | null);
 
-  const [scaleEvent, setScaleEvent] = useState(null as React.WheelEvent | null);
   const [isScaling, setIsScaling] = useState(false);
 
   const [moveEvent, setMoveEvent] = useState(null as React.MouseEvent | null);

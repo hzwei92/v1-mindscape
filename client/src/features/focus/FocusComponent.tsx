@@ -47,7 +47,7 @@ export default function FocusComponent() {
     if (focusTab) {
       centerTwig(focusSelectedTwigId || focusTab.arrow.rootTwigId || '', true, 0);
     }
-  }, [focusTab]);
+  }, [focusTab?.id]);
 
   useEffect(() => {
     if (!focusArrow) return;
