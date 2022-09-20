@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "cd ionic-client && yarn install && yarn build && cd .. && nest build",
+    "build": "cd ionic-client && yarn install && ionic build && cd .. && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest build --webpack --webpackPath webpack-hmr.config.js --watch",
@@ -59,6 +59,7 @@
     "unique-names-generator": "^4.7.1"
   },
   "devDependencies": {
+    "@ionic/cli": "^6.20.1",
     "@nestjs/cli": "^8.0.0",
     "@nestjs/schematics": "^8.0.0",
     "@nestjs/testing": "^8.0.0",
