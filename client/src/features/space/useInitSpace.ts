@@ -28,7 +28,7 @@ export default function useInitSpace() {
 
   const selectedTwigId = useAppSelector(selectSelectedTwigId(space));
 
-  const { centerTwig } = useCenterTwig(SpaceType.FRAME);
+  const { centerTwig } = useCenterTwig(space);
 
   const [getTwigs] = useMutation(GET_DETAILS, {
     onError: error => {

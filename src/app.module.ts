@@ -45,7 +45,7 @@ import { TransfersModule } from './transfers/transfers.module';
       }),
     }),
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'client', 'build'),
+      rootPath: join(__dirname, '..', 'ionic-client', 'build'),
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -92,6 +92,7 @@ import { TransfersModule } from './transfers/transfers.module';
           ?  false
           : {
               origin: [
+                'http://localhost:8100',
                 'http://localhost:8081',
                 'http://localhost:3000',
                 'chrome-extension://dfgclbhmaeilnpimjliggfdiidoaccgc',

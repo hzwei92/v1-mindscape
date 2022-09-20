@@ -151,7 +151,7 @@ type Mutation {
   copyToTab(entries: [TabEntry!]!, groupEntry: GroupEntry): [Twig!]!
   copyTwig(parentTwigId: String!, twigId: String!): CopyTwigResult!
   createBookmark(bookmark: BookmarkEntry): TabResult!
-  createGraphTab(name: String!, routeName: String!): [Tab!]!
+  createGraphTab(arrowId: String, name: String!, routeName: String!): [Tab!]!
   createGroup(groupEntry: GroupEntry!): TabResult!
   createTab(arrowId: String!, i: Int, isFocus: Boolean!, isFrame: Boolean!): [Tab!]!
   createTabByRoutename(i: Int, isFocus: Boolean!, isFrame: Boolean!, routename: String!): [Tab!]!

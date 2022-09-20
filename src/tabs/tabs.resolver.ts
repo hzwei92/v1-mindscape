@@ -30,23 +30,35 @@ export class TabsResolver {
     @CurrentUser() user: UserEntity,
     @Args('name') name: string,
     @Args('routeName') routeName: string,
+    @Args('arrowId', {nullable: true}) arrowId: string,
   ) {
-    const sheaf = await this.sheafsService.createSheaf(null, null, null);
-    let { arrow } = await this.arrowsService.createArrow({
-      user,
-      title: name,
-      routeName,
-      id: null,
-      sourceId: null,
-      targetId: null,
-      sheaf,
-      abstract: null,
-      draft: null,
-      url: null,
-      faviconUrl: null,
-    });
-    ({ arrow } = await this.arrowsService.openArrow(user, arrow));
-    return this.tabsService.appendTab(user, arrow, false, true);
+    if (arrowId) {
+      let arrow = await this.arrowsService.getArrowById(arrowId);
+      if (!arrow) {
+        throw new BadRequestException('Arrow not found');
+      }
+      ({arrow} = await this.arrowsService.openArrow(user, arrow, name, routeName));
+      return this.tabsService.appendTab(user, arrow, false, true);
+    }
+    else {
+      const sheaf = await this.sheafsService.createSheaf(null, null, null);
+      let { arrow } = await this.arrowsService.createArrow({
+        user,
+        title: name,
+        routeName,
+        id: null,
+        sourceId: null,
+        targetId: null,
+        sheaf,
+        abstract: null,
+        draft: null,
+        url: null,
+        faviconUrl: null,
+      });
+      ({ arrow } = await this.arrowsService.openArrow(user, arrow, name, routeName));
+      return this.tabsService.appendTab(user, arrow, false, true);
+    }
+
   }
   @UseGuards(GqlAuthGuard)
   @Mutation(() => [Tab], { name: 'createTab' })

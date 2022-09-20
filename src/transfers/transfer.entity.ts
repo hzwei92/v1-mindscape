@@ -9,7 +9,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { User } from 'src/users/user.entity';
-import { Arrow } from 'src/arrows/arrow.entity';
+import { Vote } from 'src/votes/vote.entity';
 
 @Entity()
 export class Transfer {
@@ -35,6 +35,13 @@ export class Transfer {
 
   @Column()
   reason: string;
+
+  @Column()
+  voteId: string;
+  
+  @ManyToOne(() => Vote)
+  @JoinColumn({ referencedColumnName: 'id' })
+  vote: Vote;
 
   @CreateDateColumn()
   createDate: Date;

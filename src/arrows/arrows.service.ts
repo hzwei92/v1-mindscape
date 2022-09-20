@@ -146,14 +146,16 @@ export class ArrowsService {
       routeName:'mindscape'
     });
 
-    ({arrow} = await this.openArrow(user, arrow));
+    ({arrow} = await this.openArrow(user, arrow, arrow.title, arrow.routeName));
 
     return arrow;
   }
 
-  async openArrow(user: User, arrow: Arrow) {
+  async openArrow(user: User, arrow: Arrow, title: string, routeName: string) {
     const [rootTwig] = await this.twigsService.createRootTwigs(user, [arrow]);
     arrow.rootTwigId = rootTwig.id;
+    arrow.title = title;
+    arrow.routeName = routeName;
     arrow = await this.arrowsRepository.save(arrow);
 
     const role = await this.rolesService.createRole(user, arrow, RoleType.ADMIN);
